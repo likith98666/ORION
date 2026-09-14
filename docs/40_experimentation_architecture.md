@@ -1,14 +1,4 @@
-Let's gooo 😎🔥 **Document 40**.
 
-For the next stage, we're going deeper into **experimentation** because ORION needs to prove that its AI architecture actually improves performance rather than just becoming more complex.
-
-Create:
-
-`C:\Users\LIKITH\ORION\docs\40_experimentation_architecture.md`
-
-Replace the entire file with this:
-
-````markdown
 # ORION — Experimentation Architecture
 
 ## 1. Overview
