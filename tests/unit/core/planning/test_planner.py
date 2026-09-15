@@ -155,23 +155,25 @@ def test_create_plan_step_without_dependencies_has_empty_dependencies() -> None:
     assert plan_steps[0].dependencies == frozenset()
 
 
-def test_create_plan_ignores_unknown_dependency_orders() -> None:
+def test_create_plan_rejects_unknown_dependency_orders() -> None:
     planner = Planner()
 
-    _, plan_steps = planner.create_plan(
-        task_id=uuid4(),
-        objective="Perform research",
-        steps=[
-            PlannedStep(
-                order=1,
-                description="Research information",
-                required_capability=AgentCapability.RESEARCH,
-                dependencies=frozenset({999}),
-            ),
-        ],
-    )
-
-    assert plan_steps[0].dependencies == frozenset()
+    with pytest.raises(
+        ValueError,
+        match="unknown dependency orders",
+    ):
+        planner.create_plan(
+            task_id=uuid4(),
+            objective="Perform research",
+            steps=[
+                PlannedStep(
+                    order=1,
+                    description="Research information",
+                    required_capability=AgentCapability.RESEARCH,
+                    dependencies=frozenset({999}),
+                ),
+            ],
+        )
 
 
 def test_create_plan_supports_empty_step_list() -> None:
@@ -213,7 +215,10 @@ def test_create_plan_preserves_plan_id_on_all_steps() -> None:
 def test_create_plan_rejects_invalid_step_order() -> None:
     planner = Planner()
 
-    with pytest.raises(ValueError, match="Plan step order must be at least 1"):
+    with pytest.raises(
+        ValueError,
+        match="Plan step order must be at least 1",
+    ):
         planner.create_plan(
             task_id=uuid4(),
             objective="Invalid plan",
