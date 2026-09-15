@@ -31,6 +31,7 @@ class Orchestrator:
 
     def orchestrate(
         self,
+        task_id: UUID,
         plan_steps: list[PlanStep],
     ) -> OrchestrationResult:
         """Create and assign agent tasks for currently ready plan steps."""
@@ -41,7 +42,8 @@ class Orchestrator:
 
         for step in ready_steps:
             agent_task = self._agent_task_service.create_task(
-                task_id=step.plan_id,
+                task_id=task_id,
+                plan_step_id=step.id,
                 description=step.description,
                 required_capability=step.required_capability,
             )

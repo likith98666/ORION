@@ -27,9 +27,26 @@ def test_service_can_create_task() -> None:
     )
 
     assert task.task_id == parent_task_id
+    assert task.plan_step_id is None
     assert task.description == "Research AI companies."
     assert task.required_capability == AgentCapability.RESEARCH
     assert task.status == AgentTaskStatus.PENDING
+
+
+def test_service_can_create_task_for_plan_step() -> None:
+    service = create_service()
+    parent_task_id = uuid4()
+    plan_step_id = uuid4()
+
+    task = service.create_task(
+        task_id=parent_task_id,
+        plan_step_id=plan_step_id,
+        description="Research AI companies.",
+        required_capability=AgentCapability.RESEARCH,
+    )
+
+    assert task.task_id == parent_task_id
+    assert task.plan_step_id == plan_step_id
 
 
 def test_service_can_get_task() -> None:

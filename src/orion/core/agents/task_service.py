@@ -16,9 +16,11 @@ class AgentTaskService:
         task_id: UUID,
         description: str,
         required_capability: AgentCapability,
+        plan_step_id: UUID | None = None,
     ) -> AgentTask:
         task = AgentTask.create(
             task_id=task_id,
+            plan_step_id=plan_step_id,
             description=description,
             required_capability=required_capability,
         )

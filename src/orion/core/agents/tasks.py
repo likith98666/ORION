@@ -22,6 +22,7 @@ class AgentTask:
 
     id: UUID
     task_id: UUID
+    plan_step_id: UUID | None
     description: str
     required_capability: AgentCapability
     status: AgentTaskStatus = AgentTaskStatus.PENDING
@@ -33,6 +34,7 @@ class AgentTask:
         task_id: UUID,
         description: str,
         required_capability: AgentCapability,
+        plan_step_id: UUID | None = None,
     ) -> "AgentTask":
         """Create a validated agent task."""
 
@@ -49,6 +51,7 @@ class AgentTask:
         return cls(
             id=uuid4(),
             task_id=task_id,
+            plan_step_id=plan_step_id,
             description=cleaned_description,
             required_capability=required_capability,
         )

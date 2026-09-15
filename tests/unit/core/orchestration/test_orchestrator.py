@@ -16,12 +16,14 @@ class FakeAgentTaskService:
     def create_task(
         self,
         task_id,
+        plan_step_id,
         description,
         required_capability,
     ):
         self.created_tasks.append(
             (
                 task_id,
+                plan_step_id,
                 description,
                 required_capability,
             )
@@ -33,6 +35,7 @@ class FakeAgentTaskService:
             {
                 "id": uuid4(),
                 "task_id": task_id,
+                "plan_step_id": plan_step_id,
                 "description": description,
                 "required_capability": required_capability,
                 "status": AgentTaskStatus.PENDING,
@@ -67,6 +70,7 @@ def create_step(
 
 
 def test_orchestrator_creates_tasks_for_ready_steps():
+    task_id = uuid4()
     plan_id = uuid4()
 
     first_step = create_step(
@@ -90,10 +94,11 @@ def test_orchestrator_creates_tasks_for_ready_steps():
     )
 
     result = orchestrator.orchestrate(
-        [
+        task_id=task_id,
+        plan_steps=[
             first_step,
             second_step,
-        ]
+        ],
     )
 
     assert len(result.ready_steps) == 2
@@ -101,6 +106,7 @@ def test_orchestrator_creates_tasks_for_ready_steps():
 
 
 def test_orchestrator_creates_tasks_only_for_ready_steps():
+    task_id = uuid4()
     plan_id = uuid4()
 
     completed_step = create_step(
@@ -137,11 +143,12 @@ def test_orchestrator_creates_tasks_only_for_ready_steps():
     )
 
     result = orchestrator.orchestrate(
-        [
+        task_id=task_id,
+        plan_steps=[
             completed_step,
             dependent_step,
             pending_step,
-        ]
+        ],
     )
 
     assert len(result.ready_steps) == 1
@@ -149,13 +156,15 @@ def test_orchestrator_creates_tasks_only_for_ready_steps():
     assert len(result.agent_tasks) == 1
 
     assert task_service.created_tasks[0] == (
-        plan_id,
+        task_id,
+        dependent_step.id,
         "Analyze the findings.",
         AgentCapability.DATA_ANALYSIS,
     )
 
 
-def test_orchestrator_passes_step_information_to_task_service():
+def test_orchestrator_passes_task_and_step_identity_to_task_service():
+    task_id = uuid4()
     plan_id = uuid4()
 
     step = create_step(
@@ -174,11 +183,15 @@ def test_orchestrator_passes_step_information_to_task_service():
         assignment_service=assignment_service,
     )
 
-    orchestrator.orchestrate([step])
+    orchestrator.orchestrate(
+        task_id=task_id,
+        plan_steps=[step],
+    )
 
     assert task_service.created_tasks == [
         (
-            plan_id,
+            task_id,
+            step.id,
             "Perform research.",
             AgentCapability.RESEARCH,
         )
@@ -186,6 +199,7 @@ def test_orchestrator_passes_step_information_to_task_service():
 
 
 def test_orchestrator_assigns_every_created_task():
+    task_id = uuid4()
     plan_id = uuid4()
 
     first_step = create_step(
@@ -212,10 +226,11 @@ def test_orchestrator_assigns_every_created_task():
     )
 
     result = orchestrator.orchestrate(
-        [
+        task_id=task_id,
+        plan_steps=[
             first_step,
             second_step,
-        ]
+        ],
     )
 
     assert len(assignment_service.assigned_tasks) == 2
@@ -225,6 +240,7 @@ def test_orchestrator_assigns_every_created_task():
 
 
 def test_orchestrator_returns_empty_result_when_no_steps_are_ready():
+    task_id = uuid4()
     plan_id = uuid4()
 
     completed_step = create_step(
@@ -244,7 +260,10 @@ def test_orchestrator_returns_empty_result_when_no_steps_are_ready():
         assignment_service=assignment_service,
     )
 
-    result = orchestrator.orchestrate([completed_step])
+    result = orchestrator.orchestrate(
+        task_id=task_id,
+        plan_steps=[completed_step],
+    )
 
     assert result.ready_steps == ()
     assert result.agent_tasks == ()
