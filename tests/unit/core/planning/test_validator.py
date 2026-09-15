@@ -113,3 +113,28 @@ def test_detects_circular_dependency() -> None:
 
     assert result.valid is False
     assert "Plan contains a circular dependency." in result.errors
+
+
+def test_reports_multiple_validation_errors() -> None:
+    step_one = create_step(
+        order=1,
+        description="Research AI platforms",
+    )
+
+    step_two = create_step(
+        order=1,
+        description="Analyze research",
+        dependencies=frozenset({uuid4()}),
+    )
+
+    result = PlanValidator().validate(
+        [step_one, step_two]
+    )
+
+    assert result.valid is False
+    assert len(result.errors) == 2
+    assert "Duplicate plan step order: 1." in result.errors
+    assert any(
+        "depends on missing step" in error
+        for error in result.errors
+    )
