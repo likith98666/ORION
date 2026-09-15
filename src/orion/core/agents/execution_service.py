@@ -1,3 +1,5 @@
+from dataclasses import replace
+from datetime import datetime
 from uuid import UUID
 
 from orion.core.agents.execution_manager import AgentExecutionManager
@@ -59,6 +61,74 @@ class AgentExecutionService:
         updated_execution = self._manager.update_status(
             execution,
             status,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def complete_execution(
+        self,
+        execution_id: UUID,
+        output: str,
+        model_name: str,
+        provider_name: str,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        latency_ms: float | None = None,
+    ) -> AgentExecution:
+        """Complete an execution and persist its result metadata."""
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(
+                f"Agent execution '{execution_id}' not found."
+            )
+
+        updated_execution = self._manager.update_status(
+            execution,
+            AgentExecutionStatus.COMPLETED,
+        )
+
+        updated_execution = replace(
+            updated_execution,
+            completed_at=datetime.now(),
+            output=output,
+            model_name=model_name,
+            provider_name=provider_name,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            latency_ms=latency_ms,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def fail_execution(
+        self,
+        execution_id: UUID,
+        error_message: str,
+    ) -> AgentExecution:
+        """Fail an execution and persist its error information."""
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(
+                f"Agent execution '{execution_id}' not found."
+            )
+
+        updated_execution = self._manager.update_status(
+            execution,
+            AgentExecutionStatus.FAILED,
+        )
+
+        updated_execution = replace(
+            updated_execution,
+            completed_at=datetime.now(),
+            error_message=error_message,
         )
 
         self._repository.save(updated_execution)
