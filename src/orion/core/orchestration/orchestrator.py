@@ -1,9 +1,15 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from uuid import UUID
 
+from orion.config.model_config import ModelConfig
 from orion.core.agents.assignment_service import AgentAssignmentService
+from orion.core.agents.execution_service import AgentExecution
 from orion.core.agents.task_service import AgentTaskService
 from orion.core.agents.tasks import AgentTask
+from orion.core.orchestration.execution_loop import (
+    ExecutionLoop,
+    ExecutionLoopResult,
+)
 from orion.core.planning.scheduler import PlanScheduler
 from orion.core.planning.steps import PlanStep
 
@@ -16,18 +22,28 @@ class OrchestrationResult:
     agent_tasks: tuple[AgentTask, ...]
 
 
+@dataclass(frozen=True)
+class OrchestrationExecutionResult:
+    """Result of orchestration followed by agent task execution."""
+
+    orchestration: OrchestrationResult
+    execution: ExecutionLoopResult
+
+
 class Orchestrator:
-    """Coordinates ready plan steps with agent task creation and assignment."""
+    """Coordinates plan steps, agent tasks, and execution."""
 
     def __init__(
         self,
         scheduler: PlanScheduler,
         agent_task_service: AgentTaskService,
         assignment_service: AgentAssignmentService,
+        execution_loop: ExecutionLoop | None = None,
     ) -> None:
         self._scheduler = scheduler
         self._agent_task_service = agent_task_service
         self._assignment_service = assignment_service
+        self._execution_loop = execution_loop
 
     def orchestrate(
         self,
@@ -57,4 +73,32 @@ class Orchestrator:
         return OrchestrationResult(
             ready_steps=tuple(ready_steps),
             agent_tasks=tuple(agent_tasks),
+        )
+
+    def orchestrate_and_execute(
+        self,
+        task_id: UUID,
+        plan_steps: list[PlanStep],
+        model_config: ModelConfig,
+    ) -> OrchestrationExecutionResult:
+        """Orchestrate ready tasks and execute them."""
+
+        if self._execution_loop is None:
+            raise ValueError(
+                "Execution loop is required for orchestrate_and_execute."
+            )
+
+        orchestration = self.orchestrate(
+            task_id=task_id,
+            plan_steps=plan_steps,
+        )
+
+        execution = self._execution_loop.execute(
+            tasks=list(orchestration.agent_tasks),
+            model_config=model_config,
+        )
+
+        return OrchestrationExecutionResult(
+            orchestration=orchestration,
+            execution=execution,
         )
