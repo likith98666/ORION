@@ -9,6 +9,9 @@ from orion.core.orchestration.execution_loop import (
     ExecutionLoop,
     ExecutionLoopResult,
 )
+from orion.core.orchestration.parallel_executor import (
+    ParallelExecutionResult,
+)
 
 
 class FakeExecutionCoordinator:
@@ -33,6 +36,20 @@ class FakeExecutionCoordinator:
             self.executions[task.id] = execution
 
         return execution
+
+
+class FakeParallelExecutor:
+    def __init__(self) -> None:
+        self.calls = []
+        self.result = ParallelExecutionResult(executions=())
+
+    def execute(
+        self,
+        tasks,
+        model_config,
+    ):
+        self.calls.append((tasks, model_config))
+        return self.result
 
 
 def create_assigned_task(description: str) -> AgentTask:
@@ -152,5 +169,40 @@ def test_execution_loop_propagates_coordinator_execution_result() -> None:
         tasks=[task],
         model_config=model_config,
     )
+
+    assert result.executions == (expected_execution,)
+
+
+def test_execution_loop_delegates_to_parallel_executor() -> None:
+    first_task = create_assigned_task("First task.")
+    second_task = create_assigned_task("Second task.")
+
+    model_config = ModelConfig(provider_name="mock")
+
+    coordinator = FakeExecutionCoordinator()
+    parallel_executor = FakeParallelExecutor()
+
+    expected_execution = AgentExecution.create(
+        agent_task_id=first_task.id,
+        agent_id=first_task.assigned_agent_id,
+    )
+
+    parallel_executor.result = ParallelExecutionResult(
+        executions=(expected_execution,),
+    )
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        parallel_executor=parallel_executor,
+    )
+
+    result = loop.execute(
+        tasks=[first_task, second_task],
+        model_config=model_config,
+    )
+
+    assert parallel_executor.calls == [
+        ([first_task, second_task], model_config),
+    ]
 
     assert result.executions == (expected_execution,)
