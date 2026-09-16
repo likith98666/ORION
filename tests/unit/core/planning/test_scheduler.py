@@ -1,4 +1,4 @@
-from uuid import uuid4
+﻿from uuid import uuid4
 
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.planning.scheduler import PlanScheduler
@@ -7,193 +7,149 @@ from orion.core.planning.steps import PlanStep, PlanStepStatus
 
 def create_step(
     order: int,
-    description: str,
     dependencies: frozenset | None = None,
 ) -> PlanStep:
     return PlanStep.create(
         plan_id=uuid4(),
         order=order,
-        description=description,
-        required_capability=AgentCapability.RESEARCH,
+        description=f"Step {order}",
+        required_capability=AgentCapability.REASONING,
         dependencies=dependencies,
     )
 
 
-def test_step_without_dependencies_is_ready() -> None:
-    scheduler = PlanScheduler()
+def test_get_ready_steps_returns_steps_without_dependencies() -> None:
+    step = create_step(1)
 
-    step = create_step(
-        order=1,
-        description="Collect information",
+    result = PlanScheduler().get_ready_steps([step])
+
+    assert result == [step]
+    assert step.status == PlanStepStatus.PENDING
+
+
+def test_get_ready_steps_returns_step_after_dependency_completes() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
     )
 
-    ready_steps = scheduler.get_ready_steps([step])
-
-    assert ready_steps == [step]
-
-
-def test_step_with_completed_dependency_is_ready() -> None:
-    scheduler = PlanScheduler()
-
-    dependency = create_step(
-        order=1,
-        description="Collect information",
-    )
     dependency.status = PlanStepStatus.COMPLETED
 
-    step = create_step(
-        order=2,
-        description="Analyze information",
-        dependencies=frozenset({dependency.id}),
+    result = PlanScheduler().get_ready_steps(
+        [dependent, dependency]
     )
 
-    ready_steps = scheduler.get_ready_steps(
-        [dependency, step]
+    assert result == [dependent]
+    assert dependent.status == PlanStepStatus.PENDING
+
+
+def test_get_ready_steps_does_not_return_step_with_unfinished_dependency() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
     )
 
-    assert ready_steps == [step]
-
-
-def test_step_with_pending_dependency_is_not_ready() -> None:
-    scheduler = PlanScheduler()
-
-    dependency = create_step(
-        order=1,
-        description="Collect information",
+    result = PlanScheduler().get_ready_steps(
+        [dependent, dependency]
     )
 
-    step = create_step(
-        order=2,
-        description="Analyze information",
-        dependencies=frozenset({dependency.id}),
-    )
-
-    ready_steps = scheduler.get_ready_steps(
-        [dependency, step]
-    )
-
-    assert ready_steps == [dependency]
+    assert result == [dependency]
 
 
-def test_step_with_multiple_dependencies_requires_all_completed() -> None:
-    scheduler = PlanScheduler()
+def test_mark_ready_steps_transitions_pending_steps_to_ready() -> None:
+    step = create_step(1)
 
-    first_dependency = create_step(
-        order=1,
-        description="Collect first dataset",
-    )
+    result = PlanScheduler().mark_ready_steps([step])
 
-    second_dependency = create_step(
-        order=2,
-        description="Collect second dataset",
-    )
-    second_dependency.status = PlanStepStatus.COMPLETED
-
-    step = create_step(
-        order=3,
-        description="Combine datasets",
-        dependencies=frozenset(
-            {
-                first_dependency.id,
-                second_dependency.id,
-            }
-        ),
-    )
-
-    ready_steps = scheduler.get_ready_steps(
-        [first_dependency, second_dependency, step]
-    )
-
-    assert ready_steps == [first_dependency]
+    assert result == [step]
+    assert step.status == PlanStepStatus.READY
 
 
-def test_step_becomes_ready_after_all_dependencies_complete() -> None:
-    scheduler = PlanScheduler()
-
-    first_dependency = create_step(
-        order=1,
-        description="Collect first dataset",
-    )
-    first_dependency.status = PlanStepStatus.COMPLETED
-
-    second_dependency = create_step(
-        order=2,
-        description="Collect second dataset",
-    )
-    second_dependency.status = PlanStepStatus.COMPLETED
-
-    step = create_step(
-        order=3,
-        description="Combine datasets",
-        dependencies=frozenset(
-            {
-                first_dependency.id,
-                second_dependency.id,
-            }
-        ),
-    )
-
-    ready_steps = scheduler.get_ready_steps(
-        [first_dependency, second_dependency, step]
-    )
-
-    assert ready_steps == [step]
-
-
-def test_completed_steps_are_not_returned_as_ready() -> None:
-    scheduler = PlanScheduler()
-
-    step = create_step(
-        order=1,
-        description="Collect information",
-    )
-    step.status = PlanStepStatus.COMPLETED
-
-    assert scheduler.get_ready_steps([step]) == []
-
-
-def test_running_steps_are_not_returned_as_ready() -> None:
-    scheduler = PlanScheduler()
-
-    step = create_step(
-        order=1,
-        description="Collect information",
-    )
+def test_mark_ready_steps_does_not_modify_non_pending_steps() -> None:
+    step = create_step(1)
     step.status = PlanStepStatus.RUNNING
 
-    assert scheduler.get_ready_steps([step]) == []
+    result = PlanScheduler().mark_ready_steps([step])
+
+    assert result == []
+    assert step.status == PlanStepStatus.RUNNING
 
 
 def test_ready_steps_are_sorted_by_order() -> None:
-    scheduler = PlanScheduler()
+    first = create_step(1)
+    second = create_step(2)
+    third = create_step(3)
 
-    first_step = create_step(
-        order=1,
-        description="First step",
+    result = PlanScheduler().get_ready_steps(
+        [third, first, second]
     )
 
-    second_step = create_step(
-        order=2,
-        description="Second step",
+    assert result == [first, second, third]
+
+
+def test_get_blocked_steps_detects_failed_dependency() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
     )
 
-    third_step = create_step(
-        order=3,
-        description="Third step",
+    dependency.status = PlanStepStatus.FAILED
+
+    result = PlanScheduler().get_blocked_steps(
+        [dependent, dependency]
     )
 
-    ready_steps = scheduler.get_ready_steps(
-        [third_step, first_step, second_step]
+    assert result == [dependent]
+    assert dependent.status == PlanStepStatus.PENDING
+
+
+def test_get_blocked_steps_detects_skipped_dependency() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
     )
 
-    assert ready_steps == [
-        first_step,
-        second_step,
-        third_step,
-    ]
+    dependency.status = PlanStepStatus.SKIPPED
+
+    result = PlanScheduler().get_blocked_steps(
+        [dependent, dependency]
+    )
+
+    assert result == [dependent]
 
 
-def test_empty_step_list_returns_empty_list() -> None:
-    scheduler = PlanScheduler()
+def test_get_blocked_steps_ignores_completed_dependency() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
+    )
 
-    assert scheduler.get_ready_steps([]) == []
+    dependency.status = PlanStepStatus.COMPLETED
+
+    result = PlanScheduler().get_blocked_steps(
+        [dependent, dependency]
+    )
+
+    assert result == []
+
+
+def test_mark_blocked_steps_transitions_to_skipped() -> None:
+    dependency = create_step(1)
+    dependent = create_step(
+        2,
+        frozenset({dependency.id}),
+    )
+
+    dependency.status = PlanStepStatus.FAILED
+
+    result = PlanScheduler().mark_blocked_steps(
+        [dependent, dependency]
+    )
+
+    assert result == [dependent]
+    assert dependent.status == PlanStepStatus.SKIPPED
