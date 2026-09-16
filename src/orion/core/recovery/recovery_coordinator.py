@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
 from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.executions import AgentExecution
@@ -6,6 +6,7 @@ from orion.core.recovery.failures import Failure
 from orion.core.recovery.recovery_action import RecoveryAction
 from orion.core.recovery.recovery_context import RecoveryContext
 from orion.core.recovery.recovery_engine import RecoveryEngine
+from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class RecoveryCoordinator:
         self,
         execution: AgentExecution,
         *,
+        execution_context: RecoveryExecutionContext | None = None,
         retry_count: int = 0,
         max_retries: int = 3,
         task_criticality: float = 0.5,
@@ -55,7 +57,31 @@ class RecoveryCoordinator:
                 "Failed execution must contain a structured failure."
             )
 
+        if execution_context is not None and not isinstance(
+            execution_context,
+            RecoveryExecutionContext,
+        ):
+            raise TypeError(
+                "execution_context must be a "
+                "RecoveryExecutionContext instance."
+            )
+
         failure = execution.failure
+
+        if execution_context is not None:
+            if execution_context.current_execution_id != execution.id:
+                raise ValueError(
+                    "Recovery execution context does not match "
+                    "the failed execution."
+                )
+
+            if execution_context.task_id != execution.agent_task_id:
+                raise ValueError(
+                    "Recovery execution context does not match "
+                    "the execution task."
+                )
+
+            retry_count = execution_context.recovery_attempt_number
 
         context = RecoveryContext(
             retry_count=retry_count,
