@@ -1,14 +1,21 @@
 from uuid import uuid4
 
 from orion.config.model_config import ModelConfig
+from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
-from orion.core.recovery.failures import Failure, FailureType
-from orion.core.recovery.recovery_action import RecoveryAction, RecoveryActionType
-from orion.core.recovery.recovery_coordinator import RecoveryResult
-from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
 from orion.core.orchestration.execution_loop import ExecutionLoop
+from orion.core.planning.steps import PlanStep, PlanStepStatus
+from orion.core.recovery.failures import Failure, FailureType
+from orion.core.recovery.recovery_action import (
+    RecoveryAction,
+    RecoveryActionType,
+)
+from orion.core.recovery.recovery_coordinator import RecoveryResult
+from orion.core.recovery.recovery_execution_context import (
+    RecoveryExecutionContext,
+)
 
 
 class FakeExecutionCoordinator:
@@ -54,14 +61,42 @@ class FakeRecoveryCoordinator:
         )
 
 
-def create_assigned_task() -> AgentTask:
+class FakeRecoveryService:
+    def __init__(self, execution: AgentExecution) -> None:
+        self.execution = execution
+        self.calls = []
+
+    def retry_task(self, task, model_config):
+        self.calls.append((task, model_config))
+        return self.execution
+
+
+class FakeStateSynchronizer:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def synchronize(self, execution, plan_steps):
+        self.calls.append((execution, plan_steps))
+
+        if execution.status == AgentExecutionStatus.FAILED:
+            plan_steps[0].status = PlanStepStatus.FAILED
+
+
+def create_plan_step() -> PlanStep:
+    return PlanStep.create(
+        plan_id=uuid4(),
+        order=1,
+        description="Execute task.",
+        required_capability=AgentCapability.REASONING,
+    )
+
+
+def create_assigned_task(plan_step_id=None) -> AgentTask:
     task = AgentTask.create(
         task_id=uuid4(),
+        plan_step_id=plan_step_id,
         description="Execute task.",
-        required_capability=__import__(
-            "orion.core.agents.capabilities",
-            fromlist=["AgentCapability"],
-        ).AgentCapability.REASONING,
+        required_capability=AgentCapability.REASONING,
     )
 
     task.assigned_agent_id = uuid4()
@@ -157,3 +192,75 @@ def test_execution_loop_does_not_invoke_recovery_for_successful_execution() -> N
 
     assert result.executions == (execution,)
     assert recovery_coordinator.calls == []
+
+
+def test_execution_loop_synchronizes_failed_execution_before_recovery() -> None:
+    plan_step = create_plan_step()
+    task = create_assigned_task(plan_step.id)
+    execution = create_failed_execution(task)
+
+    coordinator = FakeExecutionCoordinator(execution)
+    recovery_coordinator = FakeRecoveryCoordinator()
+    state_synchronizer = FakeStateSynchronizer()
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        recovery_coordinator=recovery_coordinator,
+        state_synchronizer=state_synchronizer,
+    )
+
+    loop.execute(
+        tasks=[task],
+        model_config=ModelConfig(provider_name="mock"),
+        plan_steps=[plan_step],
+    )
+
+    assert state_synchronizer.calls == [
+        (execution, [plan_step]),
+    ]
+
+    assert task.status == AgentTaskStatus.ASSIGNED
+    assert plan_step.status == PlanStepStatus.FAILED
+
+    assert len(recovery_coordinator.calls) == 1
+
+
+def test_execution_loop_retries_when_recovery_requests_retry() -> None:
+    plan_step = create_plan_step()
+    task = create_assigned_task(plan_step.id)
+
+    failed_execution = create_failed_execution(task)
+
+    retry_execution = AgentExecution.create(
+        agent_task_id=task.id,
+        agent_id=task.assigned_agent_id,
+    )
+    retry_execution.status = AgentExecutionStatus.COMPLETED
+    retry_execution.output = "Recovered successfully."
+
+    coordinator = FakeExecutionCoordinator(failed_execution)
+    recovery_coordinator = FakeRecoveryCoordinator()
+    recovery_service = FakeRecoveryService(retry_execution)
+    state_synchronizer = FakeStateSynchronizer()
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        recovery_coordinator=recovery_coordinator,
+        recovery_service=recovery_service,
+        state_synchronizer=state_synchronizer,
+    )
+
+    result = loop.execute(
+        tasks=[task],
+        model_config=ModelConfig(provider_name="mock"),
+        plan_steps=[plan_step],
+    )
+
+    assert recovery_service.calls == [
+        (task, ModelConfig(provider_name="mock")),
+    ]
+
+    assert result.executions == (
+        failed_execution,
+        retry_execution,
+    )
