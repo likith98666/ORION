@@ -30,7 +30,11 @@ class FakeAgentExecutor:
         self.execution = execution
         self.calls: list[tuple[AgentTask, ModelConfig]] = []
 
-    def execute(self, task: AgentTask, model_config: ModelConfig) -> AgentExecution:
+    def execute(
+        self,
+        task: AgentTask,
+        model_config: ModelConfig,
+    ) -> AgentExecution:
         self.calls.append((task, model_config))
         return self.execution
 
@@ -100,6 +104,103 @@ def test_retry_task_rejects_non_failed_task() -> None:
         service.retry_task(
             task=task,
             model_config=ModelConfig(provider_name="mock"),
+        )
+
+    assert agent_task_service.status_updates == []
+    assert agent_executor.calls == []
+
+
+def test_change_model_and_retry_uses_alternative_model() -> None:
+    task = create_failed_task()
+
+    execution = AgentExecution.create(
+        agent_task_id=task.id,
+        agent_id=task.assigned_agent_id,
+    )
+
+    agent_task_service = FakeAgentTaskService(task)
+    agent_executor = FakeAgentExecutor(execution)
+    service = RecoveryService(
+        agent_task_service=agent_task_service,
+        agent_executor=agent_executor,
+    )
+
+    current = ModelConfig(provider_name="primary")
+    alternative = ModelConfig(provider_name="alternate")
+
+    result = service.change_model_and_retry(
+        task=task,
+        current_model_config=current,
+        alternative_model_configs=(alternative,),
+    )
+
+    assert result is execution
+    assert task.status == AgentTaskStatus.RUNNING
+    assert agent_task_service.status_updates == [
+        (task.id, AgentTaskStatus.RUNNING),
+    ]
+    assert agent_executor.calls == [(task, alternative)]
+
+
+def test_change_model_and_retry_rejects_missing_alternative() -> None:
+    task = create_failed_task()
+
+    agent_task_service = FakeAgentTaskService(task)
+    agent_executor = FakeAgentExecutor(
+        AgentExecution.create(
+            agent_task_id=task.id,
+            agent_id=task.assigned_agent_id,
+        )
+    )
+
+    service = RecoveryService(
+        agent_task_service=agent_task_service,
+        agent_executor=agent_executor,
+    )
+
+    current = ModelConfig(provider_name="primary")
+
+    with pytest.raises(
+        ValueError,
+        match="Model recovery could not be applied",
+    ):
+        service.change_model_and_retry(
+            task=task,
+            current_model_config=current,
+            alternative_model_configs=(),
+        )
+
+    assert agent_task_service.status_updates == []
+    assert agent_executor.calls == []
+
+
+def test_change_model_and_retry_rejects_non_failed_task() -> None:
+    task = create_failed_task()
+    task.status = AgentTaskStatus.COMPLETED
+
+    agent_task_service = FakeAgentTaskService(task)
+    agent_executor = FakeAgentExecutor(
+        AgentExecution.create(
+            agent_task_id=task.id,
+            agent_id=task.assigned_agent_id,
+        )
+    )
+
+    service = RecoveryService(
+        agent_task_service=agent_task_service,
+        agent_executor=agent_executor,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Only failed agent tasks can change model and retry",
+    ):
+        service.change_model_and_retry(
+            task=task,
+            current_model_config=ModelConfig(provider_name="primary"),
+            alternative_model_configs=(
+                ModelConfig(provider_name="alternate"),
+            ),
         )
 
     assert agent_task_service.status_updates == []

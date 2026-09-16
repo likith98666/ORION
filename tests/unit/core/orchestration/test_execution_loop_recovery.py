@@ -29,7 +29,11 @@ class FakeExecutionCoordinator:
 
 
 class FakeRecoveryCoordinator:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        action_type: RecoveryActionType = RecoveryActionType.RETRY_TASK,
+    ) -> None:
+        self.action_type = action_type
         self.calls = []
 
     def handle_failure(
@@ -56,7 +60,7 @@ class FakeRecoveryCoordinator:
         return RecoveryResult(
             failure=failure,
             action=RecoveryAction(
-                action_type=RecoveryActionType.RETRY_TASK,
+                action_type=self.action_type,
             ),
         )
 
@@ -65,9 +69,25 @@ class FakeRecoveryService:
     def __init__(self, execution: AgentExecution) -> None:
         self.execution = execution
         self.calls = []
+        self.model_change_calls = []
 
     def retry_task(self, task, model_config):
         self.calls.append((task, model_config))
+        return self.execution
+
+    def change_model_and_retry(
+        self,
+        task,
+        current_model_config,
+        alternative_model_configs,
+    ):
+        self.model_change_calls.append(
+            (
+                task,
+                current_model_config,
+                alternative_model_configs,
+            )
+        )
         return self.execution
 
 
@@ -239,9 +259,13 @@ def test_execution_loop_retries_when_recovery_requests_retry() -> None:
     retry_execution.output = "Recovered successfully."
 
     coordinator = FakeExecutionCoordinator(failed_execution)
-    recovery_coordinator = FakeRecoveryCoordinator()
+    recovery_coordinator = FakeRecoveryCoordinator(
+        action_type=RecoveryActionType.RETRY_TASK,
+    )
     recovery_service = FakeRecoveryService(retry_execution)
     state_synchronizer = FakeStateSynchronizer()
+
+    model_config = ModelConfig(provider_name="mock")
 
     loop = ExecutionLoop(
         execution_coordinator=coordinator,
@@ -252,15 +276,105 @@ def test_execution_loop_retries_when_recovery_requests_retry() -> None:
 
     result = loop.execute(
         tasks=[task],
-        model_config=ModelConfig(provider_name="mock"),
+        model_config=model_config,
         plan_steps=[plan_step],
     )
 
     assert recovery_service.calls == [
-        (task, ModelConfig(provider_name="mock")),
+        (task, model_config),
     ]
+
+    assert recovery_service.model_change_calls == []
 
     assert result.executions == (
         failed_execution,
         retry_execution,
     )
+
+
+def test_execution_loop_changes_model_when_recovery_requests_change_model() -> None:
+    plan_step = create_plan_step()
+    task = create_assigned_task(plan_step.id)
+
+    failed_execution = create_failed_execution(task)
+
+    recovered_execution = AgentExecution.create(
+        agent_task_id=task.id,
+        agent_id=task.assigned_agent_id,
+    )
+    recovered_execution.status = AgentExecutionStatus.COMPLETED
+    recovered_execution.output = "Recovered using alternative model."
+
+    coordinator = FakeExecutionCoordinator(failed_execution)
+
+    recovery_coordinator = FakeRecoveryCoordinator(
+        action_type=RecoveryActionType.CHANGE_MODEL,
+    )
+
+    recovery_service = FakeRecoveryService(recovered_execution)
+    state_synchronizer = FakeStateSynchronizer()
+
+    current_model = ModelConfig(
+        provider_name="primary",
+    )
+
+    alternative_model = ModelConfig(
+        provider_name="alternate",
+    )
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        recovery_coordinator=recovery_coordinator,
+        recovery_service=recovery_service,
+        state_synchronizer=state_synchronizer,
+    )
+
+    result = loop.execute(
+        tasks=[task],
+        model_config=current_model,
+        alternative_model_configs=(alternative_model,),
+        plan_steps=[plan_step],
+    )
+
+    assert recovery_service.calls == []
+
+    assert recovery_service.model_change_calls == [
+        (
+            task,
+            current_model,
+            (alternative_model,),
+        ),
+    ]
+
+    assert result.executions == (
+        failed_execution,
+        recovered_execution,
+    )
+
+
+def test_execution_loop_ignores_recovery_actions_without_implementation() -> None:
+    task = create_assigned_task()
+    execution = create_failed_execution(task)
+
+    coordinator = FakeExecutionCoordinator(execution)
+
+    recovery_coordinator = FakeRecoveryCoordinator(
+        action_type=RecoveryActionType.CHANGE_AGENT,
+    )
+
+    recovery_service = FakeRecoveryService(execution)
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        recovery_coordinator=recovery_coordinator,
+        recovery_service=recovery_service,
+    )
+
+    result = loop.execute(
+        tasks=[task],
+        model_config=ModelConfig(provider_name="mock"),
+    )
+
+    assert result.executions == (execution,)
+    assert recovery_service.calls == []
+    assert recovery_service.model_change_calls == []

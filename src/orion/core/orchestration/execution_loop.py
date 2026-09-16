@@ -8,6 +8,7 @@ from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
 from orion.core.orchestration.parallel_executor import ParallelExecutor
 from orion.core.orchestration.state_synchronizer import StateSynchronizer
 from orion.core.planning.steps import PlanStep
+from orion.core.recovery.recovery_action import RecoveryActionType
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
 from orion.core.recovery.recovery_service import RecoveryService
@@ -42,8 +43,9 @@ class ExecutionLoop:
         tasks: list[AgentTask],
         model_config: ModelConfig,
         plan_steps: list[PlanStep] | None = None,
+        alternative_model_configs: tuple[ModelConfig, ...] = (),
     ) -> ExecutionLoopResult:
-        """Execute assigned agent tasks."""
+        """Execute assigned agent tasks with optional recovery alternatives."""
 
         executions: list[AgentExecution] = []
 
@@ -66,15 +68,16 @@ class ExecutionLoop:
                     plan_steps=plan_steps,
                 )
 
-                retry_execution = self._handle_failed_execution(
+                recovery_execution = self._handle_failed_execution(
                     execution=execution,
                     task=task,
                     model_config=model_config,
+                    alternative_model_configs=alternative_model_configs,
                     plan_steps=plan_steps,
                 )
 
-                if retry_execution is not None:
-                    executions.append(retry_execution)
+                if recovery_execution is not None:
+                    executions.append(recovery_execution)
 
             return ExecutionLoopResult(
                 executions=tuple(executions),
@@ -93,15 +96,16 @@ class ExecutionLoop:
                 plan_steps=plan_steps,
             )
 
-            retry_execution = self._handle_failed_execution(
+            recovery_execution = self._handle_failed_execution(
                 execution=execution,
                 task=task,
                 model_config=model_config,
+                alternative_model_configs=alternative_model_configs,
                 plan_steps=plan_steps,
             )
 
-            if retry_execution is not None:
-                executions.append(retry_execution)
+            if recovery_execution is not None:
+                executions.append(recovery_execution)
 
         return ExecutionLoopResult(
             executions=tuple(executions),
@@ -132,6 +136,7 @@ class ExecutionLoop:
         execution: AgentExecution,
         task: AgentTask,
         model_config: ModelConfig,
+        alternative_model_configs: tuple[ModelConfig, ...],
         plan_steps: list[PlanStep] | None,
     ) -> AgentExecution | None:
         """Coordinate recovery for a failed execution."""
@@ -151,10 +156,15 @@ class ExecutionLoop:
             execution_context=execution_context,
         )
 
-        if recovery_result.action.action_type.value != "retry_task":
-            return None
+        action_type = recovery_result.action.action_type
 
         if self._recovery_service is None:
+            return None
+
+        if action_type not in {
+            RecoveryActionType.RETRY_TASK,
+            RecoveryActionType.CHANGE_MODEL,
+        }:
             return None
 
         if task.status != AgentTaskStatus.FAILED:
@@ -173,9 +183,16 @@ class ExecutionLoop:
                 plan_steps,
             )
 
-        return self._recovery_service.retry_task(
-            task,
-            model_config,
+        if action_type == RecoveryActionType.RETRY_TASK:
+            return self._recovery_service.retry_task(
+                task,
+                model_config,
+            )
+
+        return self._recovery_service.change_model_and_retry(
+            task=task,
+            current_model_config=model_config,
+            alternative_model_configs=alternative_model_configs,
         )
 
     @staticmethod
