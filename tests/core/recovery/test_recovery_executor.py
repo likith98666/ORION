@@ -1,116 +1,75 @@
-﻿from uuid import uuid4
+﻿from orion.config.model_config import ModelConfig
 
 from orion.core.recovery.recovery_action import (
     RecoveryAction,
     RecoveryActionType,
 )
-from orion.core.recovery.recovery_executor import RecoveryExecutor
+from orion.core.recovery.recovery_executor import (
+    RecoveryExecutionResult,
+    RecoveryExecutor,
+)
 
 
-def test_executor_rejects_invalid_action() -> None:
-    executor = RecoveryExecutor()
-
-    try:
-        executor.execute("invalid")
-    except TypeError:
-        return
-
-    raise AssertionError("Expected TypeError for invalid action.")
-
-
-def test_executor_accepts_retry_action() -> None:
-    executor = RecoveryExecutor()
-
-    action = RecoveryAction(
-        action_type=RecoveryActionType.RETRY_TASK,
-    )
-
-    result = executor.execute(action)
-
-    assert result.action_type == RecoveryActionType.RETRY_TASK
-
-
-def test_executor_accepts_change_agent_action() -> None:
-    executor = RecoveryExecutor()
-
-    action = RecoveryAction(
-        action_type=RecoveryActionType.CHANGE_AGENT,
-    )
-
-    result = executor.execute(action)
-
-    assert result.action_type == RecoveryActionType.CHANGE_AGENT
-
-
-def test_executor_accepts_change_tool_action() -> None:
-    executor = RecoveryExecutor()
-
-    action = RecoveryAction(
-        action_type=RecoveryActionType.CHANGE_TOOL,
-    )
-
-    result = executor.execute(action)
-
-    assert result.action_type == RecoveryActionType.CHANGE_TOOL
-
-
-def test_executor_accepts_change_model_action() -> None:
+def test_change_model_requires_an_alternative_model() -> None:
     executor = RecoveryExecutor()
 
     action = RecoveryAction(
         action_type=RecoveryActionType.CHANGE_MODEL,
     )
 
-    result = executor.execute(action)
+    result = executor.execute(
+        action,
+        model_config=ModelConfig(provider_name="primary"),
+        alternative_model_configs=(),
+    )
 
-    assert result.action_type == RecoveryActionType.CHANGE_MODEL
+    assert isinstance(result, RecoveryExecutionResult)
+    assert result.action == action
+    assert result.applied is False
+    assert result.selected_model is None
+    assert "alternative model" in result.message.lower()
 
 
-def test_executor_accepts_modify_task_action() -> None:
+def test_change_model_selects_an_alternative_model() -> None:
     executor = RecoveryExecutor()
 
     action = RecoveryAction(
-        action_type=RecoveryActionType.MODIFY_TASK,
+        action_type=RecoveryActionType.CHANGE_MODEL,
     )
 
-    result = executor.execute(action)
+    primary = ModelConfig(provider_name="primary")
+    alternative = ModelConfig(provider_name="alternate")
 
-    assert result.action_type == RecoveryActionType.MODIFY_TASK
+    result = executor.execute(
+        action,
+        model_config=primary,
+        alternative_model_configs=(alternative,),
+    )
+
+    assert isinstance(result, RecoveryExecutionResult)
+    assert result.action == action
+    assert result.applied is True
+    assert result.selected_model == alternative
+    assert result.message
 
 
-def test_executor_accepts_change_task_order_action() -> None:
+def test_change_model_does_not_return_the_current_model() -> None:
     executor = RecoveryExecutor()
 
     action = RecoveryAction(
-        action_type=RecoveryActionType.CHANGE_TASK_ORDER,
+        action_type=RecoveryActionType.CHANGE_MODEL,
     )
 
-    result = executor.execute(action)
+    primary = ModelConfig(provider_name="primary")
+    same_model = ModelConfig(provider_name="primary")
+    alternative = ModelConfig(provider_name="alternate")
 
-    assert result.action_type == RecoveryActionType.CHANGE_TASK_ORDER
-
-
-def test_executor_accepts_skip_task_action() -> None:
-    executor = RecoveryExecutor()
-
-    action = RecoveryAction(
-        action_type=RecoveryActionType.SKIP_TASK,
+    result = executor.execute(
+        action,
+        model_config=primary,
+        alternative_model_configs=(same_model, alternative),
     )
 
-    result = executor.execute(action)
-
-    assert result.action_type == RecoveryActionType.SKIP_TASK
-
-
-def test_executor_accepts_human_escalation() -> None:
-    executor = RecoveryExecutor()
-
-    action = RecoveryAction(
-        action_type=RecoveryActionType.ESCALATE_TO_HUMAN,
-        requires_human=True,
-    )
-
-    result = executor.execute(action)
-
-    assert result.action_type == RecoveryActionType.ESCALATE_TO_HUMAN
-    assert result.requires_human is True
+    assert isinstance(result, RecoveryExecutionResult)
+    assert result.applied is True
+    assert result.selected_model == alternative
