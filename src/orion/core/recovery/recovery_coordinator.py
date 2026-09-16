@@ -7,6 +7,7 @@ from orion.core.recovery.recovery_action import RecoveryAction
 from orion.core.recovery.recovery_context import RecoveryContext
 from orion.core.recovery.recovery_engine import RecoveryEngine
 from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
+from orion.core.recovery.recovery_strategy import RecoveryDecision
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,7 @@ class RecoveryResult:
     """Result produced when ORION analyzes a failed execution."""
 
     failure: Failure
+    decision: RecoveryDecision
     action: RecoveryAction
 
 
@@ -105,5 +107,6 @@ class RecoveryCoordinator:
 
         return RecoveryResult(
             failure=failure,
+            decision=decision,
             action=action,
         )

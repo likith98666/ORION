@@ -22,7 +22,9 @@ class ExecutionLoopResult:
 
 
 class ExecutionLoop:
-    """Coordinates execution, state synchronization, and recovery."""
+    """Coordinates task execution and bounded iterative recovery."""
+
+    DEFAULT_MAX_RECOVERY_ATTEMPTS = 3
 
     def __init__(
         self,
@@ -31,12 +33,22 @@ class ExecutionLoop:
         recovery_coordinator: RecoveryCoordinator | None = None,
         recovery_service: RecoveryService | None = None,
         state_synchronizer: StateSynchronizer | None = None,
+        max_recovery_attempts: int = DEFAULT_MAX_RECOVERY_ATTEMPTS,
     ) -> None:
+        if not isinstance(max_recovery_attempts, int):
+            raise TypeError("max_recovery_attempts must be an integer.")
+
+        if max_recovery_attempts < 0:
+            raise ValueError(
+                "max_recovery_attempts cannot be negative."
+            )
+
         self._execution_coordinator = execution_coordinator
         self._parallel_executor = parallel_executor
         self._recovery_coordinator = recovery_coordinator
         self._recovery_service = recovery_service
         self._state_synchronizer = state_synchronizer
+        self._max_recovery_attempts = max_recovery_attempts
 
     def execute(
         self,
@@ -45,7 +57,7 @@ class ExecutionLoop:
         plan_steps: list[PlanStep] | None = None,
         alternative_model_configs: tuple[ModelConfig, ...] = (),
     ) -> ExecutionLoopResult:
-        """Execute assigned agent tasks with optional recovery alternatives."""
+        """Execute tasks and continue through bounded recovery when possible."""
 
         executions: list[AgentExecution] = []
 
@@ -55,29 +67,21 @@ class ExecutionLoop:
                 model_config=model_config,
             )
 
-            executions.extend(result.executions)
-
             for execution in result.executions:
                 task = self._find_task(
                     tasks,
                     execution.agent_task_id,
                 )
 
-                self._synchronize_execution(
-                    execution=execution,
-                    plan_steps=plan_steps,
+                executions.extend(
+                    self._process_execution_with_recovery(
+                        execution=execution,
+                        task=task,
+                        model_config=model_config,
+                        alternative_model_configs=alternative_model_configs,
+                        plan_steps=plan_steps,
+                    )
                 )
-
-                recovery_execution = self._handle_failed_execution(
-                    execution=execution,
-                    task=task,
-                    model_config=model_config,
-                    alternative_model_configs=alternative_model_configs,
-                    plan_steps=plan_steps,
-                )
-
-                if recovery_execution is not None:
-                    executions.append(recovery_execution)
 
             return ExecutionLoopResult(
                 executions=tuple(executions),
@@ -89,26 +93,188 @@ class ExecutionLoop:
                 model_config=model_config,
             )
 
-            executions.append(execution)
-
-            self._synchronize_execution(
-                execution=execution,
-                plan_steps=plan_steps,
+            executions.extend(
+                self._process_execution_with_recovery(
+                    execution=execution,
+                    task=task,
+                    model_config=model_config,
+                    alternative_model_configs=alternative_model_configs,
+                    plan_steps=plan_steps,
+                )
             )
-
-            recovery_execution = self._handle_failed_execution(
-                execution=execution,
-                task=task,
-                model_config=model_config,
-                alternative_model_configs=alternative_model_configs,
-                plan_steps=plan_steps,
-            )
-
-            if recovery_execution is not None:
-                executions.append(recovery_execution)
 
         return ExecutionLoopResult(
             executions=tuple(executions),
+        )
+
+    def _process_execution_with_recovery(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+        model_config: ModelConfig,
+        alternative_model_configs: tuple[ModelConfig, ...],
+        plan_steps: list[PlanStep] | None,
+    ) -> list[AgentExecution]:
+        """Process an execution and iteratively apply bounded recovery."""
+
+        executions = [execution]
+
+        self._synchronize_execution(
+            execution=execution,
+            plan_steps=plan_steps,
+        )
+
+        if execution.status != AgentExecutionStatus.FAILED:
+            return executions
+
+        if self._recovery_coordinator is None:
+            return executions
+
+        if execution.failure is None:
+            return executions
+
+        context = RecoveryExecutionContext.from_execution(
+            execution
+        )
+
+        current_execution = execution
+        current_model_config = model_config
+
+        while True:
+            if current_execution.status != AgentExecutionStatus.FAILED:
+                break
+
+            if current_execution.failure is None:
+                break
+
+            if (
+                context.recovery_attempt_number
+                >= self._max_recovery_attempts
+            ):
+                break
+
+            recovery_result = self._recovery_coordinator.handle_failure(
+                execution=current_execution,
+                execution_context=context,
+                max_retries=self._max_recovery_attempts,
+                alternative_models_available=bool(
+                    alternative_model_configs
+                ),
+            )
+
+            context = context.record_recovery(
+                recovery_result.decision
+            )
+
+            action_type = recovery_result.action.action_type
+
+            if recovery_result.action.requires_human:
+                break
+
+            if self._recovery_service is None:
+                break
+
+            if action_type not in {
+                RecoveryActionType.RETRY_TASK,
+                RecoveryActionType.CHANGE_MODEL,
+            }:
+                break
+
+            self._synchronize_failed_task_before_retry(
+                execution=current_execution,
+                task=task,
+                plan_steps=plan_steps,
+            )
+
+            if action_type == RecoveryActionType.RETRY_TASK:
+                next_execution = self._recovery_service.retry_task(
+                    task,
+                    current_model_config,
+                )
+
+            else:
+                next_execution = (
+                    self._recovery_service.change_model_and_retry(
+                        task=task,
+                        current_model_config=current_model_config,
+                        alternative_model_configs=alternative_model_configs,
+                    )
+                )
+
+                if next_execution is not None:
+                    current_model_config = (
+                        self._model_config_after_change(
+                            current_model_config=current_model_config,
+                            alternative_model_configs=alternative_model_configs,
+                        )
+                    )
+
+            if next_execution is None:
+                break
+
+            executions.append(next_execution)
+
+            context = context.create_next_attempt(
+                current_execution_id=next_execution.id,
+            )
+
+            current_execution = next_execution
+
+            self._synchronize_execution(
+                execution=current_execution,
+                plan_steps=plan_steps,
+            )
+
+            if current_execution.status != AgentExecutionStatus.FAILED:
+                break
+
+            if current_execution.failure is None:
+                break
+
+            context = context.record_failure(
+                current_execution.failure
+            )
+
+        return executions
+
+    @staticmethod
+    def _model_config_after_change(
+        current_model_config: ModelConfig,
+        alternative_model_configs: tuple[ModelConfig, ...],
+    ) -> ModelConfig:
+        """Return the selected alternative model configuration."""
+
+        for alternative in alternative_model_configs:
+            if (
+                alternative.provider_name
+                != current_model_config.provider_name
+            ):
+                return alternative
+
+        return current_model_config
+
+    def _synchronize_failed_task_before_retry(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+        plan_steps: list[PlanStep] | None,
+    ) -> None:
+        """Synchronize failed state before retrying when synchronization is configured."""
+
+        if task.status == AgentTaskStatus.FAILED:
+            return
+
+        if self._state_synchronizer is None:
+            return
+
+        if plan_steps is None:
+            raise ValueError(
+                "plan_steps are required before retrying a failed task."
+            )
+
+        self._state_synchronizer.synchronize(
+            execution,
+            plan_steps,
         )
 
     def _synchronize_execution(
@@ -116,7 +282,7 @@ class ExecutionLoop:
         execution: AgentExecution,
         plan_steps: list[PlanStep] | None,
     ) -> None:
-        """Synchronize execution state when synchronization is configured."""
+        """Synchronize execution state when a synchronizer is configured."""
 
         if self._state_synchronizer is None:
             return
@@ -131,70 +297,6 @@ class ExecutionLoop:
             plan_steps,
         )
 
-    def _handle_failed_execution(
-        self,
-        execution: AgentExecution,
-        task: AgentTask,
-        model_config: ModelConfig,
-        alternative_model_configs: tuple[ModelConfig, ...],
-        plan_steps: list[PlanStep] | None,
-    ) -> AgentExecution | None:
-        """Coordinate recovery for a failed execution."""
-
-        if self._recovery_coordinator is None:
-            return None
-
-        if execution.status != AgentExecutionStatus.FAILED:
-            return None
-
-        execution_context = RecoveryExecutionContext.from_execution(
-            execution
-        )
-
-        recovery_result = self._recovery_coordinator.handle_failure(
-            execution=execution,
-            execution_context=execution_context,
-        )
-
-        action_type = recovery_result.action.action_type
-
-        if self._recovery_service is None:
-            return None
-
-        if action_type not in {
-            RecoveryActionType.RETRY_TASK,
-            RecoveryActionType.CHANGE_MODEL,
-        }:
-            return None
-
-        if task.status != AgentTaskStatus.FAILED:
-            if self._state_synchronizer is None:
-                raise ValueError(
-                    "Failed agent task must be synchronized before retry."
-                )
-
-            if plan_steps is None:
-                raise ValueError(
-                    "plan_steps are required before retrying a failed task."
-                )
-
-            self._state_synchronizer.synchronize(
-                execution,
-                plan_steps,
-            )
-
-        if action_type == RecoveryActionType.RETRY_TASK:
-            return self._recovery_service.retry_task(
-                task,
-                model_config,
-            )
-
-        return self._recovery_service.change_model_and_retry(
-            task=task,
-            current_model_config=model_config,
-            alternative_model_configs=alternative_model_configs,
-        )
-
     @staticmethod
     def _find_task(
         tasks: list[AgentTask],
@@ -206,4 +308,6 @@ class ExecutionLoop:
             if task.id == task_id:
                 return task
 
-        raise ValueError(f"Agent task not found: {task_id}")
+        raise ValueError(
+            f"Agent task not found: {task_id}"
+        )
