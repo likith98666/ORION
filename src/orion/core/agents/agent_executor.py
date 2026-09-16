@@ -1,7 +1,8 @@
-from orion.config.model_config import ModelConfig
+﻿from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_service import AgentExecutionService
 from orion.core.agents.repository import AgentRepository
 from orion.core.agents.tasks import AgentTask
+from orion.core.recovery.failure_classifier import FailureClassifier
 from orion.models.contracts import ModelRequest
 from orion.models.runtime.runtime import ModelRuntime
 
@@ -14,10 +15,14 @@ class AgentExecutor:
         agent_repository: AgentRepository,
         execution_service: AgentExecutionService,
         model_runtime: ModelRuntime,
+        failure_classifier: FailureClassifier | None = None,
     ) -> None:
         self._agent_repository = agent_repository
         self._execution_service = execution_service
         self._model_runtime = model_runtime
+        self._failure_classifier = (
+            failure_classifier or FailureClassifier()
+        )
 
     def execute(
         self,
@@ -69,7 +74,9 @@ class AgentExecutor:
             )
 
         except Exception as exc:
+            failure = self._failure_classifier.classify(exc)
+
             return self._execution_service.fail_execution(
                 execution_id=execution.id,
-                error_message=str(exc),
+                failure=failure,
             )

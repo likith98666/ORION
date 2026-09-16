@@ -1,7 +1,9 @@
-from dataclasses import dataclass, field
+﻿from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from uuid import UUID, uuid4
+
+from orion.core.recovery.failures import Failure
 
 
 class AgentExecutionStatus(str, Enum):
@@ -25,6 +27,7 @@ class AgentExecution:
     completed_at: datetime | None = None
     output: str | None = None
     error_message: str | None = None
+    failure: Failure | None = None
     model_name: str | None = None
     provider_name: str | None = None
     input_tokens: int | None = None

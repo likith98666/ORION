@@ -1,4 +1,4 @@
-from dataclasses import replace
+﻿from dataclasses import replace
 from datetime import datetime
 from uuid import UUID
 
@@ -8,6 +8,7 @@ from orion.core.agents.executions import (
     AgentExecution,
     AgentExecutionStatus,
 )
+from orion.core.recovery.failures import Failure, FailureType
 
 
 class AgentExecutionService:
@@ -109,9 +110,26 @@ class AgentExecutionService:
     def fail_execution(
         self,
         execution_id: UUID,
-        error_message: str,
+        error_message: str | None = None,
+        failure: Failure | None = None,
     ) -> AgentExecution:
-        """Fail an execution and persist its error information."""
+        """Fail an execution and persist its error and structured failure."""
+
+        if failure is not None and not isinstance(failure, Failure):
+            raise TypeError(
+                "failure must be a Failure instance."
+            )
+
+        if failure is None:
+            if error_message is None or not error_message.strip():
+                raise ValueError(
+                    "Either error_message or failure must be provided."
+                )
+
+            failure = Failure(
+                failure_type=FailureType.UNKNOWN,
+                message=error_message,
+            )
 
         execution = self._repository.get(execution_id)
 
@@ -128,7 +146,8 @@ class AgentExecutionService:
         updated_execution = replace(
             updated_execution,
             completed_at=datetime.now(),
-            error_message=error_message,
+            error_message=failure.message,
+            failure=failure,
         )
 
         self._repository.save(updated_execution)

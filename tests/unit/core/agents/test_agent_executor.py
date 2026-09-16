@@ -241,3 +241,33 @@ def test_executor_fails_when_agent_does_not_exist() -> None:
             task,
             ModelConfig(provider_name="mock"),
         )
+
+def test_executor_preserves_classified_model_failure() -> None:
+    class ModelFailureRuntime:
+        def generate(self, config, request):
+            from orion.models.errors import ModelProviderUnavailableError
+
+            raise ModelProviderUnavailableError(
+                "Model provider unavailable."
+            )
+
+    (
+        executor,
+        agent_repository,
+        _,
+    ) = create_executor(ModelFailureRuntime())
+
+    agent = create_agent()
+    agent_repository.save(agent)
+
+    task = create_task(agent)
+
+    execution = executor.execute(
+        task,
+        ModelConfig(provider_name="test"),
+    )
+
+    assert execution.status == AgentExecutionStatus.FAILED
+    assert execution.failure is not None
+    assert execution.failure.failure_type.value == "model_failure"
+    assert execution.failure.message == "Model provider unavailable."
