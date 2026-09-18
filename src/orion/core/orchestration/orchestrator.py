@@ -96,6 +96,7 @@ class Orchestrator:
         execution = self._execution_loop.execute(
             tasks=list(orchestration.agent_tasks),
             model_config=model_config,
+            plan_steps=plan_steps,
         )
 
         return OrchestrationExecutionResult(

@@ -57,8 +57,21 @@ class FakeExecutionLoop:
     def __init__(self) -> None:
         self.calls = []
 
-    def execute(self, tasks, model_config):
-        self.calls.append((tasks, model_config))
+    def execute(
+        self,
+        tasks,
+        model_config,
+        plan_steps=None,
+        alternative_model_configs=(),
+    ):
+        self.calls.append(
+            {
+                "tasks": tasks,
+                "model_config": model_config,
+                "plan_steps": plan_steps,
+                "alternative_model_configs": alternative_model_configs,
+            }
+        )
 
         executions = tuple(
             AgentExecution.create(
@@ -121,10 +134,28 @@ def test_orchestrate_and_execute_passes_assigned_tasks_to_execution_loop():
         model_config=model_config,
     )
 
-    called_tasks, called_config = execution_loop.calls[0]
+    call = execution_loop.calls[0]
 
-    assert called_tasks == list(result.orchestration.agent_tasks)
-    assert called_config is model_config
+    assert call["tasks"] == list(result.orchestration.agent_tasks)
+    assert call["model_config"] is model_config
+
+
+def test_orchestrate_and_execute_passes_plan_steps_to_execution_loop():
+    execution_loop = FakeExecutionLoop()
+    orchestrator = create_orchestrator(execution_loop)
+
+    plan_steps = [create_step()]
+    model_config = ModelConfig(provider_name="mock")
+
+    result = orchestrator.orchestrate_and_execute(
+        task_id=uuid4(),
+        plan_steps=plan_steps,
+        model_config=model_config,
+    )
+
+    assert result.execution.executions
+    assert len(execution_loop.calls) == 1
+    assert execution_loop.calls[0]["plan_steps"] == plan_steps
 
 
 def test_orchestrate_and_execute_preserves_orchestration_result():
@@ -157,7 +188,8 @@ def test_orchestrate_and_execute_returns_empty_execution_for_no_ready_tasks():
 
     assert result.orchestration.agent_tasks == ()
     assert result.execution.executions == ()
-    assert execution_loop.calls[0][0] == []
+    assert execution_loop.calls[0]["tasks"] == []
+    assert execution_loop.calls[0]["plan_steps"] == [completed_step]
 
 
 def test_orchestrate_and_execute_requires_execution_loop():
