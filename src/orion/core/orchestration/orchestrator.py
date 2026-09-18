@@ -1,9 +1,8 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from uuid import UUID
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.assignment_service import AgentAssignmentService
-from orion.core.agents.execution_service import AgentExecution
 from orion.core.agents.task_service import AgentTaskService
 from orion.core.agents.tasks import AgentTask
 from orion.core.orchestration.execution_loop import (
@@ -50,7 +49,9 @@ class Orchestrator:
         task_id: UUID,
         plan_steps: list[PlanStep],
     ) -> OrchestrationResult:
-        """Create and assign agent tasks for currently ready plan steps."""
+        """Propagate blocked steps and assign currently ready plan steps."""
+
+        self._scheduler.mark_blocked_steps(plan_steps)
 
         ready_steps = self._scheduler.get_ready_steps(plan_steps)
 
