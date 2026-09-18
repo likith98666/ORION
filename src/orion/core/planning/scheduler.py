@@ -1,4 +1,4 @@
-﻿from orion.core.planning.steps import PlanStep, PlanStepStatus
+from orion.core.planning.steps import PlanStep, PlanStepStatus
 
 
 class PlanScheduler:
@@ -27,7 +27,7 @@ class PlanScheduler:
 
         return sorted(
             ready_steps,
-            key=lambda step: step.order,
+            key=lambda step: (-step.priority, step.order),
         )
 
     def mark_ready_steps(
@@ -69,7 +69,7 @@ class PlanScheduler:
 
         return sorted(
             blocked_steps,
-            key=lambda step: step.order,
+            key=lambda step: (-step.priority, step.order),
         )
 
     def mark_blocked_steps(
@@ -84,3 +84,5 @@ class PlanScheduler:
             step.status = PlanStepStatus.SKIPPED
 
         return blocked_steps
+
+

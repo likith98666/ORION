@@ -14,6 +14,7 @@ class PlannedStep:
     description: str
     required_capability: AgentCapability
     dependencies: frozenset[int] = frozenset()
+    priority: int = 3
 
 
 class Planner:
@@ -60,6 +61,7 @@ class Planner:
                 order=planned_step.order,
                 description=planned_step.description,
                 required_capability=planned_step.required_capability,
+                priority=planned_step.priority,
             )
 
             step_ids_by_order[planned_step.order] = step.id

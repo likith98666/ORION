@@ -26,6 +26,7 @@ class PlanStep:
     description: str
     required_capability: AgentCapability
     dependencies: frozenset[UUID] = field(default_factory=frozenset)
+    priority: int = 3
     status: PlanStepStatus = PlanStepStatus.PENDING
 
     @classmethod
@@ -36,11 +37,15 @@ class PlanStep:
         description: str,
         required_capability: AgentCapability,
         dependencies: frozenset[UUID] | None = None,
+        priority: int = 3,
     ) -> "PlanStep":
         """Create a validated plan step."""
 
         if order < 1:
             raise ValueError("Plan step order must be at least 1.")
+
+        if priority < 1 or priority > 5:
+            raise ValueError("Plan step priority must be between 1 and 5.")
 
         cleaned_description = description.strip()
 
@@ -62,4 +67,5 @@ class PlanStep:
             description=cleaned_description,
             required_capability=required_capability,
             dependencies=frozenset(dependencies),
+            priority=priority,
         )

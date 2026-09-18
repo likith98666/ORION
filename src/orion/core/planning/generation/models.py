@@ -12,6 +12,7 @@ class GeneratedPlanStep:
     description: str
     required_capability: AgentCapability
     dependencies: frozenset[int] = frozenset()
+    priority: int = 3
 
 
 @dataclass(frozen=True)
