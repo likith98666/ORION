@@ -100,3 +100,19 @@ def test_repository_can_replace_existing_task() -> None:
 
     assert result is task
     assert result.status.value == "cancelled"
+def test_repository_lists_all_tasks() -> None:
+    repository = InMemoryAgentTaskRepository()
+
+    first = create_test_task(
+        description="Research competitors.",
+    )
+    second = create_test_task(
+        description="Analyze market data.",
+    )
+
+    repository.save(first)
+    repository.save(second)
+
+    result = repository.list_all()
+
+    assert result == [first, second]

@@ -29,3 +29,7 @@ class InMemoryAgentTaskRepository(AgentTaskRepository):
             for task in self._tasks.values()
             if task.task_id == task_id
         ]
+
+    def list_all(self) -> list[AgentTask]:
+        """List all agent tasks."""
+        return list(self._tasks.values())

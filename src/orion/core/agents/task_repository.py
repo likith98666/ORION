@@ -22,3 +22,7 @@ class AgentTaskRepository(ABC):
     @abstractmethod
     def list_for_task(self, task_id: UUID) -> list[AgentTask]:
         """List all agent tasks belonging to a parent task."""
+
+    @abstractmethod
+    def list_all(self) -> list[AgentTask]:
+        """List all agent tasks."""
