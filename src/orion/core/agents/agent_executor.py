@@ -1,14 +1,17 @@
-﻿from orion.config.model_config import ModelConfig
+﻿from typing import Any
+
+from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_service import AgentExecutionService
 from orion.core.agents.repository import AgentRepository
 from orion.core.agents.tasks import AgentTask
 from orion.core.recovery.failure_classifier import FailureClassifier
+from orion.core.tools.executor import ToolExecutionResult, ToolExecutor
 from orion.models.contracts import ModelRequest
 from orion.models.runtime.runtime import ModelRuntime
 
 
 class AgentExecutor:
-    """Executes an assigned ORION agent task using the model runtime."""
+    """Executes assigned ORION agent tasks and authorized tool calls."""
 
     def __init__(
         self,
@@ -16,6 +19,7 @@ class AgentExecutor:
         execution_service: AgentExecutionService,
         model_runtime: ModelRuntime,
         failure_classifier: FailureClassifier | None = None,
+        tool_executor: ToolExecutor | None = None,
     ) -> None:
         self._agent_repository = agent_repository
         self._execution_service = execution_service
@@ -23,6 +27,7 @@ class AgentExecutor:
         self._failure_classifier = (
             failure_classifier or FailureClassifier()
         )
+        self._tool_executor = tool_executor
 
     def execute(
         self,
@@ -80,3 +85,34 @@ class AgentExecutor:
                 execution_id=execution.id,
                 failure=failure,
             )
+
+    def execute_tool(
+        self,
+        task: AgentTask,
+        tool_name: str,
+        arguments: dict[str, Any],
+    ) -> ToolExecutionResult:
+        """Execute a registered tool on behalf of an assigned agent."""
+
+        if self._tool_executor is None:
+            raise ValueError(
+                "Tool executor is required for tool execution."
+            )
+
+        if task.assigned_agent_id is None:
+            raise ValueError(
+                f"Agent task '{task.id}' has no assigned agent."
+            )
+
+        agent = self._agent_repository.get(task.assigned_agent_id)
+
+        if agent is None:
+            raise ValueError(
+                f"Agent '{task.assigned_agent_id}' was not found."
+            )
+
+        return self._tool_executor.execute(
+            agent=agent,
+            tool_name=tool_name,
+            arguments=arguments,
+        )
