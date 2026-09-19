@@ -12,14 +12,17 @@ class AgentAssignmentService:
         capability_registry: AgentCapabilityRegistry,
     ) -> None:
         self._task_repository = task_repository
-        self._assigner = AgentAssigner(capability_registry)
+        self._assigner = AgentAssigner(
+            capability_registry=capability_registry,
+            task_repository=task_repository,
+        )
         self._task_manager = AgentTaskManager()
 
     def assign_task(self, task: AgentTask) -> AgentTask:
         if task.status != AgentTaskStatus.PENDING:
             raise ValueError(
-    "Only pending tasks can be assigned"
-)
+                "Only pending tasks can be assigned"
+            )
 
         assignment = self._assigner.assign(task)
 

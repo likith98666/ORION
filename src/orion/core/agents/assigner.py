@@ -1,20 +1,23 @@
 from orion.core.agents.assignment import AgentAssignment
 from orion.core.agents.capability_registry import AgentCapabilityRegistry
 from orion.core.agents.models import AgentStatus
-from orion.core.agents.tasks import AgentTask
+from orion.core.agents.task_repository import AgentTaskRepository
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
 
 
 class AgentAssigner:
-    """Assigns agent tasks to active agents with the required capability."""
+    """Assigns tasks to active capable agents using current workload."""
 
     def __init__(
         self,
         capability_registry: AgentCapabilityRegistry,
+        task_repository: AgentTaskRepository,
     ) -> None:
         self._capability_registry = capability_registry
+        self._task_repository = task_repository
 
     def assign(self, task: AgentTask) -> AgentAssignment:
-        """Assign a task to the first active agent with the required capability."""
+        """Assign a task to the least-loaded active capable agent."""
 
         agents = self._capability_registry.find_by_capability(
             task.required_capability
@@ -38,7 +41,28 @@ class AgentAssigner:
                 f"'{task.required_capability.value}'."
             )
 
-        agent = available_agents[0]
+        all_tasks = self._task_repository.list_all()
+
+        loads = {
+            agent.id: sum(
+                1
+                for existing_task in all_tasks
+                if (
+                    existing_task.assigned_agent_id == agent.id
+                    and existing_task.status
+                    in {
+                        AgentTaskStatus.ASSIGNED,
+                        AgentTaskStatus.RUNNING,
+                    }
+                )
+            )
+            for agent in available_agents
+        }
+
+        agent = min(
+            available_agents,
+            key=lambda candidate: loads[candidate.id],
+        )
 
         return AgentAssignment.create(
             agent=agent,
