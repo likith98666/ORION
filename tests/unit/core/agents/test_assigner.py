@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 
 from orion.core.agents.assigner import AgentAssigner
 from orion.core.agents.capabilities import AgentCapability
@@ -7,29 +8,36 @@ from orion.core.agents.memory_task_repository import (
     InMemoryAgentTaskRepository,
 )
 from orion.core.agents.models import Agent, AgentStatus
+from orion.core.agents.permissions import AgentPermission
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
 
 
 def create_agent(
     name: str,
     capabilities: frozenset[AgentCapability],
+    permissions: frozenset[AgentPermission] | None = None,
 ) -> Agent:
+    from orion.core.agents.permission_policy import AgentPermissionPolicy
+
     return Agent.create(
         name=name,
         description=f"{name} agent.",
         capabilities=capabilities,
+        permission_policy=AgentPermissionPolicy.create(
+            permissions or frozenset()
+        ),
     )
 
 
 def create_task(
     capability: AgentCapability,
+    required_permissions: frozenset[AgentPermission] | None = None,
 ) -> AgentTask:
-    from uuid import uuid4
-
     return AgentTask.create(
         task_id=uuid4(),
         description="Execute this agent task.",
         required_capability=capability,
+        required_permissions=required_permissions,
     )
 
 
@@ -239,6 +247,137 @@ def test_assigner_ignores_agents_without_required_capability() -> None:
     )
 
     assert assignment.agent_id == researcher.id
+
+
+def test_assigner_allows_task_without_required_permissions() -> None:
+    registry = AgentCapabilityRegistry()
+    repository = InMemoryAgentTaskRepository()
+
+    researcher = create_agent(
+        "Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+    )
+    registry.register(researcher)
+
+    assignment = create_assigner(registry, repository).assign(
+        create_task(AgentCapability.RESEARCH)
+    )
+
+    assert assignment.agent_id == researcher.id
+
+
+def test_assigner_selects_agent_with_required_permission() -> None:
+    registry = AgentCapabilityRegistry()
+    repository = InMemoryAgentTaskRepository()
+
+    restricted = create_agent(
+        "Restricted Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+    )
+    authorized = create_agent(
+        "Authorized Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+        frozenset({AgentPermission.WEB_ACCESS}),
+    )
+
+    registry.register(restricted)
+    registry.register(authorized)
+
+    assignment = create_assigner(registry, repository).assign(
+        create_task(
+            AgentCapability.RESEARCH,
+            frozenset({AgentPermission.WEB_ACCESS}),
+        )
+    )
+
+    assert assignment.agent_id == authorized.id
+
+
+def test_assigner_skips_agent_missing_required_permission() -> None:
+    registry = AgentCapabilityRegistry()
+    repository = InMemoryAgentTaskRepository()
+
+    unauthorized = create_agent(
+        "Unauthorized Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+    )
+    authorized = create_agent(
+        "Authorized Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+        frozenset({AgentPermission.WEB_ACCESS}),
+    )
+
+    registry.register(unauthorized)
+    registry.register(authorized)
+
+    assignment = create_assigner(registry, repository).assign(
+        create_task(
+            AgentCapability.RESEARCH,
+            frozenset({AgentPermission.WEB_ACCESS}),
+        )
+    )
+
+    assert assignment.agent_id == authorized.id
+
+
+def test_assigner_requires_all_required_permissions() -> None:
+    registry = AgentCapabilityRegistry()
+    repository = InMemoryAgentTaskRepository()
+
+    partial = create_agent(
+        "Partial Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+        frozenset({AgentPermission.WEB_ACCESS}),
+    )
+    authorized = create_agent(
+        "Authorized Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+        frozenset(
+            {
+                AgentPermission.WEB_ACCESS,
+                AgentPermission.READ_FILES,
+            }
+        ),
+    )
+
+    registry.register(partial)
+    registry.register(authorized)
+
+    assignment = create_assigner(registry, repository).assign(
+        create_task(
+            AgentCapability.RESEARCH,
+            frozenset(
+                {
+                    AgentPermission.WEB_ACCESS,
+                    AgentPermission.READ_FILES,
+                }
+            ),
+        )
+    )
+
+    assert assignment.agent_id == authorized.id
+
+
+def test_assigner_rejects_task_without_authorized_agent() -> None:
+    registry = AgentCapabilityRegistry()
+    repository = InMemoryAgentTaskRepository()
+
+    unauthorized = create_agent(
+        "Unauthorized Researcher",
+        frozenset({AgentCapability.RESEARCH}),
+    )
+    registry.register(unauthorized)
+
+    with pytest.raises(
+        ValueError,
+        match="No active agent available with capability 'research'",
+    ):
+        create_assigner(registry, repository).assign(
+            create_task(
+                AgentCapability.RESEARCH,
+                frozenset({AgentPermission.WEB_ACCESS}),
+            )
+        )
 
 
 def test_assigner_rejects_task_without_active_capable_agent() -> None:
