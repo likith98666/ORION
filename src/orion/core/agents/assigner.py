@@ -6,7 +6,7 @@ from orion.core.agents.tasks import AgentTask, AgentTaskStatus
 
 
 class AgentAssigner:
-    """Assigns tasks to active capable agents using current workload."""
+    """Assigns tasks to active capable and authorized agents."""
 
     def __init__(
         self,
@@ -17,7 +17,7 @@ class AgentAssigner:
         self._task_repository = task_repository
 
     def assign(self, task: AgentTask) -> AgentAssignment:
-        """Assign a task to the least-loaded active capable agent."""
+        """Assign a task to the least-loaded eligible active agent."""
 
         agents = self._capability_registry.find_by_capability(
             task.required_capability
@@ -33,6 +33,10 @@ class AgentAssigner:
             agent
             for agent in agents
             if agent.status == AgentStatus.ACTIVE
+            and all(
+                agent.permission_policy.allows(permission)
+                for permission in task.required_permissions
+            )
         ]
 
         if not available_agents:
@@ -68,3 +72,4 @@ class AgentAssigner:
             agent=agent,
             capability=task.required_capability,
         )
+

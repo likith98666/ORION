@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.permissions import AgentPermission
 from orion.core.agents.task_manager import AgentTaskManager
 from orion.core.agents.task_repository import AgentTaskRepository
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
@@ -17,12 +18,14 @@ class AgentTaskService:
         description: str,
         required_capability: AgentCapability,
         plan_step_id: UUID | None = None,
+        required_permissions: frozenset[AgentPermission] | None = None,
     ) -> AgentTask:
         task = AgentTask.create(
             task_id=task_id,
             plan_step_id=plan_step_id,
             description=description,
             required_capability=required_capability,
+            required_permissions=required_permissions,
         )
 
         self._repository.save(task)

@@ -3,6 +3,7 @@ from enum import Enum
 from uuid import UUID, uuid4
 
 from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.permissions import AgentPermission
 
 
 class AgentTaskStatus(str, Enum):
@@ -25,6 +26,7 @@ class AgentTask:
     plan_step_id: UUID | None
     description: str
     required_capability: AgentCapability
+    required_permissions: frozenset[AgentPermission] = frozenset()
     status: AgentTaskStatus = AgentTaskStatus.PENDING
     assigned_agent_id: UUID | None = None
 
@@ -35,8 +37,9 @@ class AgentTask:
         description: str,
         required_capability: AgentCapability,
         plan_step_id: UUID | None = None,
+        required_permissions: frozenset[AgentPermission] | None = None,
     ) -> "AgentTask":
-        """Create a validated agent task."""
+        """Create a validated ORION agent task."""
 
         cleaned_description = description.strip()
 
@@ -48,10 +51,14 @@ class AgentTask:
                 "Agent task description cannot exceed 5,000 characters."
             )
 
+        if required_permissions is None:
+            required_permissions = frozenset()
+
         return cls(
             id=uuid4(),
             task_id=task_id,
             plan_step_id=plan_step_id,
             description=cleaned_description,
             required_capability=required_capability,
+            required_permissions=frozenset(required_permissions),
         )
