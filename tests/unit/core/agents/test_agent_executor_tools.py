@@ -5,8 +5,8 @@ import pytest
 from orion.core.agents.agent_executor import AgentExecutor
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
-from orion.core.agents.permissions import AgentPermission
 from orion.core.agents.permission_policy import AgentPermissionPolicy
+from orion.core.agents.permissions import AgentPermission
 from orion.core.agents.tasks import AgentTask
 from orion.core.tools.definition import ToolDefinition
 from orion.core.tools.executor import ToolExecutor

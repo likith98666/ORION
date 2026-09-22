@@ -5,8 +5,8 @@ import pytest
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.executions import AgentExecution, AgentExecutionStatus
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
-from orion.core.planning.steps import PlanStep, PlanStepStatus
 from orion.core.orchestration.state_synchronizer import StateSynchronizer
+from orion.core.planning.steps import PlanStep, PlanStepStatus
 
 
 def create_agent_task(

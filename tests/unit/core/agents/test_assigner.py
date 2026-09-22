@@ -1,5 +1,6 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from orion.core.agents.assigner import AgentAssigner
 from orion.core.agents.capabilities import AgentCapability

@@ -1,5 +1,4 @@
 ﻿from orion.config.model_config import ModelConfig
-
 from orion.core.recovery.recovery_action import (
     RecoveryAction,
     RecoveryActionType,

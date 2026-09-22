@@ -1,12 +1,11 @@
 from uuid import uuid4
 
-import pytest
-
 from orion.config.model_config import ModelConfig
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.orchestration.execution_loop import ExecutionLoop
 from orion.core.planning.steps import PlanStep, PlanStepStatus
 from orion.core.recovery.failures import Failure, FailureType
@@ -15,9 +14,6 @@ from orion.core.recovery.recovery_action import (
     RecoveryActionType,
 )
 from orion.core.recovery.recovery_coordinator import RecoveryResult
-from orion.core.recovery.recovery_execution_context import (
-    RecoveryExecutionContext,
-)
 from orion.core.recovery.recovery_strategy import (
     RecoveryDecision,
     RecoveryStrategy,
@@ -30,7 +26,7 @@ class FakeExecutionCoordinator:
         self.calls = []
         self.index = 0
 
-    def execute_task(self, task, model_config):
+    def execute_task(self, task, model_config, memory_context=None):
         self.calls.append((task, model_config))
 
         if self.index >= len(self.executions):
@@ -124,6 +120,28 @@ class FakeRecoveryCoordinator:
         )
 
 
+class FakeMemoryContextProvider:
+    def __init__(
+        self,
+        contexts: list[ExecutionMemoryContext],
+    ) -> None:
+        self.contexts = list(contexts)
+        self.calls = []
+        self.index = 0
+
+    def provide(self, task):
+        self.calls.append(task)
+
+        if self.index >= len(self.contexts):
+            raise AssertionError(
+                "Fake memory context provider ran out of contexts."
+            )
+
+        context = self.contexts[self.index]
+        self.index += 1
+        return context
+
+
 class FakeRecoveryService:
     def __init__(
         self,
@@ -144,8 +162,19 @@ class FakeRecoveryService:
         self.index += 1
         return execution
 
-    def retry_task(self, task, model_config):
-        self.retry_calls.append((task, model_config))
+    def retry_task(
+        self,
+        task,
+        model_config,
+        memory_context=None,
+    ):
+        self.retry_calls.append(
+            (
+                task,
+                model_config,
+                memory_context,
+            )
+        )
         return self._next_execution()
 
     def change_model_and_retry(
@@ -153,16 +182,17 @@ class FakeRecoveryService:
         task,
         current_model_config,
         alternative_model_configs,
+        memory_context=None,
     ):
         self.model_change_calls.append(
             (
                 task,
                 current_model_config,
                 alternative_model_configs,
+                memory_context,
             )
         )
         return self._next_execution()
-
 
 class FakeStateSynchronizer:
     def __init__(self) -> None:
@@ -629,6 +659,7 @@ def test_execution_loop_changes_model_and_continues_recovery() -> None:
             task,
             current_model,
             (alternative_model,),
+            None,
         )
     ]
 
@@ -700,3 +731,107 @@ def test_execution_loop_stops_when_recovery_service_is_missing() -> None:
 
     assert result.executions == (execution,)
     assert len(recovery_coordinator.calls) == 1
+
+
+
+
+
+
+
+
+def test_execution_loop_uses_fresh_memory_context_for_each_recovery_attempt() -> None:
+    task = create_assigned_task()
+
+    first_failure = create_failed_execution(task)
+    second_failure = create_failed_execution(task)
+    successful_execution = create_completed_execution(task)
+
+    coordinator = FakeExecutionCoordinator(
+        [first_failure]
+    )
+
+    recovery_coordinator = FakeRecoveryCoordinator(
+        [
+            RecoveryActionType.RETRY_TASK,
+            RecoveryActionType.RETRY_TASK,
+        ]
+    )
+
+    recovery_service = FakeRecoveryService(
+        [
+            second_failure,
+            successful_execution,
+        ]
+    )
+
+    first_context = ExecutionMemoryContext(
+        task_id=task.task_id,
+        agent_id=task.assigned_agent_id,
+        memories=(),
+        max_memories=5,
+    )
+
+    second_context = ExecutionMemoryContext(
+        task_id=task.task_id,
+        agent_id=task.assigned_agent_id,
+        memories=(),
+        max_memories=5,
+    )
+
+    third_context = ExecutionMemoryContext(
+        task_id=task.task_id,
+        agent_id=task.assigned_agent_id,
+        memories=(),
+        max_memories=5,
+    )
+
+    memory_provider = FakeMemoryContextProvider(
+        [
+            first_context,
+            second_context,
+            third_context,
+        ]
+    )
+
+    model_config = ModelConfig(provider_name="mock")
+
+    loop = ExecutionLoop(
+        execution_coordinator=coordinator,
+        recovery_coordinator=recovery_coordinator,
+        recovery_service=recovery_service,
+        memory_context_provider=memory_provider,
+    )
+
+    result = loop.execute(
+        tasks=[task],
+        model_config=model_config,
+    )
+
+    assert result.executions == (
+        first_failure,
+        second_failure,
+        successful_execution,
+    )
+
+    assert memory_provider.calls == [
+        task,
+        task,
+        task,
+    ]
+
+    assert recovery_service.retry_calls == [
+        (
+            task,
+            model_config,
+            second_context,
+        ),
+        (
+            task,
+            model_config,
+            third_context,
+        ),
+    ]
+
+    assert first_context is not second_context
+    assert second_context is not third_context
+    assert first_context is not third_context

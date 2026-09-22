@@ -1,10 +1,9 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
-from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
 from orion.core.orchestration.execution_loop import (
     ExecutionLoop,
     ExecutionLoopResult,
@@ -23,6 +22,7 @@ class FakeExecutionCoordinator:
         self,
         task,
         model_config,
+        memory_context=None,
     ):
         self.calls.append((task, model_config))
 
@@ -47,10 +47,10 @@ class FakeParallelExecutor:
         self,
         tasks,
         model_config,
+        memory_contexts=None,
     ):
-        self.calls.append((tasks, model_config))
+        self.calls.append((tasks, model_config, memory_contexts))
         return self.result
-
 
 def create_assigned_task(description: str) -> AgentTask:
     task = AgentTask.create(
@@ -202,7 +202,7 @@ def test_execution_loop_delegates_to_parallel_executor() -> None:
     )
 
     assert parallel_executor.calls == [
-        ([first_task, second_task], model_config),
+        ([first_task, second_task], model_config, [None, None]),
     ]
 
     assert result.executions == (expected_execution,)

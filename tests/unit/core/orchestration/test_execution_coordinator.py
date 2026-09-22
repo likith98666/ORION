@@ -1,25 +1,35 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 import pytest
 
 from orion.config.model_config import ModelConfig
+from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
-from orion.core.agents.capabilities import AgentCapability
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
 
 
 class FakeAgentExecutor:
     def __init__(self, execution: AgentExecution) -> None:
         self.execution = execution
-        self.calls: list[tuple[AgentTask, ModelConfig]] = []
+        self.calls: list[
+            tuple[
+                AgentTask,
+                ModelConfig,
+                ExecutionMemoryContext | None,
+            ]
+        ] = []
 
     def execute(
         self,
         task: AgentTask,
         model_config: ModelConfig,
+        memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
-        self.calls.append((task, model_config))
+        self.calls.append(
+            (task, model_config, memory_context)
+        )
         return self.execution
 
 
@@ -49,7 +59,9 @@ def test_execute_task_delegates_to_agent_executor() -> None:
     result = coordinator.execute_task(task, model_config)
 
     assert result is execution
-    assert executor.calls == [(task, model_config)]
+    assert executor.calls == [
+        (task, model_config, None),
+    ]
 
 
 def test_execute_task_preserves_model_config() -> None:

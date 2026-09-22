@@ -1,0 +1,2031 @@
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\events.py =====
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID, uuid4
+
+
+class TaskEventType(str, Enum):
+    TASK_CREATED = "task_created"
+    STATUS_CHANGED = "status_changed"
+    TASK_FAILED = "task_failed"
+
+
+@dataclass(frozen=True)
+class TaskEvent:
+    id: UUID
+    task_id: UUID
+    event_type: TaskEventType
+    timestamp: datetime
+    message: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def create(
+        cls,
+        task_id: UUID,
+        event_type: TaskEventType,
+        message: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> "TaskEvent":
+        cleaned_message = message.strip()
+
+        if not cleaned_message:
+            raise ValueError("Event message cannot be empty.")
+
+        return cls(
+            id=uuid4(),
+            task_id=task_id,
+            event_type=event_type,
+            timestamp=datetime.now(),
+            message=cleaned_message,
+            metadata=dict(metadata) if metadata is not None else {},
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\event_repository.py =====
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from orion.core.tasks.events import TaskEvent
+
+
+class TaskEventRepository(ABC):
+    @abstractmethod
+    def save(self, event: TaskEvent) -> None:
+        """Save a task event."""
+
+    @abstractmethod
+    def get(self, event_id: UUID) -> TaskEvent | None:
+        """Get an event by ID."""
+
+    @abstractmethod
+    def list_for_task(self, task_id: UUID) -> list[TaskEvent]:
+        """List all events belonging to a task."""
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\manager.py =====
+
+from datetime import datetime
+from uuid import UUID
+
+from orion.core.tasks.event_repository import TaskEventRepository
+from orion.core.tasks.events import TaskEvent, TaskEventType
+from orion.core.tasks.models import Task, TaskStatus
+from orion.core.tasks.repository import TaskRepository
+
+ALLOWED_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
+    TaskStatus.CREATED: {
+        TaskStatus.PLANNING,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.PLANNING: {
+        TaskStatus.RUNNING,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.RUNNING: {
+        TaskStatus.WAITING,
+        TaskStatus.VERIFYING,
+        TaskStatus.FAILED,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.WAITING: {
+        TaskStatus.RUNNING,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.VERIFYING: {
+        TaskStatus.COMPLETED,
+        TaskStatus.FAILED,
+    },
+    TaskStatus.FAILED: {
+        TaskStatus.PLANNING,
+        TaskStatus.CANCELLED,
+    },
+    TaskStatus.COMPLETED: set(),
+    TaskStatus.CANCELLED: set(),
+}
+
+
+class TaskManager:
+    def __init__(
+        self,
+        repository: TaskRepository,
+        event_repository: TaskEventRepository,
+    ) -> None:
+        self._repository = repository
+        self._event_repository = event_repository
+
+    def create_task(self, objective: str) -> Task:
+        task = Task.create(objective)
+        self._repository.save(task)
+
+        event = TaskEvent.create(
+            task_id=task.id,
+            event_type=TaskEventType.TASK_CREATED,
+            message="Task created",
+        )
+        self._event_repository.save(event)
+
+        return task
+
+    def get_task(self, task_id: UUID) -> Task | None:
+        return self._repository.get(task_id)
+
+    def update_status(
+        self,
+        task_id: UUID,
+        status: TaskStatus,
+        error: str | None = None,
+    ) -> Task:
+        task = self._repository.get(task_id)
+
+        if task is None:
+            raise ValueError(f"Task not found: {task_id}")
+
+        if status != TaskStatus.FAILED and error is not None:
+            raise ValueError(
+                "An error message can only be provided when "
+                "transitioning a task to FAILED."
+            )
+
+        allowed_statuses = ALLOWED_TRANSITIONS[task.status]
+
+        if status not in allowed_statuses:
+            raise ValueError(
+                f"Invalid task transition: "
+                f"{task.status.value} -> {status.value}"
+            )
+
+        previous_status = task.status
+
+        if status == TaskStatus.FAILED:
+            cleaned_error = error.strip() if error is not None else None
+
+            if not cleaned_error:
+                raise ValueError(
+                    "An error message is required when a task fails."
+                )
+
+            task.last_error = cleaned_error
+
+        elif status == TaskStatus.PLANNING:
+            task.last_error = None
+
+        now = datetime.now()
+
+        if status == TaskStatus.RUNNING:
+            task.started_at = task.started_at or now
+            task.attempt_count += 1
+
+        if status == TaskStatus.COMPLETED:
+            task.completed_at = now
+
+        task.status = status
+        self._repository.save(task)
+
+        if status == TaskStatus.FAILED:
+            event_type = TaskEventType.TASK_FAILED
+            message = f"Task failed: {task.last_error}"
+        else:
+            event_type = TaskEventType.STATUS_CHANGED
+            message = (
+                f"Task status changed: "
+                f"{previous_status.value} -> {status.value}"
+            )
+
+        event = TaskEvent.create(
+            task_id=task.id,
+            event_type=event_type,
+            message=message,
+            metadata={
+                "previous_status": previous_status.value,
+                "new_status": status.value,
+                "attempt_count": task.attempt_count,
+            },
+        )
+        self._event_repository.save(event)
+
+        return task
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\memory_event_repository.py =====
+
+from uuid import UUID
+
+from orion.core.tasks.event_repository import TaskEventRepository
+from orion.core.tasks.events import TaskEvent
+
+
+class InMemoryTaskEventRepository(TaskEventRepository):
+    def __init__(self) -> None:
+        self._events: dict[UUID, TaskEvent] = {}
+
+    def save(self, event: TaskEvent) -> None:
+        self._events[event.id] = event
+
+    def get(self, event_id: UUID) -> TaskEvent | None:
+        return self._events.get(event_id)
+
+    def list_for_task(self, task_id: UUID) -> list[TaskEvent]:
+        events = [
+            event
+            for event in self._events.values()
+            if event.task_id == task_id
+        ]
+
+        return sorted(
+            events,
+            key=lambda event: event.timestamp,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\memory_repository.py =====
+
+from uuid import UUID
+
+from orion.core.tasks.models import Task
+from orion.core.tasks.repository import TaskRepository
+
+
+class InMemoryTaskRepository(TaskRepository):
+    def __init__(self) -> None:
+        self._tasks: dict[UUID, Task] = {}
+
+    def save(self, task: Task) -> None:
+        self._tasks[task.id] = task
+
+    def get(self, task_id: UUID) -> Task | None:
+        return self._tasks.get(task_id)
+
+    def delete(self, task_id: UUID) -> None:
+        self._tasks.pop(task_id, None)
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\models.py =====
+
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from uuid import UUID, uuid4
+
+
+class TaskStatus(str, Enum):
+    CREATED = "created"
+    PLANNING = "planning"
+    RUNNING = "running"
+    WAITING = "waiting"
+    VERIFYING = "verifying"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class Task:
+    id: UUID
+    objective: str
+    status: TaskStatus
+    created_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    attempt_count: int = 0
+    last_error: str | None = None
+
+    @classmethod
+    def create(cls, objective: str) -> "Task":
+        cleaned_objective = objective.strip()
+
+        if not cleaned_objective:
+            raise ValueError("Task objective cannot be empty.")
+
+        if len(cleaned_objective) > 10_000:
+            raise ValueError("Task objective cannot exceed 10,000 characters.")
+
+        return cls(
+            id=uuid4(),
+            objective=cleaned_objective,
+            status=TaskStatus.CREATED,
+            created_at=datetime.now(),
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\repository.py =====
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from orion.core.tasks.models import Task
+
+
+class TaskRepository(ABC):
+    @abstractmethod
+    def save(self, task: Task) -> None:
+        """Save a task."""
+
+    @abstractmethod
+    def get(self, task_id: UUID) -> Task | None:
+        """Get a task by ID."""
+
+    @abstractmethod
+    def delete(self, task_id: UUID) -> None:
+        """Delete a task."""
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\tasks\__init__.py =====
+
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\agent_executor.py =====
+
+from orion.config.model_config import ModelConfig
+from orion.core.agents.execution_service import AgentExecutionService
+from orion.core.agents.repository import AgentRepository
+from orion.core.agents.tasks import AgentTask
+from orion.core.recovery.failure_classifier import FailureClassifier
+from orion.models.contracts import ModelRequest
+from orion.models.runtime.runtime import ModelRuntime
+
+
+class AgentExecutor:
+    """Executes an assigned ORION agent task using the model runtime."""
+
+    def __init__(
+        self,
+        agent_repository: AgentRepository,
+        execution_service: AgentExecutionService,
+        model_runtime: ModelRuntime,
+        failure_classifier: FailureClassifier | None = None,
+    ) -> None:
+        self._agent_repository = agent_repository
+        self._execution_service = execution_service
+        self._model_runtime = model_runtime
+        self._failure_classifier = (
+            failure_classifier or FailureClassifier()
+        )
+
+    def execute(
+        self,
+        task: AgentTask,
+        model_config: ModelConfig,
+    ):
+        """Execute an assigned agent task."""
+
+        if task.assigned_agent_id is None:
+            raise ValueError(
+                f"Agent task '{task.id}' has no assigned agent."
+            )
+
+        agent = self._agent_repository.get(task.assigned_agent_id)
+
+        if agent is None:
+            raise ValueError(
+                f"Agent '{task.assigned_agent_id}' was not found."
+            )
+
+        execution = self._execution_service.create_execution(
+            agent_task_id=task.id,
+            agent_id=agent.id,
+        )
+
+        request = ModelRequest(
+            prompt=task.description,
+            metadata={
+                "agent_id": str(agent.id),
+                "agent_name": agent.name,
+                "agent_task_id": str(task.id),
+            },
+        )
+
+        try:
+            response = self._model_runtime.generate(
+                model_config,
+                request,
+            )
+
+            return self._execution_service.complete_execution(
+                execution_id=execution.id,
+                output=response.text,
+                model_name=response.model_name,
+                provider_name=response.provider_name,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+                latency_ms=response.latency_ms,
+            )
+
+        except Exception as exc:
+            failure = self._failure_classifier.classify(exc)
+
+            return self._execution_service.fail_execution(
+                execution_id=execution.id,
+                failure=failure,
+            )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\assigner.py =====
+
+from orion.core.agents.assignment import AgentAssignment
+from orion.core.agents.capability_registry import AgentCapabilityRegistry
+from orion.core.agents.tasks import AgentTask
+
+
+class AgentAssigner:
+    """Assigns agent tasks to capable ORION agents."""
+
+    def __init__(
+        self,
+        capability_registry: AgentCapabilityRegistry,
+    ) -> None:
+        self._capability_registry = capability_registry
+
+    def assign(self, task: AgentTask) -> AgentAssignment:
+        """Assign a task to an available agent with the required capability."""
+
+        agents = self._capability_registry.find_by_capability(
+            task.required_capability
+        )
+
+        if not agents:
+            raise ValueError(
+                f"No agent available with capability "
+                f"'{task.required_capability.value}'."
+            )
+
+        agent = agents[0]
+
+        return AgentAssignment.create(
+            agent=agent,
+            capability=task.required_capability,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\assignment.py =====
+
+from dataclasses import dataclass
+from uuid import UUID, uuid4
+
+from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.models import Agent
+
+
+@dataclass(frozen=True)
+class AgentAssignment:
+    """Represents an agent assigned to a specific capability."""
+
+    id: UUID
+    agent_id: UUID
+    capability: AgentCapability
+
+    @classmethod
+    def create(
+        cls,
+        agent: Agent,
+        capability: AgentCapability,
+    ) -> "AgentAssignment":
+        """Create a validated agent assignment."""
+
+        if capability not in agent.capabilities:
+            raise ValueError(
+                f"Agent '{agent.name}' does not have capability "
+                f"'{capability.value}'."
+            )
+
+        return cls(
+            id=uuid4(),
+            agent_id=agent.id,
+            capability=capability,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\assignment_service.py =====
+
+from orion.core.agents.assigner import AgentAssigner
+from orion.core.agents.capability_registry import AgentCapabilityRegistry
+from orion.core.agents.task_manager import AgentTaskManager
+from orion.core.agents.task_repository import AgentTaskRepository
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+
+
+class AgentAssignmentService:
+    def __init__(
+        self,
+        task_repository: AgentTaskRepository,
+        capability_registry: AgentCapabilityRegistry,
+    ) -> None:
+        self._task_repository = task_repository
+        self._assigner = AgentAssigner(capability_registry)
+        self._task_manager = AgentTaskManager()
+
+    def assign_task(self, task: AgentTask) -> AgentTask:
+        if task.status != AgentTaskStatus.PENDING:
+            raise ValueError(
+    "Only pending tasks can be assigned"
+)
+
+        assignment = self._assigner.assign(task)
+
+        task.assigned_agent_id = assignment.agent_id
+
+        updated_task = self._task_manager.update_status(
+            task,
+            AgentTaskStatus.ASSIGNED,
+        )
+
+        self._task_repository.save(updated_task)
+
+        return updated_task
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\capabilities.py =====
+
+from enum import Enum
+
+
+class AgentCapability(str, Enum):
+    """Capabilities that an ORION agent can possess."""
+
+    RESEARCH = "research"
+    WEB_SEARCH = "web_search"
+    DATA_ANALYSIS = "data_analysis"
+    CODE_EXECUTION = "code_execution"
+    FILE_PROCESSING = "file_processing"
+    DOCUMENT_GENERATION = "document_generation"
+    DATABASE_QUERY = "database_query"
+    REASONING = "reasoning"
+    WRITING = "writing"
+    VERIFICATION = "verification"
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\capability_registry.py =====
+
+from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.models import Agent
+
+
+class AgentCapabilityRegistry:
+    """Find agents based on their capabilities."""
+
+    def __init__(self) -> None:
+        self._agents: list[Agent] = []
+
+    def register(self, agent: Agent) -> None:
+        """Register an agent for capability-based lookup."""
+
+        if agent in self._agents:
+            raise ValueError(
+                f"Agent '{agent.name}' is already registered."
+            )
+
+        self._agents.append(agent)
+
+    def find_by_capability(
+        self,
+        capability: AgentCapability,
+    ) -> list[Agent]:
+        """Return all agents that have the requested capability."""
+
+        return [
+            agent
+            for agent in self._agents
+            if capability in agent.capabilities
+        ]
+
+    def list_capabilities(self) -> frozenset[AgentCapability]:
+        """Return every capability provided by registered agents."""
+
+        capabilities: set[AgentCapability] = set()
+
+        for agent in self._agents:
+            capabilities.update(agent.capabilities)
+
+        return frozenset(capabilities)
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\executions.py =====
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from uuid import UUID, uuid4
+
+from orion.core.recovery.failures import Failure
+
+
+class AgentExecutionStatus(str, Enum):
+    """Lifecycle status of an ORION agent execution attempt."""
+
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class AgentExecution:
+    """Represents one execution attempt of an ORION agent task."""
+
+    id: UUID
+    agent_task_id: UUID
+    agent_id: UUID
+    status: AgentExecutionStatus = AgentExecutionStatus.RUNNING
+    started_at: datetime = field(default_factory=datetime.now)
+    completed_at: datetime | None = None
+    output: str | None = None
+    error_message: str | None = None
+    failure: Failure | None = None
+    model_name: str | None = None
+    provider_name: str | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    latency_ms: float | None = None
+
+    @classmethod
+    def create(
+        cls,
+        agent_task_id: UUID,
+        agent_id: UUID,
+    ) -> "AgentExecution":
+        """Create a new agent execution attempt."""
+
+        return cls(
+            id=uuid4(),
+            agent_task_id=agent_task_id,
+            agent_id=agent_id,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\execution_manager.py =====
+
+from orion.core.agents.executions import (
+    AgentExecution,
+    AgentExecutionStatus,
+)
+
+
+ALLOWED_TRANSITIONS: dict[
+    AgentExecutionStatus,
+    set[AgentExecutionStatus],
+] = {
+    AgentExecutionStatus.RUNNING: {
+        AgentExecutionStatus.COMPLETED,
+        AgentExecutionStatus.FAILED,
+        AgentExecutionStatus.CANCELLED,
+    },
+    AgentExecutionStatus.COMPLETED: set(),
+    AgentExecutionStatus.FAILED: set(),
+    AgentExecutionStatus.CANCELLED: set(),
+}
+
+
+class AgentExecutionManager:
+    """Manages the lifecycle of ORION agent executions."""
+
+    def update_status(
+        self,
+        execution: AgentExecution,
+        status: AgentExecutionStatus,
+    ) -> AgentExecution:
+        """Update an execution status using lifecycle rules."""
+
+        allowed_statuses = ALLOWED_TRANSITIONS[execution.status]
+
+        if status not in allowed_statuses:
+            raise ValueError(
+                f"Invalid agent execution transition: "
+                f"{execution.status.value} -> {status.value}"
+            )
+
+        execution.status = status
+
+        return execution
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\execution_repository.py =====
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from orion.core.agents.executions import AgentExecution
+
+
+class AgentExecutionRepository(ABC):
+    """Abstract repository for storing ORION agent executions."""
+
+    @abstractmethod
+    def save(self, execution: AgentExecution) -> None:
+        """Save an agent execution."""
+
+    @abstractmethod
+    def get(self, execution_id: UUID) -> AgentExecution | None:
+        """Get an agent execution by ID."""
+
+    @abstractmethod
+    def delete(self, execution_id: UUID) -> None:
+        """Delete an agent execution."""
+
+    @abstractmethod
+    def list_for_agent_task(
+        self,
+        agent_task_id: UUID,
+    ) -> list[AgentExecution]:
+        """List all executions for an agent task."""
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\execution_repository_memory.py =====
+
+from uuid import UUID
+
+from orion.core.agents.execution_repository import AgentExecutionRepository
+from orion.core.agents.executions import AgentExecution
+
+
+class InMemoryAgentExecutionRepository(AgentExecutionRepository):
+    """In-memory repository for ORION agent executions."""
+
+    def __init__(self) -> None:
+        self._executions: dict[UUID, AgentExecution] = {}
+
+    def save(self, execution: AgentExecution) -> None:
+        """Save an agent execution."""
+        self._executions[execution.id] = execution
+
+    def get(self, execution_id: UUID) -> AgentExecution | None:
+        """Get an agent execution by ID."""
+        return self._executions.get(execution_id)
+
+    def delete(self, execution_id: UUID) -> None:
+        """Delete an agent execution."""
+        self._executions.pop(execution_id, None)
+
+    def list_for_agent_task(
+        self,
+        agent_task_id: UUID,
+    ) -> list[AgentExecution]:
+        """List all executions for an agent task."""
+        return [
+            execution
+            for execution in self._executions.values()
+            if execution.agent_task_id == agent_task_id
+        ]
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\execution_service.py =====
+
+from dataclasses import replace
+from datetime import datetime
+from uuid import UUID
+
+from orion.core.agents.execution_manager import AgentExecutionManager
+from orion.core.agents.execution_repository import AgentExecutionRepository
+from orion.core.agents.executions import (
+    AgentExecution,
+    AgentExecutionStatus,
+)
+from orion.core.recovery.failures import Failure, FailureType
+
+
+class AgentExecutionService:
+    """Coordinates creation and lifecycle updates of agent executions."""
+
+    def __init__(
+        self,
+        repository: AgentExecutionRepository,
+    ) -> None:
+        self._repository = repository
+        self._manager = AgentExecutionManager()
+
+    def create_execution(
+        self,
+        agent_task_id: UUID,
+        agent_id: UUID,
+    ) -> AgentExecution:
+        """Create and persist a new running execution."""
+
+        execution = AgentExecution.create(
+            agent_task_id=agent_task_id,
+            agent_id=agent_id,
+        )
+
+        self._repository.save(execution)
+
+        return execution
+
+    def get_execution(
+        self,
+        execution_id: UUID,
+    ) -> AgentExecution | None:
+        """Get an execution by ID."""
+
+        return self._repository.get(execution_id)
+
+    def update_status(
+        self,
+        execution_id: UUID,
+        status: AgentExecutionStatus,
+    ) -> AgentExecution:
+        """Update and persist an execution status."""
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(
+                f"Agent execution '{execution_id}' not found."
+            )
+
+        updated_execution = self._manager.update_status(
+            execution,
+            status,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def complete_execution(
+        self,
+        execution_id: UUID,
+        output: str,
+        model_name: str,
+        provider_name: str,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        latency_ms: float | None = None,
+    ) -> AgentExecution:
+        """Complete an execution and persist its result metadata."""
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(
+                f"Agent execution '{execution_id}' not found."
+            )
+
+        updated_execution = self._manager.update_status(
+            execution,
+            AgentExecutionStatus.COMPLETED,
+        )
+
+        updated_execution = replace(
+            updated_execution,
+            completed_at=datetime.now(),
+            output=output,
+            model_name=model_name,
+            provider_name=provider_name,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            latency_ms=latency_ms,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def fail_execution(
+        self,
+        execution_id: UUID,
+        error_message: str | None = None,
+        failure: Failure | None = None,
+    ) -> AgentExecution:
+        """Fail an execution and persist its error and structured failure."""
+
+        if failure is not None and not isinstance(failure, Failure):
+            raise TypeError(
+                "failure must be a Failure instance."
+            )
+
+        if failure is None:
+            if error_message is None or not error_message.strip():
+                raise ValueError(
+                    "Either error_message or failure must be provided."
+                )
+
+            failure = Failure(
+                failure_type=FailureType.UNKNOWN,
+                message=error_message,
+            )
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(
+                f"Agent execution '{execution_id}' not found."
+            )
+
+        updated_execution = self._manager.update_status(
+            execution,
+            AgentExecutionStatus.FAILED,
+        )
+
+        updated_execution = replace(
+            updated_execution,
+            completed_at=datetime.now(),
+            error_message=failure.message,
+            failure=failure,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def list_for_agent_task(
+        self,
+        agent_task_id: UUID,
+    ) -> list[AgentExecution]:
+        """List all execution attempts for an agent task."""
+
+        return self._repository.list_for_agent_task(agent_task_id)
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\memory_repository.py =====
+
+from uuid import UUID
+
+from orion.core.agents.models import Agent
+from orion.core.agents.repository import AgentRepository
+
+
+class InMemoryAgentRepository(AgentRepository):
+    """In-memory implementation of the ORION agent repository."""
+
+    def __init__(self) -> None:
+        self._agents: dict[UUID, Agent] = {}
+
+    def save(self, agent: Agent) -> None:
+        """Save an agent."""
+        self._agents[agent.id] = agent
+
+    def get(self, agent_id: UUID) -> Agent | None:
+        """Get an agent by ID."""
+        return self._agents.get(agent_id)
+
+    def delete(self, agent_id: UUID) -> None:
+        """Delete an agent."""
+        self._agents.pop(agent_id, None)
+
+    def list_all(self) -> list[Agent]:
+        """List all agents."""
+        return list(self._agents.values())
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\memory_task_repository.py =====
+
+from uuid import UUID
+
+from orion.core.agents.task_repository import AgentTaskRepository
+from orion.core.agents.tasks import AgentTask
+
+
+class InMemoryAgentTaskRepository(AgentTaskRepository):
+    """In-memory implementation of the ORION agent task repository."""
+
+    def __init__(self) -> None:
+        self._tasks: dict[UUID, AgentTask] = {}
+
+    def save(self, task: AgentTask) -> None:
+        """Save an agent task."""
+        self._tasks[task.id] = task
+
+    def get(self, task_id: UUID) -> AgentTask | None:
+        """Get an agent task by ID."""
+        return self._tasks.get(task_id)
+
+    def delete(self, task_id: UUID) -> None:
+        """Delete an agent task."""
+        self._tasks.pop(task_id, None)
+
+    def list_for_task(self, task_id: UUID) -> list[AgentTask]:
+        """List all agent tasks belonging to a parent task."""
+        return [
+            task
+            for task in self._tasks.values()
+            if task.task_id == task_id
+        ]
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\models.py =====
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from uuid import UUID, uuid4
+
+from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.permission_policy import AgentPermissionPolicy
+
+
+class AgentStatus(str, Enum):
+    """Lifecycle status of an ORION agent."""
+
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DISABLED = "disabled"
+
+
+@dataclass
+class Agent:
+    """Represents a specialized AI agent in ORION."""
+
+    id: UUID
+    name: str
+    description: str
+    capabilities: frozenset[AgentCapability]
+    permission_policy: AgentPermissionPolicy
+    status: AgentStatus = AgentStatus.ACTIVE
+    created_at: datetime = field(default_factory=datetime.now)
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        description: str,
+        capabilities: frozenset[AgentCapability],
+        permission_policy: AgentPermissionPolicy | None = None,
+    ) -> "Agent":
+        """Create a validated ORION agent."""
+
+        cleaned_name = name.strip()
+        cleaned_description = description.strip()
+
+        if not cleaned_name:
+            raise ValueError("Agent name cannot be empty.")
+
+        if len(cleaned_name) > 200:
+            raise ValueError("Agent name cannot exceed 200 characters.")
+
+        if not cleaned_description:
+            raise ValueError("Agent description cannot be empty.")
+
+        if len(cleaned_description) > 2_000:
+            raise ValueError(
+                "Agent description cannot exceed 2,000 characters."
+            )
+
+        if not capabilities:
+            raise ValueError("Agent must have at least one capability.")
+
+        cleaned_capabilities = frozenset(capabilities)
+
+        if not cleaned_capabilities:
+            raise ValueError("Agent must have at least one capability.")
+
+        if permission_policy is None:
+            permission_policy = AgentPermissionPolicy.create(
+                frozenset()
+            )
+
+        return cls(
+            id=uuid4(),
+            name=cleaned_name,
+            description=cleaned_description,
+            capabilities=cleaned_capabilities,
+            permission_policy=permission_policy,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\permissions.py =====
+
+from enum import Enum
+
+
+class AgentPermission(str, Enum):
+    """Permissions that control what an ORION agent may access."""
+
+    READ_FILES = "read_files"
+    WRITE_FILES = "write_files"
+    WEB_ACCESS = "web_access"
+    CODE_EXECUTION = "code_execution"
+    DATABASE_READ = "database_read"
+    DATABASE_WRITE = "database_write"
+    EXTERNAL_API = "external_api"
+    SEND_MESSAGES = "send_messages"
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\permission_policy.py =====
+
+from dataclasses import dataclass
+
+from orion.core.agents.permissions import AgentPermission
+
+
+@dataclass(frozen=True)
+class AgentPermissionPolicy:
+    """Defines the permissions granted to an ORION agent."""
+
+    permissions: frozenset[AgentPermission]
+
+    def allows(self, permission: AgentPermission) -> bool:
+        """Return whether the requested permission is allowed."""
+        return permission in self.permissions
+
+    @classmethod
+    def create(
+        cls,
+        permissions: frozenset[AgentPermission],
+    ) -> "AgentPermissionPolicy":
+        """Create a permission policy."""
+        return cls(
+            permissions=frozenset(permissions),
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\registry.py =====
+
+from orion.core.agents.models import Agent
+
+
+class AgentRegistry:
+    """Registry for managing ORION agents."""
+
+    def __init__(self) -> None:
+        self._agents: dict[str, Agent] = {}
+
+    def register(self, agent: Agent) -> None:
+        """Register an agent."""
+
+        if agent.name in self._agents:
+            raise ValueError(
+                f"Agent '{agent.name}' is already registered."
+            )
+
+        self._agents[agent.name] = agent
+
+    def get(self, name: str) -> Agent:
+        """Retrieve an agent by name."""
+
+        cleaned_name = name.strip()
+
+        if not cleaned_name:
+            raise ValueError("Agent name cannot be empty.")
+
+        if cleaned_name not in self._agents:
+            raise KeyError(
+                f"Agent '{cleaned_name}' is not registered."
+            )
+
+        return self._agents[cleaned_name]
+
+    def list_names(self) -> list[str]:
+        """Return the names of all registered agents."""
+
+        return list(self._agents.keys())
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\repository.py =====
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from orion.core.agents.models import Agent
+
+
+class AgentRepository(ABC):
+    """Abstract repository for storing ORION agents."""
+
+    @abstractmethod
+    def save(self, agent: Agent) -> None:
+        """Save an agent."""
+
+    @abstractmethod
+    def get(self, agent_id: UUID) -> Agent | None:
+        """Get an agent by ID."""
+
+    @abstractmethod
+    def delete(self, agent_id: UUID) -> None:
+        """Delete an agent."""
+
+    @abstractmethod
+    def list_all(self) -> list[Agent]:
+        """List all agents."""
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\service.py =====
+
+from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.capability_registry import AgentCapabilityRegistry
+from orion.core.agents.models import Agent
+from orion.core.agents.registry import AgentRegistry
+
+
+class AgentService:
+    def __init__(
+        self,
+        registry: AgentRegistry,
+        capability_registry: AgentCapabilityRegistry,
+    ) -> None:
+        self._registry = registry
+        self._capability_registry = capability_registry
+
+    def register_agent(self, agent: Agent) -> Agent:
+        self._registry.register(agent)
+        self._capability_registry.register(agent)
+        return agent
+
+    def get_agent(self, name: str) -> Agent | None:
+        return self._registry.get(name)
+
+    def find_agents_by_capability(
+        self,
+        capability: AgentCapability,
+    ) -> list[Agent]:
+        return self._capability_registry.find_by_capability(capability)
+
+    def list_agent_names(self) -> list[str]:
+        return self._registry.list_names()
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\tasks.py =====
+
+from dataclasses import dataclass
+from enum import Enum
+from uuid import UUID, uuid4
+
+from orion.core.agents.capabilities import AgentCapability
+
+
+class AgentTaskStatus(str, Enum):
+    """Lifecycle status of an agent task."""
+
+    PENDING = "pending"
+    ASSIGNED = "assigned"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class AgentTask:
+    """Represents a subtask assigned to an ORION agent."""
+
+    id: UUID
+    task_id: UUID
+    plan_step_id: UUID | None
+    description: str
+    required_capability: AgentCapability
+    status: AgentTaskStatus = AgentTaskStatus.PENDING
+    assigned_agent_id: UUID | None = None
+
+    @classmethod
+    def create(
+        cls,
+        task_id: UUID,
+        description: str,
+        required_capability: AgentCapability,
+        plan_step_id: UUID | None = None,
+    ) -> "AgentTask":
+        """Create a validated agent task."""
+
+        cleaned_description = description.strip()
+
+        if not cleaned_description:
+            raise ValueError("Agent task description cannot be empty.")
+
+        if len(cleaned_description) > 5_000:
+            raise ValueError(
+                "Agent task description cannot exceed 5,000 characters."
+            )
+
+        return cls(
+            id=uuid4(),
+            task_id=task_id,
+            plan_step_id=plan_step_id,
+            description=cleaned_description,
+            required_capability=required_capability,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\task_manager.py =====
+
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+
+ALLOWED_TRANSITIONS: dict[
+    AgentTaskStatus,
+    set[AgentTaskStatus],
+] = {
+    AgentTaskStatus.PENDING: {
+        AgentTaskStatus.ASSIGNED,
+        AgentTaskStatus.CANCELLED,
+    },
+    AgentTaskStatus.ASSIGNED: {
+        AgentTaskStatus.RUNNING,
+        AgentTaskStatus.CANCELLED,
+    },
+    AgentTaskStatus.RUNNING: {
+        AgentTaskStatus.COMPLETED,
+        AgentTaskStatus.FAILED,
+        AgentTaskStatus.CANCELLED,
+    },
+    AgentTaskStatus.COMPLETED: set(),
+    AgentTaskStatus.FAILED: {
+        AgentTaskStatus.RUNNING,
+        AgentTaskStatus.CANCELLED,
+    },
+    AgentTaskStatus.CANCELLED: set(),
+}
+
+
+class AgentTaskManager:
+    """Manages the lifecycle of ORION agent tasks."""
+
+    def update_status(
+        self,
+        task: AgentTask,
+        status: AgentTaskStatus,
+    ) -> AgentTask:
+        """Update an agent task status using lifecycle rules."""
+
+        allowed_statuses = ALLOWED_TRANSITIONS[task.status]
+
+        if status not in allowed_statuses:
+            raise ValueError(
+                f"Invalid agent task transition: "
+                f"{task.status.value} -> {status.value}"
+            )
+
+        task.status = status
+
+        return task
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\task_repository.py =====
+
+from abc import ABC, abstractmethod
+from uuid import UUID
+
+from orion.core.agents.tasks import AgentTask
+
+
+class AgentTaskRepository(ABC):
+    """Abstract repository for storing ORION agent tasks."""
+
+    @abstractmethod
+    def save(self, task: AgentTask) -> None:
+        """Save an agent task."""
+
+    @abstractmethod
+    def get(self, task_id: UUID) -> AgentTask | None:
+        """Get an agent task by ID."""
+
+    @abstractmethod
+    def delete(self, task_id: UUID) -> None:
+        """Delete an agent task."""
+
+    @abstractmethod
+    def list_for_task(self, task_id: UUID) -> list[AgentTask]:
+        """List all agent tasks belonging to a parent task."""
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\agents\task_service.py =====
+
+from uuid import UUID
+
+from orion.core.agents.capabilities import AgentCapability
+from orion.core.agents.task_manager import AgentTaskManager
+from orion.core.agents.task_repository import AgentTaskRepository
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+
+
+class AgentTaskService:
+    def __init__(self, repository: AgentTaskRepository) -> None:
+        self._repository = repository
+        self._manager = AgentTaskManager()
+
+    def create_task(
+        self,
+        task_id: UUID,
+        description: str,
+        required_capability: AgentCapability,
+        plan_step_id: UUID | None = None,
+    ) -> AgentTask:
+        task = AgentTask.create(
+            task_id=task_id,
+            plan_step_id=plan_step_id,
+            description=description,
+            required_capability=required_capability,
+        )
+
+        self._repository.save(task)
+
+        return task
+
+    def get_task(self, task_id: UUID) -> AgentTask | None:
+        return self._repository.get(task_id)
+
+    def update_status(
+        self,
+        task_id: UUID,
+        status: AgentTaskStatus,
+    ) -> AgentTask:
+        task = self._repository.get(task_id)
+
+        if task is None:
+            raise ValueError(f"Agent task not found: {task_id}")
+
+        updated_task = self._manager.update_status(task, status)
+
+        self._repository.save(updated_task)
+
+        return updated_task
+
+    def list_for_task(self, task_id: UUID) -> list[AgentTask]:
+        return self._repository.list_for_task(task_id)
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\orchestration\execution_coordinator.py =====
+
+from orion.config.model_config import ModelConfig
+from orion.core.agents.agent_executor import AgentExecutor
+from orion.core.agents.executions import AgentExecution
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+
+
+class ExecutionCoordinator:
+    """Coordinates execution of assigned agent tasks."""
+
+    def __init__(self, agent_executor: AgentExecutor) -> None:
+        self._agent_executor = agent_executor
+
+    def execute_task(
+        self,
+        task: AgentTask,
+        model_config: ModelConfig,
+    ) -> AgentExecution:
+        if task.status != AgentTaskStatus.ASSIGNED:
+            raise ValueError(
+                f"Only assigned agent tasks can be executed: {task.status.value}"
+            )
+
+        return self._agent_executor.execute(task, model_config)
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\orchestration\execution_loop.py =====
+
+from dataclasses import dataclass
+
+from orion.config.model_config import ModelConfig
+from orion.core.agents.execution_manager import AgentExecutionStatus
+from orion.core.agents.executions import AgentExecution
+from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
+from orion.core.orchestration.parallel_executor import ParallelExecutor
+from orion.core.orchestration.state_synchronizer import StateSynchronizer
+from orion.core.planning.steps import PlanStep
+from orion.core.recovery.recovery_action import RecoveryActionType
+from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
+from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
+from orion.core.recovery.recovery_service import RecoveryService
+
+
+@dataclass(frozen=True)
+class ExecutionLoopResult:
+    """Result of executing a collection of assigned agent tasks."""
+
+    executions: tuple[AgentExecution, ...]
+
+
+class ExecutionLoop:
+    """Coordinates task execution and bounded iterative recovery."""
+
+    DEFAULT_MAX_RECOVERY_ATTEMPTS = 3
+
+    def __init__(
+        self,
+        execution_coordinator: ExecutionCoordinator,
+        parallel_executor: ParallelExecutor | None = None,
+        recovery_coordinator: RecoveryCoordinator | None = None,
+        recovery_service: RecoveryService | None = None,
+        state_synchronizer: StateSynchronizer | None = None,
+        max_recovery_attempts: int = DEFAULT_MAX_RECOVERY_ATTEMPTS,
+    ) -> None:
+        if not isinstance(max_recovery_attempts, int):
+            raise TypeError("max_recovery_attempts must be an integer.")
+
+        if max_recovery_attempts < 0:
+            raise ValueError(
+                "max_recovery_attempts cannot be negative."
+            )
+
+        self._execution_coordinator = execution_coordinator
+        self._parallel_executor = parallel_executor
+        self._recovery_coordinator = recovery_coordinator
+        self._recovery_service = recovery_service
+        self._state_synchronizer = state_synchronizer
+        self._max_recovery_attempts = max_recovery_attempts
+
+    def execute(
+        self,
+        tasks: list[AgentTask],
+        model_config: ModelConfig,
+        plan_steps: list[PlanStep] | None = None,
+        alternative_model_configs: tuple[ModelConfig, ...] = (),
+    ) -> ExecutionLoopResult:
+        """Execute tasks and continue through bounded recovery when possible."""
+
+        executions: list[AgentExecution] = []
+
+        if self._parallel_executor is not None:
+            result = self._parallel_executor.execute(
+                tasks=tasks,
+                model_config=model_config,
+            )
+
+            for execution in result.executions:
+                task = self._find_task(
+                    tasks,
+                    execution.agent_task_id,
+                )
+
+                executions.extend(
+                    self._process_execution_with_recovery(
+                        execution=execution,
+                        task=task,
+                        model_config=model_config,
+                        alternative_model_configs=alternative_model_configs,
+                        plan_steps=plan_steps,
+                    )
+                )
+
+            return ExecutionLoopResult(
+                executions=tuple(executions),
+            )
+
+        for task in tasks:
+            execution = self._execution_coordinator.execute_task(
+                task=task,
+                model_config=model_config,
+            )
+
+            executions.extend(
+                self._process_execution_with_recovery(
+                    execution=execution,
+                    task=task,
+                    model_config=model_config,
+                    alternative_model_configs=alternative_model_configs,
+                    plan_steps=plan_steps,
+                )
+            )
+
+        return ExecutionLoopResult(
+            executions=tuple(executions),
+        )
+
+    def _process_execution_with_recovery(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+        model_config: ModelConfig,
+        alternative_model_configs: tuple[ModelConfig, ...],
+        plan_steps: list[PlanStep] | None,
+    ) -> list[AgentExecution]:
+        """Process an execution and iteratively apply bounded recovery."""
+
+        executions = [execution]
+
+        self._synchronize_execution(
+            execution=execution,
+            plan_steps=plan_steps,
+        )
+
+        if execution.status != AgentExecutionStatus.FAILED:
+            return executions
+
+        if self._recovery_coordinator is None:
+            return executions
+
+        if execution.failure is None:
+            return executions
+
+        context = RecoveryExecutionContext.from_execution(
+            execution
+        )
+
+        current_execution = execution
+        current_model_config = model_config
+
+        while True:
+            if current_execution.status != AgentExecutionStatus.FAILED:
+                break
+
+            if current_execution.failure is None:
+                break
+
+            if (
+                context.recovery_attempt_number
+                >= self._max_recovery_attempts
+            ):
+                break
+
+            recovery_result = self._recovery_coordinator.handle_failure(
+                execution=current_execution,
+                execution_context=context,
+                max_retries=self._max_recovery_attempts,
+                alternative_models_available=bool(
+                    alternative_model_configs
+                ),
+            )
+
+            context = context.record_recovery(
+                recovery_result.decision
+            )
+
+            action_type = recovery_result.action.action_type
+
+            if recovery_result.action.requires_human:
+                break
+
+            if self._recovery_service is None:
+                break
+
+            if action_type not in {
+                RecoveryActionType.RETRY_TASK,
+                RecoveryActionType.CHANGE_MODEL,
+            }:
+                break
+
+            self._synchronize_failed_task_before_retry(
+                execution=current_execution,
+                task=task,
+                plan_steps=plan_steps,
+            )
+
+            if action_type == RecoveryActionType.RETRY_TASK:
+                next_execution = self._recovery_service.retry_task(
+                    task,
+                    current_model_config,
+                )
+
+            else:
+                next_execution = (
+                    self._recovery_service.change_model_and_retry(
+                        task=task,
+                        current_model_config=current_model_config,
+                        alternative_model_configs=alternative_model_configs,
+                    )
+                )
+
+                if next_execution is not None:
+                    current_model_config = (
+                        self._model_config_after_change(
+                            current_model_config=current_model_config,
+                            alternative_model_configs=alternative_model_configs,
+                        )
+                    )
+
+            if next_execution is None:
+                break
+
+            executions.append(next_execution)
+
+            context = context.create_next_attempt(
+                current_execution_id=next_execution.id,
+            )
+
+            current_execution = next_execution
+
+            self._synchronize_execution(
+                execution=current_execution,
+                plan_steps=plan_steps,
+            )
+
+            if current_execution.status != AgentExecutionStatus.FAILED:
+                break
+
+            if current_execution.failure is None:
+                break
+
+            context = context.record_failure(
+                current_execution.failure
+            )
+
+        return executions
+
+    @staticmethod
+    def _model_config_after_change(
+        current_model_config: ModelConfig,
+        alternative_model_configs: tuple[ModelConfig, ...],
+    ) -> ModelConfig:
+        """Return the selected alternative model configuration."""
+
+        for alternative in alternative_model_configs:
+            if (
+                alternative.provider_name
+                != current_model_config.provider_name
+            ):
+                return alternative
+
+        return current_model_config
+
+    def _synchronize_failed_task_before_retry(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+        plan_steps: list[PlanStep] | None,
+    ) -> None:
+        """Synchronize failed state before retrying when synchronization is configured."""
+
+        if task.status == AgentTaskStatus.FAILED:
+            return
+
+        if self._state_synchronizer is None:
+            return
+
+        if plan_steps is None:
+            raise ValueError(
+                "plan_steps are required before retrying a failed task."
+            )
+
+        self._state_synchronizer.synchronize(
+            execution,
+            plan_steps,
+        )
+
+    def _synchronize_execution(
+        self,
+        execution: AgentExecution,
+        plan_steps: list[PlanStep] | None,
+    ) -> None:
+        """Synchronize execution state when a synchronizer is configured."""
+
+        if self._state_synchronizer is None:
+            return
+
+        if plan_steps is None:
+            raise ValueError(
+                "plan_steps are required when state_synchronizer is configured."
+            )
+
+        self._state_synchronizer.synchronize(
+            execution,
+            plan_steps,
+        )
+
+    @staticmethod
+    def _find_task(
+        tasks: list[AgentTask],
+        task_id,
+    ) -> AgentTask:
+        """Find the task associated with an execution."""
+
+        for task in tasks:
+            if task.id == task_id:
+                return task
+
+        raise ValueError(
+            f"Agent task not found: {task_id}"
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\orchestration\orchestrator.py =====
+
+from dataclasses import dataclass
+from uuid import UUID
+
+from orion.config.model_config import ModelConfig
+from orion.core.agents.assignment_service import AgentAssignmentService
+from orion.core.agents.execution_service import AgentExecution
+from orion.core.agents.task_service import AgentTaskService
+from orion.core.agents.tasks import AgentTask
+from orion.core.orchestration.execution_loop import (
+    ExecutionLoop,
+    ExecutionLoopResult,
+)
+from orion.core.planning.scheduler import PlanScheduler
+from orion.core.planning.steps import PlanStep
+
+
+@dataclass(frozen=True)
+class OrchestrationResult:
+    """Result of scheduling and assigning ready plan steps."""
+
+    ready_steps: tuple[PlanStep, ...]
+    agent_tasks: tuple[AgentTask, ...]
+
+
+@dataclass(frozen=True)
+class OrchestrationExecutionResult:
+    """Result of orchestration followed by agent task execution."""
+
+    orchestration: OrchestrationResult
+    execution: ExecutionLoopResult
+
+
+class Orchestrator:
+    """Coordinates plan steps, agent tasks, and execution."""
+
+    def __init__(
+        self,
+        scheduler: PlanScheduler,
+        agent_task_service: AgentTaskService,
+        assignment_service: AgentAssignmentService,
+        execution_loop: ExecutionLoop | None = None,
+    ) -> None:
+        self._scheduler = scheduler
+        self._agent_task_service = agent_task_service
+        self._assignment_service = assignment_service
+        self._execution_loop = execution_loop
+
+    def orchestrate(
+        self,
+        task_id: UUID,
+        plan_steps: list[PlanStep],
+    ) -> OrchestrationResult:
+        """Create and assign agent tasks for currently ready plan steps."""
+
+        ready_steps = self._scheduler.get_ready_steps(plan_steps)
+
+        agent_tasks: list[AgentTask] = []
+
+        for step in ready_steps:
+            agent_task = self._agent_task_service.create_task(
+                task_id=task_id,
+                plan_step_id=step.id,
+                description=step.description,
+                required_capability=step.required_capability,
+            )
+
+            assigned_task = self._assignment_service.assign_task(
+                agent_task
+            )
+
+            agent_tasks.append(assigned_task)
+
+        return OrchestrationResult(
+            ready_steps=tuple(ready_steps),
+            agent_tasks=tuple(agent_tasks),
+        )
+
+    def orchestrate_and_execute(
+        self,
+        task_id: UUID,
+        plan_steps: list[PlanStep],
+        model_config: ModelConfig,
+    ) -> OrchestrationExecutionResult:
+        """Orchestrate ready tasks and execute them."""
+
+        if self._execution_loop is None:
+            raise ValueError(
+                "Execution loop is required for orchestrate_and_execute."
+            )
+
+        orchestration = self.orchestrate(
+            task_id=task_id,
+            plan_steps=plan_steps,
+        )
+
+        execution = self._execution_loop.execute(
+            tasks=list(orchestration.agent_tasks),
+            model_config=model_config,
+        )
+
+        return OrchestrationExecutionResult(
+            orchestration=orchestration,
+            execution=execution,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\orchestration\parallel_executor.py =====
+
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+
+from orion.config.model_config import ModelConfig
+from orion.core.agents.executions import AgentExecution
+from orion.core.agents.tasks import AgentTask
+from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
+
+
+@dataclass(frozen=True)
+class ParallelExecutionResult:
+    """Result of executing agent tasks in parallel."""
+
+    executions: tuple[AgentExecution, ...]
+
+
+class ParallelExecutor:
+    """Executes independent assigned agent tasks with bounded concurrency."""
+
+    DEFAULT_MAX_WORKERS = 4
+
+    def __init__(
+        self,
+        execution_coordinator: ExecutionCoordinator,
+        max_workers: int = DEFAULT_MAX_WORKERS,
+    ) -> None:
+        if max_workers <= 0:
+            raise ValueError("max_workers must be greater than zero.")
+
+        self._execution_coordinator = execution_coordinator
+        self._max_workers = max_workers
+
+    @property
+    def max_workers(self) -> int:
+        """Return the maximum number of concurrent workers."""
+        return self._max_workers
+
+    def execute(
+        self,
+        tasks: list[AgentTask],
+        model_config: ModelConfig,
+    ) -> ParallelExecutionResult:
+        """Execute tasks concurrently while preserving input result order."""
+
+        if not tasks:
+            return ParallelExecutionResult(executions=())
+
+        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
+            futures = [
+                executor.submit(
+                    self._execution_coordinator.execute_task,
+                    task,
+                    model_config,
+                )
+                for task in tasks
+            ]
+
+            executions = tuple(
+                future.result()
+                for future in futures
+            )
+
+        return ParallelExecutionResult(
+            executions=executions,
+        )
+
+
+===== C:\Users\LIKITH\ORION\src\orion\core\orchestration\state_synchronizer.py =====
+
+from orion.core.agents.execution_manager import AgentExecutionStatus
+from orion.core.agents.task_service import AgentTaskService
+from orion.core.agents.tasks import AgentTaskStatus
+from orion.core.agents.executions import AgentExecution
+from orion.core.planning.steps import PlanStep, PlanStepStatus
+
+
+class StateSynchronizer:
+    """Synchronizes agent execution state with its task and plan step."""
+
+    def __init__(
+        self,
+        task_service: AgentTaskService,
+    ) -> None:
+        self._task_service = task_service
+
+    def synchronize(
+        self,
+        execution: AgentExecution,
+        plan_steps: list[PlanStep],
+    ) -> None:
+        """Synchronize an execution result with its agent task and plan step."""
+
+        task = self._task_service.get_task(execution.agent_task_id)
+
+        if task is None:
+            raise ValueError(
+                f"Agent task not found: {execution.agent_task_id}"
+            )
+
+        plan_step = next(
+            (
+                step
+                for step in plan_steps
+                if step.id == task.plan_step_id
+            ),
+            None,
+        )
+
+        if plan_step is None:
+            raise ValueError(
+                f"Plan step not found: {task.plan_step_id}"
+            )
+
+        if execution.status == AgentExecutionStatus.RUNNING:
+            self._task_service.update_status(
+                task.id,
+                AgentTaskStatus.RUNNING,
+            )
+            plan_step.status = PlanStepStatus.RUNNING
+
+        elif execution.status == AgentExecutionStatus.COMPLETED:
+            self._task_service.update_status(
+                task.id,
+                AgentTaskStatus.COMPLETED,
+            )
+            plan_step.status = PlanStepStatus.COMPLETED
+
+        elif execution.status == AgentExecutionStatus.FAILED:
+            self._task_service.update_status(
+                task.id,
+                AgentTaskStatus.FAILED,
+            )
+            plan_step.status = PlanStepStatus.FAILED
+
+        elif execution.status == AgentExecutionStatus.CANCELLED:
+            self._task_service.update_status(
+                task.id,
+                AgentTaskStatus.CANCELLED,
+            )
+            plan_step.status = PlanStepStatus.SKIPPED

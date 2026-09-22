@@ -4,6 +4,9 @@ from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.memory.context_provider import MemoryContextProvider
+from orion.core.memory.execution_context import ExecutionMemoryContext
+from orion.core.memory.service import MemoryService
 from orion.core.orchestration.execution_coordinator import ExecutionCoordinator
 from orion.core.orchestration.parallel_executor import ParallelExecutor
 from orion.core.orchestration.state_synchronizer import StateSynchronizer
@@ -12,6 +15,7 @@ from orion.core.recovery.recovery_action import RecoveryActionType
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
 from orion.core.recovery.recovery_service import RecoveryService
+from orion.core.verification.engine import VerificationEngine
 
 
 @dataclass(frozen=True)
@@ -22,7 +26,7 @@ class ExecutionLoopResult:
 
 
 class ExecutionLoop:
-    """Coordinates task execution and bounded iterative recovery."""
+    """Coordinates task execution, verification, memory capture, and bounded recovery."""
 
     DEFAULT_MAX_RECOVERY_ATTEMPTS = 3
 
@@ -33,6 +37,9 @@ class ExecutionLoop:
         recovery_coordinator: RecoveryCoordinator | None = None,
         recovery_service: RecoveryService | None = None,
         state_synchronizer: StateSynchronizer | None = None,
+        memory_service: MemoryService | None = None,
+        verification_engine: VerificationEngine | None = None,
+        memory_context_provider: MemoryContextProvider | None = None,
         max_recovery_attempts: int = DEFAULT_MAX_RECOVERY_ATTEMPTS,
     ) -> None:
         if not isinstance(max_recovery_attempts, int):
@@ -48,6 +55,9 @@ class ExecutionLoop:
         self._recovery_coordinator = recovery_coordinator
         self._recovery_service = recovery_service
         self._state_synchronizer = state_synchronizer
+        self._memory_service = memory_service
+        self._verification_engine = verification_engine
+        self._memory_context_provider = memory_context_provider
         self._max_recovery_attempts = max_recovery_attempts
 
     def execute(
@@ -62,9 +72,15 @@ class ExecutionLoop:
         executions: list[AgentExecution] = []
 
         if self._parallel_executor is not None:
+            memory_contexts = [
+                self._provide_memory_context(task)
+                for task in tasks
+            ]
+
             result = self._parallel_executor.execute(
                 tasks=tasks,
                 model_config=model_config,
+                memory_contexts=memory_contexts,
             )
 
             for execution in result.executions:
@@ -88,9 +104,12 @@ class ExecutionLoop:
             )
 
         for task in tasks:
+            memory_context = self._provide_memory_context(task)
+
             execution = self._execution_coordinator.execute_task(
                 task=task,
                 model_config=model_config,
+                memory_context=memory_context,
             )
 
             executions.extend(
@@ -107,6 +126,17 @@ class ExecutionLoop:
             executions=tuple(executions),
         )
 
+    def _provide_memory_context(
+        self,
+        task: AgentTask,
+    ) -> ExecutionMemoryContext | None:
+        """Provide bounded memory context when memory retrieval is configured."""
+
+        if self._memory_context_provider is None:
+            return None
+
+        return self._memory_context_provider.provide(task)
+
     def _process_execution_with_recovery(
         self,
         execution: AgentExecution,
@@ -115,13 +145,23 @@ class ExecutionLoop:
         alternative_model_configs: tuple[ModelConfig, ...],
         plan_steps: list[PlanStep] | None,
     ) -> list[AgentExecution]:
-        """Process an execution and iteratively apply bounded recovery."""
+        """Process an execution, verify output, capture memory, and apply bounded recovery."""
 
         executions = [execution]
 
         self._synchronize_execution(
             execution=execution,
             plan_steps=plan_steps,
+        )
+
+        self._verify_execution(
+            execution=execution,
+            task=task,
+        )
+
+        self._remember_execution(
+            execution=execution,
+            task=task,
         )
 
         if execution.status != AgentExecutionStatus.FAILED:
@@ -186,28 +226,31 @@ class ExecutionLoop:
                 plan_steps=plan_steps,
             )
 
+            retry_memory_context = self._provide_memory_context(task)
+
             if action_type == RecoveryActionType.RETRY_TASK:
                 next_execution = self._recovery_service.retry_task(
                     task,
                     current_model_config,
+                    memory_context=retry_memory_context,
                 )
-
             else:
                 next_execution = (
                     self._recovery_service.change_model_and_retry(
                         task=task,
                         current_model_config=current_model_config,
                         alternative_model_configs=alternative_model_configs,
+                        memory_context=retry_memory_context,
                     )
                 )
 
-                if next_execution is not None:
-                    current_model_config = (
-                        self._model_config_after_change(
-                            current_model_config=current_model_config,
-                            alternative_model_configs=alternative_model_configs,
-                        )
+            if next_execution is not None:
+                current_model_config = (
+                    self._model_config_after_change(
+                        current_model_config=current_model_config,
+                        alternative_model_configs=alternative_model_configs,
                     )
+                )
 
             if next_execution is None:
                 break
@@ -225,6 +268,16 @@ class ExecutionLoop:
                 plan_steps=plan_steps,
             )
 
+            self._verify_execution(
+                execution=current_execution,
+                task=task,
+            )
+
+            self._remember_execution(
+                execution=current_execution,
+                task=task,
+            )
+
             if current_execution.status != AgentExecutionStatus.FAILED:
                 break
 
@@ -236,6 +289,40 @@ class ExecutionLoop:
             )
 
         return executions
+
+    def _verify_execution(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+    ) -> None:
+        """Verify execution output when verification is configured."""
+
+        if self._verification_engine is None:
+            return
+
+        if not task.expected_requirements:
+            return
+
+        self._verification_engine.verify_output(
+            execution_id=execution.id,
+            output=execution.output,
+            expected_requirements=list(task.expected_requirements),
+        )
+
+    def _remember_execution(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+    ) -> None:
+        """Persist an execution outcome as episodic memory when configured."""
+
+        if self._memory_service is None:
+            return
+
+        self._memory_service.remember_execution(
+            execution=execution,
+            task_id=task.task_id,
+        )
 
     @staticmethod
     def _model_config_after_change(

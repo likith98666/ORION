@@ -1,4 +1,4 @@
-﻿from threading import Event, Lock
+from threading import Event, Lock
 from time import sleep
 from uuid import uuid4
 
@@ -18,7 +18,7 @@ class FakeExecutionCoordinator:
         self.completed = []
         self._lock = Lock()
 
-    def execute_task(self, task, model_config):
+    def execute_task(self, task, model_config, memory_context=None):
         with self._lock:
             self.started.append(task.id)
 
@@ -86,7 +86,7 @@ def test_parallel_executor_runs_tasks_concurrently():
             self.started_count = 0
             self._lock = Lock()
 
-        def execute_task(self, task, model_config):
+        def execute_task(self, task, model_config, memory_context=None):
             with self._lock:
                 self.started_count += 1
                 if self.started_count >= 2:
@@ -144,7 +144,7 @@ def test_parallel_executor_respects_max_workers():
     lock = Lock()
 
     class ConcurrencyCoordinator:
-        def execute_task(self, task, model_config):
+        def execute_task(self, task, model_config, memory_context=None):
             nonlocal active, maximum_active
 
             with lock:
@@ -185,7 +185,7 @@ def test_parallel_executor_respects_max_workers():
 
 def test_parallel_executor_preserves_input_order():
     class OutOfOrderCoordinator:
-        def execute_task(self, task, model_config):
+        def execute_task(self, task, model_config, memory_context=None):
             if task.description == "Task A":
                 sleep(0.10)
             elif task.description == "Task B":
@@ -239,4 +239,86 @@ def test_parallel_executor_rejects_invalid_max_workers():
         ParallelExecutor(
             execution_coordinator=FakeExecutionCoordinator(),
             max_workers=0,
+        )
+
+
+def test_parallel_executor_propagates_memory_context_per_task():
+    received = {}
+    lock = Lock()
+
+    class MemoryAwareCoordinator:
+        def execute_task(self, task, model_config, memory_context=None):
+            with lock:
+                received[task.id] = memory_context
+
+            return AgentExecution(
+                id=uuid4(),
+                agent_task_id=task.id,
+                agent_id=task.assigned_agent_id,
+                status=AgentExecutionStatus.COMPLETED,
+            )
+
+    tasks = [
+        create_task("Task A"),
+        create_task("Task B"),
+        create_task("Task C"),
+    ]
+
+    from orion.core.memory.execution_context import ExecutionMemoryContext
+
+    contexts = [
+        ExecutionMemoryContext(
+            task_id=task.id,
+            agent_id=task.assigned_agent_id,
+        )
+        for task in tasks
+    ]
+
+    executor = ParallelExecutor(
+        execution_coordinator=MemoryAwareCoordinator(),
+        max_workers=3,
+    )
+
+    result = executor.execute(
+        tasks=tasks,
+        model_config=create_model_config(),
+        memory_contexts=contexts,
+    )
+
+    assert len(result.executions) == len(tasks)
+
+    for task, context in zip(tasks, contexts, strict=True):
+        assert received[task.id] is context
+
+    assert [
+        execution.agent_task_id
+        for execution in result.executions
+    ] == [task.id for task in tasks]
+
+def test_parallel_executor_rejects_mismatched_memory_contexts():
+    executor = ParallelExecutor(
+        execution_coordinator=FakeExecutionCoordinator(),
+        max_workers=2,
+    )
+
+    tasks = [
+        create_task("Task A"),
+        create_task("Task B"),
+    ]
+
+    from orion.core.memory.execution_context import ExecutionMemoryContext
+
+    context = ExecutionMemoryContext(
+        task_id=tasks[0].id,
+        agent_id=tasks[0].assigned_agent_id,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="exactly one context per task",
+    ):
+        executor.execute(
+            tasks=tasks,
+            model_config=create_model_config(),
+            memory_contexts=[context],
         )

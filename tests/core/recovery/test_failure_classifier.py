@@ -1,7 +1,7 @@
 import pytest
 
-from orion.core.recovery.failures import FailureType
 from orion.core.recovery.failure_classifier import FailureClassifier
+from orion.core.recovery.failures import FailureType
 from orion.models.errors import (
     ModelProviderError,
     ModelProviderUnavailableError,

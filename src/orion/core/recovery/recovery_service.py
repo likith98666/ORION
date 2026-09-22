@@ -3,6 +3,7 @@ from orion.core.agents.agent_executor import AgentExecutor
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.task_service import AgentTaskService
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.recovery.recovery_action import (
     RecoveryAction,
     RecoveryActionType,
@@ -27,6 +28,7 @@ class RecoveryService:
         self,
         task: AgentTask,
         model_config: ModelConfig,
+        memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
         """Retry a failed agent task using a new execution attempt."""
 
@@ -49,6 +51,7 @@ class RecoveryService:
         return self._agent_executor.execute(
             updated_task,
             model_config,
+            memory_context=memory_context,
         )
 
     def change_model_and_retry(
@@ -56,6 +59,7 @@ class RecoveryService:
         task: AgentTask,
         current_model_config: ModelConfig,
         alternative_model_configs: tuple[ModelConfig, ...] = (),
+        memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
         """Change the model configuration and retry a failed agent task."""
 
@@ -109,4 +113,5 @@ class RecoveryService:
         return self.retry_task(
             task,
             recovery_result.selected_model,
+            memory_context=memory_context,
         )

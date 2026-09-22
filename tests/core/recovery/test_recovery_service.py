@@ -4,8 +4,9 @@ import pytest
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.capabilities import AgentCapability
-from orion.core.agents.executions import AgentExecution, AgentExecutionStatus
+from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.recovery.recovery_service import RecoveryService
 
 
@@ -28,14 +29,23 @@ class FakeAgentTaskService:
 class FakeAgentExecutor:
     def __init__(self, execution: AgentExecution) -> None:
         self.execution = execution
-        self.calls: list[tuple[AgentTask, ModelConfig]] = []
+        self.calls: list[
+            tuple[
+                AgentTask,
+                ModelConfig,
+                ExecutionMemoryContext | None,
+            ]
+        ] = []
 
     def execute(
         self,
         task: AgentTask,
         model_config: ModelConfig,
+        memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
-        self.calls.append((task, model_config))
+        self.calls.append(
+            (task, model_config, memory_context)
+        )
         return self.execution
 
 
@@ -76,7 +86,9 @@ def test_retry_task_moves_failed_task_to_running() -> None:
     assert agent_task_service.status_updates == [
         (task.id, AgentTaskStatus.RUNNING),
     ]
-    assert agent_executor.calls == [(task, model_config)]
+    assert agent_executor.calls == [
+        (task, model_config, None),
+    ]
     assert result is execution
 
 
@@ -139,7 +151,9 @@ def test_change_model_and_retry_uses_alternative_model() -> None:
     assert agent_task_service.status_updates == [
         (task.id, AgentTaskStatus.RUNNING),
     ]
-    assert agent_executor.calls == [(task, alternative)]
+    assert agent_executor.calls == [
+        (task, alternative, None),
+    ]
 
 
 def test_change_model_and_retry_rejects_missing_alternative() -> None:

@@ -1,9 +1,11 @@
-﻿from typing import Any
+from typing import Any
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_service import AgentExecutionService
 from orion.core.agents.repository import AgentRepository
 from orion.core.agents.tasks import AgentTask
+from orion.core.memory.context_formatter import MemoryContextFormatter
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.recovery.failure_classifier import FailureClassifier
 from orion.core.tools.executor import ToolExecutionResult, ToolExecutor
 from orion.models.contracts import ModelRequest
@@ -20,6 +22,7 @@ class AgentExecutor:
         model_runtime: ModelRuntime,
         failure_classifier: FailureClassifier | None = None,
         tool_executor: ToolExecutor | None = None,
+        memory_context_formatter: MemoryContextFormatter | None = None,
     ) -> None:
         self._agent_repository = agent_repository
         self._execution_service = execution_service
@@ -28,11 +31,15 @@ class AgentExecutor:
             failure_classifier or FailureClassifier()
         )
         self._tool_executor = tool_executor
+        self._memory_context_formatter = (
+            memory_context_formatter or MemoryContextFormatter()
+        )
 
     def execute(
         self,
         task: AgentTask,
         model_config: ModelConfig,
+        memory_context: ExecutionMemoryContext | None = None,
     ):
         """Execute an assigned agent task."""
 
@@ -53,13 +60,23 @@ class AgentExecutor:
             agent_id=agent.id,
         )
 
+        metadata = {
+            "agent_id": str(agent.id),
+            "agent_name": agent.name,
+            "agent_task_id": str(task.id),
+        }
+
+        if memory_context is not None:
+            metadata["memory_context_count"] = memory_context.memory_count
+
+        prompt = self._memory_context_formatter.format(
+            task.description,
+            memory_context,
+        )
+
         request = ModelRequest(
-            prompt=task.description,
-            metadata={
-                "agent_id": str(agent.id),
-                "agent_name": agent.name,
-                "agent_task_id": str(task.id),
-            },
+            prompt=prompt,
+            metadata=metadata,
         )
 
         try:

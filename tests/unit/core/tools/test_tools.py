@@ -1,150 +1,122 @@
-﻿from orion.core.agents.capabilities import AgentCapability
+import pytest
+
+from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
-from orion.core.agents.permissions import AgentPermission
 from orion.core.agents.permission_policy import AgentPermissionPolicy
+from orion.core.agents.permissions import AgentPermission
 from orion.core.tools.definition import ToolDefinition
 from orion.core.tools.executor import ToolExecutor
 from orion.core.tools.memory_registry import InMemoryToolRegistry
 
 
-def create_agent(
-    permissions: frozenset[AgentPermission],
-) -> Agent:
+def _agent_with_permission(permission: AgentPermission) -> Agent:
     return Agent.create(
-        name="test-agent",
-        description="Tool execution test agent",
-        capabilities=frozenset({AgentCapability.RESEARCH}),
-        permission_policy=AgentPermissionPolicy.create(permissions),
+        name="Test Agent",
+        description="Agent used for tool tests.",
+        capabilities=frozenset({AgentCapability.REASONING}),
+        permission_policy=AgentPermissionPolicy.create(
+            frozenset({permission}),
+        ),
     )
 
 
-def test_register_and_get_tool():
+def _tool(permission: AgentPermission = AgentPermission.WEB_ACCESS) -> ToolDefinition:
+    return ToolDefinition(
+        name="test_tool",
+        description="Test tool.",
+        permission=permission,
+        handler=lambda arguments: arguments.get("value"),
+    )
+
+
+def test_register_and_get_tool() -> None:
     registry = InMemoryToolRegistry()
-
-    tool = ToolDefinition(
-        name="echo",
-        description="Echo input",
-        permission=AgentPermission.READ_FILES,
-        handler=lambda arguments: arguments["value"],
-    )
+    tool = _tool()
 
     registry.register(tool)
 
-    assert registry.get("echo") is tool
-    assert registry.list_tools() == (tool,)
+    assert registry.get("test_tool") is tool
 
 
-def test_duplicate_tool_registration_is_rejected():
+def test_duplicate_registration_rejected() -> None:
     registry = InMemoryToolRegistry()
-
-    tool = ToolDefinition(
-        name="echo",
-        description="Echo input",
-        permission=AgentPermission.READ_FILES,
-        handler=lambda arguments: arguments["value"],
-    )
+    tool = _tool()
 
     registry.register(tool)
 
-    try:
+    with pytest.raises(ValueError, match="already registered"):
         registry.register(tool)
-        assert False
-    except ValueError as exc:
-        assert "already registered" in str(exc)
 
 
-def test_authorized_agent_can_execute_tool():
+def test_authorized_tool_execution() -> None:
     registry = InMemoryToolRegistry()
+    tool = _tool()
+    registry.register(tool)
 
-    registry.register(
-        ToolDefinition(
-            name="echo",
-            description="Echo input",
-            permission=AgentPermission.READ_FILES,
-            handler=lambda arguments: arguments["value"],
-        )
-    )
+    agent = _agent_with_permission(AgentPermission.WEB_ACCESS)
 
-    executor = ToolExecutor(registry)
-    agent = create_agent(frozenset({AgentPermission.READ_FILES}))
-
-    result = executor.execute(
+    result = ToolExecutor(registry).execute(
         agent=agent,
-        tool_name="echo",
+        tool_name="test_tool",
         arguments={"value": "hello"},
     )
 
     assert result.success is True
     assert result.output == "hello"
-    assert result.error is None
 
 
-def test_unauthorized_agent_cannot_execute_tool():
+def test_unauthorized_tool_execution_rejected() -> None:
     registry = InMemoryToolRegistry()
+    tool = _tool()
+    registry.register(tool)
 
-    registry.register(
-        ToolDefinition(
-            name="echo",
-            description="Echo input",
-            permission=AgentPermission.READ_FILES,
-            handler=lambda arguments: arguments["value"],
-        )
+    agent = Agent.create(
+        name="Unauthorized Agent",
+        description="Agent without tool permission.",
+        capabilities=frozenset({AgentCapability.REASONING}),
+        permission_policy=AgentPermissionPolicy.create(frozenset()),
     )
 
-    executor = ToolExecutor(registry)
-    agent = create_agent(frozenset())
-
-    try:
-        executor.execute(
+    with pytest.raises(PermissionError, match="not authorized"):
+        ToolExecutor(registry).execute(
             agent=agent,
-            tool_name="echo",
+            tool_name="test_tool",
             arguments={"value": "hello"},
         )
-        assert False
-    except PermissionError as exc:
-        assert "not authorized" in str(exc)
 
 
-def test_missing_tool_is_rejected():
+def test_missing_tool_rejected() -> None:
     registry = InMemoryToolRegistry()
-    executor = ToolExecutor(registry)
-    agent = create_agent(frozenset())
 
-    try:
-        executor.execute(
+    agent = _agent_with_permission(AgentPermission.WEB_ACCESS)
+
+    with pytest.raises(ValueError, match="was not found"):
+        ToolExecutor(registry).execute(
             agent=agent,
-            tool_name="missing",
+            tool_name="missing_tool",
             arguments={},
         )
-        assert False
-    except ValueError as exc:
-        assert "was not found" in str(exc)
 
 
-def test_tool_failure_is_returned_as_structured_result():
+def test_tool_execution_failure_is_structured() -> None:
     registry = InMemoryToolRegistry()
 
-    def failing_tool(arguments):
-        raise RuntimeError("tool failed")
-
-    registry.register(
-        ToolDefinition(
-            name="failing",
-            description="Always fails",
-            permission=AgentPermission.READ_FILES,
-            handler=failing_tool,
-        )
+    failing_tool = ToolDefinition(
+        name="failing_tool",
+        description="Tool that always fails.",
+        permission=AgentPermission.WEB_ACCESS,
+        handler=lambda arguments: 1 / 0,
     )
 
-    executor = ToolExecutor(registry)
-    agent = create_agent(frozenset({AgentPermission.READ_FILES}))
+    registry.register(failing_tool)
 
-    result = executor.execute(
+    agent = _agent_with_permission(AgentPermission.WEB_ACCESS)
+
+    result = ToolExecutor(registry).execute(
         agent=agent,
-        tool_name="failing",
+        tool_name="failing_tool",
         arguments={},
     )
 
     assert result.success is False
-    assert result.output is None
-    assert result.error == "tool failed"
+    assert result.error

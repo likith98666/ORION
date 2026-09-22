@@ -3,7 +3,6 @@ from orion.core.agents.executions import (
     AgentExecutionStatus,
 )
 
-
 ALLOWED_TRANSITIONS: dict[
     AgentExecutionStatus,
     set[AgentExecutionStatus],

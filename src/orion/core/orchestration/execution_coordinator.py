@@ -1,7 +1,8 @@
-﻿from orion.config.model_config import ModelConfig
+from orion.config.model_config import ModelConfig
 from orion.core.agents.agent_executor import AgentExecutor
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
+from orion.core.memory.execution_context import ExecutionMemoryContext
 
 
 class ExecutionCoordinator:
@@ -14,10 +15,15 @@ class ExecutionCoordinator:
         self,
         task: AgentTask,
         model_config: ModelConfig,
+        memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
         if task.status != AgentTaskStatus.ASSIGNED:
             raise ValueError(
                 f"Only assigned agent tasks can be executed: {task.status.value}"
             )
 
-        return self._agent_executor.execute(task, model_config)
+        return self._agent_executor.execute(
+            task,
+            model_config,
+            memory_context=memory_context,
+        )
