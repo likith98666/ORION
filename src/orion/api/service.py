@@ -47,6 +47,10 @@ from orion.core.missions.planner import MissionPlanner
 from orion.core.observability.context import TelemetryContext
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_engine import RecoveryEngine
+from orion.core.repo_intel.detector import ArchitectureDetector
+from orion.core.repo_intel.graph import RepoCodeGraph
+from orion.core.repo_intel.impact import ChangeImpactAnalyzer
+from orion.core.repo_intel.optimizer import ContextOptimizer
 from orion.core.security.approval import ApprovalStatus
 from orion.core.security.approval_repository_memory import InMemoryApprovalRepository
 from orion.core.security.approval_service import ApprovalService
@@ -1829,3 +1833,52 @@ class MissionAPIService:
         if not memory:
             return None
         return memory.to_dict()
+
+    # -------------------------------------------------------------
+    # V3 Deep Repository Intelligence
+    # -------------------------------------------------------------
+
+    def get_repository_index(self, workspace_path: str | None = None) -> dict[str, Any]:
+        """Index workspace symbols, modules, and architecture profile."""
+        ws = (
+            validate_workspace_path(workspace_path)
+            if workspace_path
+            else (self._default_workspace_path or Path.cwd())
+        )
+        graph = RepoCodeGraph.build_from_workspace(ws)
+        detector = ArchitectureDetector(ws)
+        profile = detector.detect_profile(
+            total_files=len(graph.modules),
+            total_symbols=sum(len(m.symbols) for m in graph.modules.values()),
+        )
+        graph_dict = graph.to_dict()
+        graph_dict["profile"] = profile.to_dict()
+        return graph_dict
+
+    def analyze_repository_impact(
+        self, target_file: str, workspace_path: str | None = None
+    ) -> dict[str, Any]:
+        """Analyze direct and transitive blast radius of modifying target_file."""
+        ws = (
+            validate_workspace_path(workspace_path)
+            if workspace_path
+            else (self._default_workspace_path or Path.cwd())
+        )
+        graph = RepoCodeGraph.build_from_workspace(ws)
+        analyzer = ChangeImpactAnalyzer(graph)
+        report = analyzer.analyze_change(target_file=target_file)
+        return report.to_dict()
+
+    def get_repository_context(
+        self, target_file: str, workspace_path: str | None = None
+    ) -> dict[str, Any]:
+        """Build a bounded, token-efficient context neighborhood around target_file."""
+        ws = (
+            validate_workspace_path(workspace_path)
+            if workspace_path
+            else (self._default_workspace_path or Path.cwd())
+        )
+        graph = RepoCodeGraph.build_from_workspace(ws)
+        optimizer = ContextOptimizer(graph)
+        ctx = optimizer.build_context(target_file=target_file)
+        return ctx.to_dict()

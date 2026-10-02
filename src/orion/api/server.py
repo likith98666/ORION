@@ -91,6 +91,11 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_list_benchmarks()
             return
 
+        # V3 Repository Index endpoint
+        if path in ("/api/repo/index", "/api/v1/repo/index"):
+            self._handle_get_repo_index(query)
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -171,6 +176,22 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_plan_mission(body)
             return
 
+        # V3 Repo Impact endpoint
+        if path in ("/api/repo/impact", "/api/v1/repo/impact"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_repo_impact(body)
+            return
+
+        # V3 Repo Context endpoint
+        if path in ("/api/repo/context", "/api/v1/repo/context"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_repo_context(body)
+            return
+
         # Resource action endpoints
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -246,6 +267,45 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 f"Benchmark error: {exc}",
                 code="BENCHMARK_ERROR",
             )
+
+    def _handle_get_repo_index(self, query: dict[str, list[str]]) -> None:
+        ws_list = query.get("workspace", [None])
+        ws_path = ws_list[0] if ws_list else None
+        try:
+            data = self.service.get_repository_index(ws_path)
+            self._send_json(HTTPStatus.OK, data)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_repo_impact(self, body: dict[str, Any]) -> None:
+        target_file = body.get("target_file")
+        if not target_file:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Field 'target_file' is required.")
+            return
+        ws_path = body.get("workspace")
+        try:
+            report = self.service.analyze_repository_impact(
+                target_file=str(target_file),
+                workspace_path=str(ws_path) if ws_path else None,
+            )
+            self._send_json(HTTPStatus.OK, report)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_repo_context(self, body: dict[str, Any]) -> None:
+        target_file = body.get("target_file")
+        if not target_file:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Field 'target_file' is required.")
+            return
+        ws_path = body.get("workspace")
+        try:
+            ctx = self.service.get_repository_context(
+                target_file=str(target_file),
+                workspace_path=str(ws_path) if ws_path else None,
+            )
+            self._send_json(HTTPStatus.OK, ctx)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def _handle_get_mission(self, mission_id: UUID) -> None:
         mission = self.service.get_mission(mission_id)
