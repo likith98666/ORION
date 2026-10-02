@@ -141,6 +141,15 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_hitl_feedback(path)
             return
 
+        # V8 Policy Engine endpoints
+        if path in ("/api/v1/policy/rules", "/api/policy/rules"):
+            self._handle_list_policy_rules()
+            return
+
+        if path in ("/api/v1/policy/decisions", "/api/policy/decisions"):
+            self._handle_get_policy_decisions(query)
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -326,6 +335,21 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_hitl_feedback(body)
+            return
+
+        # V8 Policy Engine endpoints
+        if path in ("/api/v1/policy/evaluate", "/api/policy/evaluate"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_evaluate_policy(body)
+            return
+
+        if path in ("/api/v1/policy/rules", "/api/policy/rules"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_add_policy_rule(body)
             return
 
         # Resource action endpoints
@@ -641,6 +665,62 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 corrections=corrections,
             )
             self._send_json(HTTPStatus.CREATED, fb)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    # -------------------------------------------------------------
+    # V8 Policy Engine Handlers
+    # -------------------------------------------------------------
+    def _handle_list_policy_rules(self) -> None:
+        rules = self.service.list_policy_rules()
+        self._send_json(HTTPStatus.OK, {"rules": rules, "total": len(rules)})
+
+    def _handle_get_policy_decisions(self, query: dict[str, list[str]]) -> None:
+        limit_str = query.get("limit", ["100"])[0]
+        try:
+            limit = int(limit_str)
+        except ValueError:
+            limit = 100
+        decisions = self.service.get_policy_decisions(limit=limit)
+        self._send_json(HTTPStatus.OK, {"decisions": decisions, "total": len(decisions)})
+
+    def _handle_evaluate_policy(self, body: dict[str, Any]) -> None:
+        subject = body.get("subject")
+        action = body.get("action")
+        resource = body.get("resource")
+        if not subject or not action or not resource:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'subject', 'action', and 'resource' are required.",
+            )
+            return
+
+        try:
+            decision = self.service.evaluate_policy(
+                subject=str(subject),
+                action=str(action),
+                resource=str(resource),
+                tenant_id=str(body.get("tenant_id", "default")),
+                environment=str(body.get("environment", "sandbox")),
+                risk_tier=str(body.get("risk_tier", "low")),
+                parameters=body.get("parameters"),
+                metadata=body.get("metadata"),
+            )
+            self._send_json(HTTPStatus.OK, decision)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_add_policy_rule(self, body: dict[str, Any]) -> None:
+        if not body.get("rule_id") or not body.get("name") or not body.get("effect"):
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'rule_id', 'name', and 'effect' are required.",
+            )
+            return
+
+        try:
+            res = self.service.add_policy_rule(body)
+            self._send_json(HTTPStatus.CREATED, res)
         except Exception as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 

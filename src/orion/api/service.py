@@ -63,6 +63,13 @@ from orion.core.missions.memory import MissionMemory
 from orion.core.missions.models import MissionPlan, ResourceBudget
 from orion.core.missions.planner import MissionPlanner
 from orion.core.observability.context import TelemetryContext
+from orion.core.policy import (
+    PolicyContext,
+    PolicyEffect,
+    PolicyEngine,
+    PolicyRiskTier,
+    PolicyRule,
+)
 from orion.core.recovery.advanced.memory import AdaptiveRecoveryMemory
 from orion.core.recovery.advanced.planner import AdaptiveRecoveryPlanner
 from orion.core.recovery.advanced.simulation import RecoverySimulator
@@ -185,6 +192,7 @@ class MissionAPIService:
         self._experiment_tracker = ExperimentTracker(self._redaction_engine)
         self._benchmark_runner = BenchmarkRunner()
         self._hitl_coordinator = HITLCoordinator()
+        self._policy_engine = PolicyEngine()
 
     @property
     def config(self) -> AppConfig:
@@ -2198,3 +2206,97 @@ class MissionAPIService:
         """Retrieve all operator feedback entries for a mission."""
         fbs = self._hitl_coordinator.get_mission_feedback(mission_id)
         return [f.to_dict() for f in fbs]
+
+    # -------------------------------------------------------------
+    # V8 Policy Engine & Autonomous Security Hardening
+    # -------------------------------------------------------------
+    @property
+    def policy_engine(self) -> PolicyEngine:
+        """Return the active PolicyEngine instance."""
+        return self._policy_engine
+
+    def evaluate_policy(
+        self,
+        subject: str,
+        action: str,
+        resource: str,
+        tenant_id: str = "default",
+        environment: str = "sandbox",
+        risk_tier: str = "low",
+        parameters: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Evaluate an execution request against central policy rules."""
+        rt = PolicyRiskTier(risk_tier.lower().strip())
+        ctx = PolicyContext(
+            subject=subject,
+            action=action,
+            resource=resource,
+            tenant_id=tenant_id,
+            environment=environment,
+            risk_tier=rt,
+            parameters=parameters or {},
+            metadata=metadata or {},
+        )
+        decision = self._policy_engine.evaluate(ctx)
+        return decision.to_dict()
+
+    def list_policy_rules(self) -> list[dict[str, Any]]:
+        """List all registered policy rules."""
+        rules = self._policy_engine.list_rules()
+        return [
+            {
+                "rule_id": r.rule_id,
+                "name": r.name,
+                "description": r.description,
+                "effect": r.effect.value,
+                "priority": r.priority,
+                "enabled": r.enabled,
+                "subjects": list(r.subjects),
+                "actions": list(r.actions),
+                "resource_patterns": list(r.resource_patterns),
+                "forbidden_payload_patterns": list(r.forbidden_payload_patterns),
+                "min_risk_tier": r.min_risk_tier.value if r.min_risk_tier else None,
+                "environments": list(r.environments),
+                "modifications": r.modifications,
+                "reason": r.reason,
+            }
+            for r in rules
+        ]
+
+    def add_policy_rule(self, rule_data: dict[str, Any]) -> dict[str, Any]:
+        """Register a new policy rule."""
+        effect = PolicyEffect(rule_data["effect"].lower().strip())
+        min_rt = (
+            PolicyRiskTier(rule_data["min_risk_tier"].lower().strip())
+            if rule_data.get("min_risk_tier")
+            else None
+        )
+        rule = PolicyRule(
+            rule_id=rule_data["rule_id"],
+            name=rule_data["name"],
+            description=rule_data.get("description", ""),
+            effect=effect,
+            priority=rule_data.get("priority", 100),
+            enabled=rule_data.get("enabled", True),
+            subjects=tuple(rule_data.get("subjects", ())),
+            actions=tuple(rule_data.get("actions", ())),
+            resource_patterns=tuple(rule_data.get("resource_patterns", ())),
+            forbidden_payload_patterns=tuple(rule_data.get("forbidden_payload_patterns", ())),
+            min_risk_tier=min_rt,
+            environments=tuple(rule_data.get("environments", ())),
+            modifications=rule_data.get("modifications"),
+            reason=rule_data.get("reason", "Custom policy rule"),
+        )
+        self._policy_engine.add_rule(rule)
+        return {
+            "status": "added",
+            "rule_id": rule.rule_id,
+            "name": rule.name,
+            "priority": rule.priority,
+        }
+
+    def get_policy_decisions(self, limit: int = 100) -> list[dict[str, Any]]:
+        """Retrieve recent policy evaluation decisions."""
+        decisions = self._policy_engine.get_decision_history(limit=limit)
+        return [d.to_dict() for d in decisions]
