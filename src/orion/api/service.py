@@ -38,6 +38,10 @@ from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
 from orion.core.agents.permission_policy import AgentPermissionPolicy
 from orion.core.agents.permissions import AgentPermission
+from orion.core.agents.workforce.conflict import AgentConflictResolver
+from orion.core.agents.workforce.contracts import WorkforceContractRegistry
+from orion.core.agents.workforce.models import AgentProposal, WorkforceRole
+from orion.core.agents.workforce.reviewer import IndependentReviewer
 from orion.core.evaluation.models import BenchmarkReport
 from orion.core.missions.engine import MissionExecutionEngine
 from orion.core.missions.graph import MissionTaskGraph
@@ -158,6 +162,7 @@ class MissionAPIService:
         self._mission_plans: dict[UUID, tuple[MissionPlan, MissionTaskGraph]] = {}
         self._mission_memories: dict[UUID, MissionMemory] = {}
         self._mission_engines: dict[UUID, MissionExecutionEngine] = {}
+        self._workforce_registry = WorkforceContractRegistry.create_default_roster()
 
     @property
     def config(self) -> AppConfig:
@@ -1882,3 +1887,50 @@ class MissionAPIService:
         optimizer = ContextOptimizer(graph)
         ctx = optimizer.build_context(target_file=target_file)
         return ctx.to_dict()
+
+    # -------------------------------------------------------------
+    # V4 Advanced Multi-Agent Engineering
+    # -------------------------------------------------------------
+
+    def get_workforce_roster(self) -> list[dict[str, Any]]:
+        """Return serialized roster of active workforce agents."""
+        return self._workforce_registry.get_roster_summary()
+
+    def review_agent_proposal(self, proposal_data: dict[str, Any]) -> dict[str, Any]:
+        """Perform independent multi-stage review on a candidate proposal."""
+        reviewer = IndependentReviewer()
+        proposal = AgentProposal(
+            proposal_id=UUID(str(proposal_data.get("proposal_id", uuid4()))),
+            agent_id=UUID(str(proposal_data.get("agent_id", uuid4()))),
+            role=WorkforceRole(proposal_data.get("role", "implementer")),
+            target_files=tuple(proposal_data.get("target_files", ())),
+            patch_content=str(proposal_data.get("patch_content", "")),
+            rationale=str(proposal_data.get("rationale", "")),
+            assumptions=tuple(proposal_data.get("assumptions", ())),
+            confidence_score=float(proposal_data.get("confidence_score", 1.0)),
+            evidence_items=tuple(proposal_data.get("evidence_items", ())),
+        )
+        verdict = reviewer.review(proposal)
+        return verdict.to_dict()
+
+    def resolve_competing_proposals(
+        self, proposals_list: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Arbitrate between competing agent proposals using evidence scoring."""
+        resolver = AgentConflictResolver()
+        proposals = [
+            AgentProposal(
+                proposal_id=UUID(str(p.get("proposal_id", uuid4()))),
+                agent_id=UUID(str(p.get("agent_id", uuid4()))),
+                role=WorkforceRole(p.get("role", "implementer")),
+                target_files=tuple(p.get("target_files", ())),
+                patch_content=str(p.get("patch_content", "")),
+                rationale=str(p.get("rationale", "")),
+                assumptions=tuple(p.get("assumptions", ())),
+                confidence_score=float(p.get("confidence_score", 1.0)),
+                evidence_items=tuple(p.get("evidence_items", ())),
+            )
+            for p in proposals_list
+        ]
+        resolution = resolver.resolve(proposals)
+        return resolution.to_dict()

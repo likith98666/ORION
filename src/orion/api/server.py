@@ -96,6 +96,11 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_repo_index(query)
             return
 
+        # V4 Workforce Roster endpoint
+        if path in ("/api/workforce/roster", "/api/v1/workforce/roster"):
+            self._handle_get_workforce_roster()
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -190,6 +195,25 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_repo_context(body)
+            return
+
+        # V4 Workforce Review endpoint
+        if path in ("/api/workforce/review", "/api/v1/workforce/review"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_workforce_review(body)
+            return
+
+        # V4 Workforce Conflict Resolution endpoint
+        if path in (
+            "/api/workforce/resolve-conflict",
+            "/api/v1/workforce/resolve-conflict",
+        ):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_workforce_resolve_conflict(body)
             return
 
         # Resource action endpoints
@@ -304,6 +328,31 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 workspace_path=str(ws_path) if ws_path else None,
             )
             self._send_json(HTTPStatus.OK, ctx)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_get_workforce_roster(self) -> None:
+        roster = self.service.get_workforce_roster()
+        self._send_json(HTTPStatus.OK, {"roster": roster, "total": len(roster)})
+
+    def _handle_workforce_review(self, body: dict[str, Any]) -> None:
+        try:
+            verdict = self.service.review_agent_proposal(body)
+            self._send_json(HTTPStatus.OK, verdict)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_workforce_resolve_conflict(self, body: dict[str, Any]) -> None:
+        proposals = body.get("proposals", [])
+        if not isinstance(proposals, list) or not proposals:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Field 'proposals' must be a non-empty list.",
+            )
+            return
+        try:
+            resolution = self.service.resolve_competing_proposals(proposals)
+            self._send_json(HTTPStatus.OK, resolution)
         except Exception as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
