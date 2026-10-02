@@ -49,6 +49,10 @@ from orion.core.missions.memory import MissionMemory
 from orion.core.missions.models import MissionPlan, ResourceBudget
 from orion.core.missions.planner import MissionPlanner
 from orion.core.observability.context import TelemetryContext
+from orion.core.recovery.advanced.memory import AdaptiveRecoveryMemory
+from orion.core.recovery.advanced.planner import AdaptiveRecoveryPlanner
+from orion.core.recovery.advanced.simulation import RecoverySimulator
+from orion.core.recovery.advanced.taxonomy import FailureClassifier
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_engine import RecoveryEngine
 from orion.core.repo_intel.detector import ArchitectureDetector
@@ -163,6 +167,7 @@ class MissionAPIService:
         self._mission_memories: dict[UUID, MissionMemory] = {}
         self._mission_engines: dict[UUID, MissionExecutionEngine] = {}
         self._workforce_registry = WorkforceContractRegistry.create_default_roster()
+        self._adaptive_recovery_memory = AdaptiveRecoveryMemory()
 
     @property
     def config(self) -> AppConfig:
@@ -1934,3 +1939,87 @@ class MissionAPIService:
         ]
         resolution = resolver.resolve(proposals)
         return resolution.to_dict()
+
+    # -------------------------------------------------------------
+    # V5 Advanced Self-Healing
+    # -------------------------------------------------------------
+
+    def classify_failure(
+        self,
+        output_text: str,
+        target_file: str | None = None,
+        exit_code: int | None = None,
+    ) -> dict[str, Any]:
+        """Classify execution errors or test failures into formal categories."""
+        diag = FailureClassifier.classify(
+            output_text=output_text,
+            target_file=target_file,
+            exit_code=exit_code,
+        )
+        return diag.to_dict()
+
+    def simulate_recovery_action(
+        self,
+        action_type: str,
+        target_files: list[str],
+        estimated_duration_seconds: float = 5.0,
+        max_duration_budget: float = 60.0,
+    ) -> dict[str, Any]:
+        """Pre-execution simulation verifying safety, blast radius, and risk."""
+        simulator = RecoverySimulator()
+        sim_res = simulator.simulate(
+            action_type=action_type,
+            target_files=target_files,
+            estimated_duration_seconds=estimated_duration_seconds,
+            max_duration_budget=max_duration_budget,
+        )
+        return sim_res.to_dict()
+
+    def plan_adaptive_recovery(
+        self,
+        output_text: str,
+        target_files: list[str] | None = None,
+        attempt_number: int = 1,
+    ) -> dict[str, Any]:
+        """Formulate adaptive recovery plan incorporating memory and simulation."""
+        target_file = target_files[0] if target_files else None
+        diag = FailureClassifier.classify(output_text=output_text, target_file=target_file)
+        planner = AdaptiveRecoveryPlanner(memory=self._adaptive_recovery_memory)
+        plan = planner.create_plan(
+            diagnosis=diag,
+            attempt_number=attempt_number,
+            target_files=target_files,
+        )
+        return plan.to_dict()
+
+    def record_recovery_attempt(
+        self,
+        attempt_number: int,
+        category: str,
+        error_message: str,
+        strategy_name: str,
+        success: bool,
+        duration_seconds: float,
+        notes: str = "",
+    ) -> dict[str, Any]:
+        """Record an executed recovery attempt into adaptive memory."""
+        from orion.core.recovery.advanced.taxonomy import FailureCategory, FailureDiagnosis
+
+        diag = FailureDiagnosis(
+            failure_id=uuid4(),
+            category=FailureCategory(category),
+            error_message=error_message,
+        )
+        rec = self._adaptive_recovery_memory.record_attempt(
+            attempt_number=attempt_number,
+            diagnosis=diag,
+            strategy_name=strategy_name,
+            success=success,
+            duration_seconds=duration_seconds,
+            notes=notes,
+        )
+        return rec.to_dict()
+
+    def get_recovery_strategy_metrics(self) -> dict[str, dict[str, Any]]:
+        """Return empirical strategy metrics across past recovery attempts."""
+        return self._adaptive_recovery_memory.get_strategy_metrics()

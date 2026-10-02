@@ -101,6 +101,11 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_workforce_roster()
             return
 
+        # V5 Recovery Strategy Metrics endpoint
+        if path in ("/api/recovery/metrics", "/api/v1/recovery/metrics"):
+            self._handle_get_recovery_metrics()
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -214,6 +219,30 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_workforce_resolve_conflict(body)
+            return
+
+        # V5 Recovery Classify endpoint
+        if path in ("/api/recovery/classify", "/api/v1/recovery/classify"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_recovery_classify(body)
+            return
+
+        # V5 Recovery Simulate endpoint
+        if path in ("/api/recovery/simulate", "/api/v1/recovery/simulate"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_recovery_simulate(body)
+            return
+
+        # V5 Recovery Plan endpoint
+        if path in ("/api/recovery/plan", "/api/v1/recovery/plan"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_recovery_plan(body)
             return
 
         # Resource action endpoints
@@ -353,6 +382,67 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         try:
             resolution = self.service.resolve_competing_proposals(proposals)
             self._send_json(HTTPStatus.OK, resolution)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_get_recovery_metrics(self) -> None:
+        metrics = self.service.get_recovery_strategy_metrics()
+        self._send_json(HTTPStatus.OK, {"metrics": metrics})
+
+    def _handle_recovery_classify(self, body: dict[str, Any]) -> None:
+        output_text = body.get("output_text") or body.get("error_text")
+        if not output_text:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST, "Field 'output_text' (or 'error_text') is required."
+            )
+            return
+        target_file = body.get("target_file")
+        exit_code = body.get("exit_code")
+        try:
+            diag = self.service.classify_failure(
+                output_text=str(output_text),
+                target_file=str(target_file) if target_file else None,
+                exit_code=int(exit_code) if exit_code is not None else None,
+            )
+            self._send_json(HTTPStatus.OK, diag)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_recovery_simulate(self, body: dict[str, Any]) -> None:
+        action_type = body.get("action_type")
+        if not action_type:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Field 'action_type' is required.")
+            return
+        target_files = body.get("target_files", [])
+        est_duration = float(body.get("estimated_duration_seconds", 5.0))
+        budget = float(body.get("max_duration_budget", 60.0))
+        try:
+            result = self.service.simulate_recovery_action(
+                action_type=str(action_type),
+                target_files=list(target_files),
+                estimated_duration_seconds=est_duration,
+                max_duration_budget=budget,
+            )
+            self._send_json(HTTPStatus.OK, result)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_recovery_plan(self, body: dict[str, Any]) -> None:
+        output_text = body.get("output_text") or body.get("error_text")
+        if not output_text:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST, "Field 'output_text' (or 'error_text') is required."
+            )
+            return
+        target_files = body.get("target_files")
+        attempt_number = int(body.get("attempt_number", 1))
+        try:
+            plan = self.service.plan_adaptive_recovery(
+                output_text=str(output_text),
+                target_files=list(target_files) if target_files else None,
+                attempt_number=attempt_number,
+            )
+            self._send_json(HTTPStatus.OK, plan)
         except Exception as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
