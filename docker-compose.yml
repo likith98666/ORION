@@ -7,9 +7,11 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - ORION_ENV=production
       - ORION_HOST=0.0.0.0
       - ORION_PORT=8000
       - ORION_WORKSPACE=/workspace
+    stop_signal: SIGTERM
     volumes:
       - ./workspace_data:/workspace:rw
     restart: unless-stopped

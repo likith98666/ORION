@@ -19,6 +19,7 @@ from orion.core.security.models import (
     AuthorizationResult,
     SecurityContext,
 )
+from orion.core.security.rate_limiter import TokenBucketRateLimiter
 from orion.core.security.redaction import REDACTED_VALUE, RedactionEngine
 from orion.core.security.risk import ToolRiskLevel
 from orion.core.security.risk_policy import ToolRiskPolicy
@@ -51,6 +52,7 @@ __all__ = [
     "SecretProvider",
     "SecretReference",
     "SecurityContext",
+    "TokenBucketRateLimiter",
     "ToolRiskLevel",
     "ToolRiskPolicy",
 ]

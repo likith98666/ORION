@@ -16,6 +16,7 @@ from typing import Any
 from orion import __version__
 from orion.api.server import create_server
 from orion.api.service import MissionAPIService
+from orion.config.app_config import AppConfig
 
 BANNER = f"""
 ======================================================================
@@ -63,9 +64,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def run_server(host: str, port: int, workspace: Path) -> int:
+def run_server(
+    host: str,
+    port: int,
+    workspace: Path,
+    config: AppConfig | None = None,
+) -> int:
     """Run the HTTP server until interrupted."""
-    service = MissionAPIService(default_workspace_path=workspace)
+    app_config = config or AppConfig.from_env(
+        argv_workspace=workspace,
+        argv_host=host,
+        argv_port=port,
+    )
+    service = MissionAPIService(default_workspace_path=workspace, config=app_config)
     server = create_server(host=host, port=port, service=service)
 
     # Print startup telemetry banner
@@ -73,12 +84,19 @@ def run_server(host: str, port: int, workspace: Path) -> int:
     print(f"  HTTP Server : http://{host}:{port}")
     print(f"  Workspace   : {workspace.resolve()}")
     print(f"  Health Check: http://{host}:{port}/api/v1/health")
+    print(f"  Readiness   : http://{host}:{port}/api/v1/readiness")
     print(f"  UI Console  : http://{host}:{port}/")
+    print(f"  Environment : {app_config.environment}")
+    print(
+        f"  Rate Limits : {app_config.rate_limit_per_minute}/min "
+        f"(missions: {app_config.mission_rate_limit_per_minute}/min)"
+    )
     print("======================================================================")
     print("  Press Ctrl+C to terminate cleanly.\n")
 
     def _shutdown_handler(signum: int, frame: Any) -> None:
         print("\n[ORION] Received termination signal. Shutting down gracefully...")
+        service.shutdown()
         server.shutdown()
         server.server_close()
         sys.exit(0)
@@ -95,6 +113,7 @@ def run_server(host: str, port: int, workspace: Path) -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        service.shutdown()
         server.server_close()
     return 0
 

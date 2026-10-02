@@ -573,3 +573,29 @@ class TaskCancellationResponse:
             "reason": self.reason,
             "message": self.message,
         }
+
+
+@dataclass(frozen=True)
+class ReadinessResponse:
+    """Readiness probe response verifying environment, workspace, and subsystems."""
+
+    status: str
+    version: str
+    environment: str
+    workspace_path: str
+    workspace_writable: bool
+    active_missions: int
+    checks: dict[str, bool]
+    timestamp: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "version": self.version,
+            "environment": self.environment,
+            "workspace_path": self.workspace_path,
+            "workspace_writable": self.workspace_writable,
+            "active_missions": self.active_missions,
+            "checks": self.checks,
+            "timestamp": self.timestamp,
+        }

@@ -18,6 +18,7 @@ from orion.api.dto import (
     TaskSubmissionRequest,
 )
 from orion.api.service import MissionAPIService
+from orion.core.security.rate_limiter import TokenBucketRateLimiter
 
 ORION_VERSION = "1.0.0"
 STATIC_DIR = Path(__file__).resolve().parent.parent / "ui" / "static"
@@ -27,12 +28,39 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
     """HTTP Request Handler providing REST API, SSE streams, and UI static assets."""
 
     service: MissionAPIService = MissionAPIService()
+    rate_limiter: TokenBucketRateLimiter = TokenBucketRateLimiter()
 
     def do_OPTIONS(self) -> None:
         """Handle CORS pre-flight requests."""
         self.send_response(HTTPStatus.NO_CONTENT)
         self._send_cors_headers()
+        self._send_security_headers()
         self.end_headers()
+
+    def _check_rate_limit(self, is_submission: bool = False) -> bool:
+        """Check sliding window rate limits. Returns True if allowed, False if exceeded."""
+        if not self.service.config.rate_limit_enabled:
+            return True
+
+        client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
+        if is_submission:
+            key = f"{client_ip}:submission"
+            limit = self.service.config.mission_rate_limit_per_minute
+        else:
+            key = f"{client_ip}:api"
+            limit = self.service.config.rate_limit_per_minute
+
+        allowed, retry_after = self.rate_limiter.check_rate_limit(key, limit_per_minute=limit)
+        if not allowed:
+            retry_secs = max(1, int(retry_after))
+            self._send_error_json(
+                HTTPStatus.TOO_MANY_REQUESTS,
+                "Rate limit exceeded. Please retry later.",
+                code="RATE_LIMIT_EXCEEDED",
+                extra_headers={"Retry-After": str(retry_secs)},
+            )
+            return False
+        return True
 
     def do_GET(self) -> None:
         """Route GET requests to API endpoints, event streams, or static assets."""
@@ -40,9 +68,17 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path
         query = parse_qs(parsed.query)
 
-        # Health endpoint
-        if path == "/api/v1/health" or path == "/api/health":
+        # Health & Readiness probes are exempt from rate limiting to prevent probe flapping
+        if path in ("/api/v1/health", "/api/health"):
             self._handle_health()
+            return
+
+        if path in ("/api/v1/readiness", "/api/readiness"):
+            self._handle_readiness()
+            return
+
+        # Check rate limit for general API requests
+        if not self._check_rate_limit(is_submission=False):
             return
 
         # Collection endpoints: list missions/tasks
@@ -99,8 +135,13 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        # Check rate limit (stricter limit for mission submission)
+        is_sub = path in ("/api/tasks", "/api/v1/tasks", "/api/v1/missions")
+        if not self._check_rate_limit(is_submission=is_sub):
+            return
+
         # Create mission / task submission
-        if path in ("/api/tasks", "/api/v1/tasks", "/api/v1/missions"):
+        if is_sub:
             body = self._read_json_body()
             if body is None:
                 return
@@ -146,6 +187,13 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             timestamp=self._current_time_iso(),
         )
         self._send_json(HTTPStatus.OK, resp.to_dict())
+
+    def _handle_readiness(self) -> None:
+        resp = self.service.check_readiness()
+        status_code = (
+            HTTPStatus.OK if resp.status == "ready" else HTTPStatus.SERVICE_UNAVAILABLE
+        )
+        self._send_json(status_code, resp.to_dict())
 
     def _handle_list_missions(self) -> None:
         missions = self.service.list_missions()
@@ -267,6 +315,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
         self._send_cors_headers()
+        self._send_security_headers()
         self.end_headers()
 
         # Send initial connected message
@@ -287,7 +336,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                     payload = f"event: {ev_name}\ndata: {ev_data}\n\n".encode()
                     self.wfile.write(payload)
                     self.wfile.flush()
-                    if ev_name in ("TASK_COMPLETED", "TASK_TERMINATED"):
+                    if ev_name in ("TASK_COMPLETED", "TASK_TERMINATED", "SYSTEM_SHUTDOWN"):
                         break
                 except queue.Empty:
                     # Keep-alive comment line
@@ -489,10 +538,41 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         return None, None
 
     def _read_json_body(self) -> dict[str, Any] | None:
-        """Parse incoming JSON payload."""
-        content_length = int(self.headers.get("Content-Length", 0))
+        """Parse incoming JSON payload with size boundary enforcement."""
+        content_length_header = self.headers.get("Content-Length")
+        if not content_length_header:
+            return {}
+
+        try:
+            content_length = int(content_length_header)
+        except ValueError:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Invalid Content-Length header.",
+                code="INVALID_CONTENT_LENGTH",
+            )
+            return None
+
+        if content_length < 0:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Content-Length cannot be negative.",
+                code="INVALID_CONTENT_LENGTH",
+            )
+            return None
+
         if content_length == 0:
             return {}
+
+        # Enforce maximum body size cap
+        max_bytes = self.service.config.max_request_body_bytes
+        if content_length > max_bytes:
+            self._send_error_json(
+                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                f"Request payload ({content_length} bytes) exceeds limit of {max_bytes} bytes.",
+                code="PAYLOAD_TOO_LARGE",
+            )
+            return None
 
         raw_data = self.rfile.read(content_length)
         try:
@@ -501,31 +581,75 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 return parsed
             return {"data": parsed}
         except json.JSONDecodeError as exc:
-            self._send_error_json(HTTPStatus.BAD_REQUEST, f"Malformed JSON: {exc}")
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                f"Malformed JSON: {exc}",
+                code="MALFORMED_JSON",
+            )
             return None
 
     def _has_body(self) -> bool:
         return int(self.headers.get("Content-Length", 0)) > 0
 
-    def _send_json(self, status: HTTPStatus, data: dict[str, Any]) -> None:
-        """Send a JSON HTTP response."""
+    def _send_json(
+        self,
+        status: HTTPStatus,
+        data: dict[str, Any],
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
+        """Send a JSON HTTP response with security and cache headers."""
         encoded = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
         self._send_cors_headers()
+        self._send_security_headers()
+        if extra_headers:
+            for header_name, header_val in extra_headers.items():
+                self.send_header(header_name, header_val)
         self.end_headers()
         self.wfile.write(encoded)
 
-    def _send_error_json(self, status: HTTPStatus, error: str) -> None:
+    def _send_error_json(
+        self,
+        status: HTTPStatus,
+        error: str,
+        code: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
         """Send a standardized JSON error response."""
-        self._send_json(status, {"error": error, "status": status.value})
+        self._send_json(
+            status,
+            {
+                "error": error,
+                "code": code or status.name,
+                "status": status.value,
+                "timestamp": self._current_time_iso(),
+            },
+            extra_headers=extra_headers,
+        )
 
     def _send_cors_headers(self) -> None:
         """Include standard CORS headers."""
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    def _send_security_headers(self) -> None:
+        """Send production HTTP security headers."""
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Permissions-Policy", "geolocation=(), camera=(), microphone=()")
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "connect-src 'self'"
+        )
+        self.send_header("Content-Security-Policy", csp)
 
     def _serve_static_file(self, filename: str, content_type: str | None = None) -> None:
         """Serve static file from the static asset directory."""
@@ -535,11 +659,13 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         try:
             file_path.relative_to(STATIC_DIR)
         except ValueError:
-            self._send_error_json(HTTPStatus.FORBIDDEN, "Access forbidden.")
+            self._send_error_json(HTTPStatus.FORBIDDEN, "Access forbidden.", code="FORBIDDEN_PATH")
             return
 
         if not file_path.exists() or file_path.is_dir():
-            self._send_error_json(HTTPStatus.NOT_FOUND, f"File '{filename}' not found.")
+            self._send_error_json(
+                HTTPStatus.NOT_FOUND, f"File '{filename}' not found.", code="NOT_FOUND"
+            )
             return
 
         mime = content_type or mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
@@ -549,6 +675,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(content)))
         self._send_cors_headers()
+        self._send_security_headers()
         self.end_headers()
         self.wfile.write(content)
 
@@ -564,11 +691,16 @@ def create_server(
     host: str = "127.0.0.1",
     port: int = 8000,
     service: MissionAPIService | None = None,
+    rate_limiter: TokenBucketRateLimiter | None = None,
 ) -> ThreadingHTTPServer:
     """Create and return an initialized multi-threaded HTTP server."""
     active_service = service or MissionAPIService()
+    active_rate_limiter = rate_limiter or TokenBucketRateLimiter(
+        default_limit_per_minute=active_service.config.rate_limit_per_minute
+    )
 
     class CustomBoundHandler(OrionAPIHandler):
         service = active_service
+        rate_limiter = active_rate_limiter
 
     return ThreadingHTTPServer((host, port), CustomBoundHandler)

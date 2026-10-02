@@ -19,6 +19,7 @@ from orion.api.dto import (
     ExecutionGraphNodeDTO,
     ExecutionGraphResponse,
     MissionResponse,
+    ReadinessResponse,
     RecoveryDetailDTO,
     RecoveryObservabilityResponse,
     TaskApprovalRequest,
@@ -32,6 +33,7 @@ from orion.api.dto import (
     TimelineEventDTO,
     VerificationDetailDTO,
 )
+from orion.config.app_config import AppConfig
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
 from orion.core.agents.permission_policy import AgentPermissionPolicy
@@ -42,6 +44,7 @@ from orion.core.recovery.recovery_engine import RecoveryEngine
 from orion.core.security.approval import ApprovalStatus
 from orion.core.security.approval_repository_memory import InMemoryApprovalRepository
 from orion.core.security.approval_service import ApprovalService
+from orion.core.security.redaction import RedactionEngine
 from orion.core.swe.cognitive.patch_approval import PatchApprovalPackage
 from orion.core.swe.coordinator import STAGE_ORDER, SWEWorkflowCoordinator
 from orion.core.swe.evidence import (
@@ -125,7 +128,11 @@ class MissionRecord:
 class MissionAPIService:
     """Product-facing application service managing autonomous SWE missions."""
 
-    def __init__(self, default_workspace_path: Path | str | None = None) -> None:
+    def __init__(
+        self,
+        default_workspace_path: Path | str | None = None,
+        config: AppConfig | None = None,
+    ) -> None:
         self._missions: dict[UUID, MissionRecord] = {}
         self._start_time = time.time()
         self._default_workspace_path = (
@@ -133,6 +140,16 @@ class MissionAPIService:
             if default_workspace_path
             else None
         )
+        self._config = config or AppConfig.from_env(
+            argv_workspace=self._default_workspace_path
+        )
+        self._redaction_engine = RedactionEngine(secrets=self._config.known_secrets)
+        self._is_shutting_down: bool = False
+
+    @property
+    def config(self) -> AppConfig:
+        """Return the active AppConfig instance."""
+        return self._config
 
     @property
     def uptime_seconds(self) -> float:
@@ -143,6 +160,11 @@ class MissionAPIService:
     def missions_count(self) -> int:
         """Return total count of managed missions."""
         return len(self._missions)
+
+    @property
+    def is_shutting_down(self) -> bool:
+        """Return True if service is shutting down."""
+        return self._is_shutting_down
 
     def _get_record(self, ident: UUID) -> MissionRecord | None:
         """Retrieve MissionRecord by mission_id or task_id."""
@@ -189,6 +211,13 @@ class MissionAPIService:
         if not record:
             return
 
+        # Scrub sensitive tokens/passwords if redaction is enabled
+        scrubbed_data: dict[str, Any] = (
+            self._redaction_engine.redact(data)
+            if self._config.redaction_enabled
+            else data
+        )
+
         now_iso = datetime.now(UTC).isoformat()
         event_payload = {
             "event": event_type,
@@ -197,24 +226,35 @@ class MissionAPIService:
             "execution_id": str(record.execution_id),
             "lifecycle_state": record.lifecycle_state,
             "timestamp": now_iso,
-            "data": data,
+            "data": scrubbed_data,
         }
 
-        # Record event in timeline
+        # Record event in timeline with scrubbed detail & metadata
         current_st = (
             record.coordinator.current_stage.value
             if record.coordinator.current_stage
             else record.lifecycle_state.lower()
         )
+        raw_detail = str(
+            scrubbed_data.get("summary")
+            or scrubbed_data.get("detail")
+            or event_type
+        )
+        scrubbed_detail = (
+            self._redaction_engine.redact(raw_detail)
+            if self._config.redaction_enabled
+            else raw_detail
+        )
+
         record.timeline.append(
             TimelineEventDTO(
                 event_id=str(uuid4()),
                 stage=current_st,
                 title=event_type.replace("_", " ").title(),
-                detail=str(data.get("summary") or data.get("detail") or event_type),
+                detail=scrubbed_detail,
                 level=level,
                 timestamp=now_iso,
-                metadata=data,
+                metadata=scrubbed_data,
             )
         )
 
@@ -227,6 +267,85 @@ class MissionAPIService:
                     dead_queues.append(q)
             for dq in dead_queues:
                 record.subscribers.remove(dq)
+
+    # -------------------------------------------------------------
+    # Health, Readiness, and Graceful Shutdown
+    # -------------------------------------------------------------
+    def check_readiness(self) -> ReadinessResponse:
+        """Evaluate subsystem readiness, workspace writeability, and shutdown state."""
+        now_iso = datetime.now(UTC).isoformat()
+        ws_path = (
+            self._default_workspace_path
+            or self._config.workspace
+            or Path(".").resolve()
+        )
+        ws_str = str(ws_path)
+
+        checks: dict[str, bool] = {
+            "workspace_exists": False,
+            "workspace_writable": False,
+            "service_running": not self._is_shutting_down,
+        }
+
+        if ws_path.exists() and ws_path.is_dir():
+            checks["workspace_exists"] = True
+            probe_path = ws_path / f".orion_readiness_probe_{uuid4().hex}"
+            try:
+                probe_path.write_text("ok", encoding="utf-8")
+                if probe_path.exists():
+                    checks["workspace_writable"] = True
+                    probe_path.unlink(missing_ok=True)
+            except OSError:
+                checks["workspace_writable"] = False
+
+        is_ready = all(checks.values())
+        status_str = "ready" if is_ready else "not_ready"
+
+        active_count = sum(
+            1
+            for m in self._missions.values()
+            if m.lifecycle_state not in ("COMPLETED", "TERMINATED", "CANCELLED", "SHUTDOWN")
+        )
+
+        return ReadinessResponse(
+            status=status_str,
+            version="1.0.0",
+            environment=self._config.environment,
+            workspace_path=ws_str,
+            workspace_writable=checks["workspace_writable"],
+            active_missions=active_count,
+            checks=checks,
+            timestamp=now_iso,
+        )
+
+    def shutdown(self) -> None:
+        """Perform graceful shutdown, closing in-flight missions and notifying SSE subscribers."""
+        self._is_shutting_down = True
+        now_iso = datetime.now(UTC).isoformat()
+        terminal_states = ("COMPLETED", "TERMINATED", "CANCELLED", "SHUTDOWN")
+
+        for mission_id, record in self._missions.items():
+            with record.lock:
+                if record.lifecycle_state not in terminal_states:
+                    record.cancelled = True
+                    record.lifecycle_state = "SHUTDOWN"
+                    record.status = "shutdown"
+                    record.last_error = "Server shutting down"
+
+                # Broadcast shutdown event to active subscribers
+                shutdown_event = {
+                    "event": "SYSTEM_SHUTDOWN",
+                    "mission_id": str(mission_id),
+                    "task_id": str(record.task_id),
+                    "timestamp": now_iso,
+                    "data": {"message": "ORION server shutting down gracefully."},
+                }
+                for q in list(record.subscribers):
+                    try:
+                        q.put_nowait(shutdown_event)
+                    except (queue.Full, OSError):
+                        pass
+                record.subscribers.clear()
 
     # -------------------------------------------------------------
     # Mission & Task Creation

@@ -27,6 +27,7 @@ COPY --chown=orion:orion src/ /app/src/
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/src \
+    ORION_ENV=production \
     ORION_HOST=0.0.0.0 \
     ORION_PORT=8000 \
     ORION_WORKSPACE=/workspace
@@ -34,6 +35,9 @@ ENV PYTHONUNBUFFERED=1 \
 USER orion
 
 EXPOSE 8000
+
+# Graceful termination signal
+STOPSIGNAL SIGTERM
 
 # Built-in health check using standard library urllib
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
