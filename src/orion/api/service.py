@@ -3,6 +3,7 @@ from __future__ import annotations
 import queue
 import threading
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -50,6 +51,11 @@ from orion.core.evaluation import (
     BenchmarkRunner,
     ExperimentRecord,
     ExperimentTracker,
+)
+from orion.core.hitl import (
+    ClarificationStatus,
+    HITLCoordinator,
+    InterventionType,
 )
 from orion.core.missions.engine import MissionExecutionEngine
 from orion.core.missions.graph import MissionTaskGraph
@@ -178,6 +184,7 @@ class MissionAPIService:
         self._adaptive_recovery_memory = AdaptiveRecoveryMemory()
         self._experiment_tracker = ExperimentTracker(self._redaction_engine)
         self._benchmark_runner = BenchmarkRunner()
+        self._hitl_coordinator = HITLCoordinator()
 
     @property
     def config(self) -> AppConfig:
@@ -2083,3 +2090,111 @@ class MissionAPIService:
         """Empirically compare two evaluation experiments."""
         res = self._experiment_tracker.compare_experiments(base_id, target_id)
         return res.to_dict()
+
+    # -------------------------------------------------------------
+    # V7 Human-in-the-Loop & Collaborative Oversight
+    # -------------------------------------------------------------
+    @property
+    def hitl_coordinator(self) -> HITLCoordinator:
+        """Return the active HITLCoordinator instance."""
+        return self._hitl_coordinator
+
+    def request_clarification(
+        self,
+        mission_id: UUID,
+        task_id: UUID,
+        question: str,
+        context: str,
+        options: Sequence[str] = (),
+        default_choice: str | None = None,
+        timeout_seconds: float = 300.0,
+    ) -> dict[str, Any]:
+        """Request human clarification when ambiguity is detected."""
+        req = self._hitl_coordinator.request_clarification(
+            mission_id=mission_id,
+            task_id=task_id,
+            question=question,
+            context=context,
+            options=options,
+            default_choice=default_choice,
+            timeout_seconds=timeout_seconds,
+        )
+        return req.to_dict()
+
+    def respond_clarification(
+        self,
+        request_id: UUID,
+        response_text: str,
+        operator: str,
+    ) -> dict[str, Any]:
+        """Submit operator resolution for a pending clarification."""
+        req = self._hitl_coordinator.respond_clarification(
+            request_id=request_id,
+            response_text=response_text,
+            operator=operator,
+        )
+        return req.to_dict()
+
+    def list_clarifications(
+        self,
+        mission_id: UUID | None = None,
+        status: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """List clarification requests filtered by mission or status."""
+        st = ClarificationStatus(status) if status else None
+        reqs = self._hitl_coordinator.list_clarifications(mission_id=mission_id, status=st)
+        return [r.to_dict() for r in reqs]
+
+    def intervene_mission(
+        self,
+        mission_id: UUID,
+        action: str,
+        operator: str,
+        reason: str,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Perform an explicit operator intervention (pause, resume, steer, force_fail)."""
+        interv_type = InterventionType(action.lower().strip())
+        interv = self._hitl_coordinator.record_intervention(
+            mission_id=mission_id,
+            intervention_type=interv_type,
+            operator=operator,
+            reason=reason,
+            payload=payload,
+        )
+        # Apply cancellation if force_fail
+        if interv_type == InterventionType.FORCE_FAIL:
+            record = self._get_record(mission_id)
+            if record:
+                record.cancelled = True
+                record.status = "failed"
+                record.lifecycle_state = "FAILED"
+        return interv.to_dict()
+
+    def submit_operator_feedback(
+        self,
+        mission_id: UUID,
+        operator: str,
+        rating: int,
+        comments: str,
+        corrections: Sequence[str] = (),
+    ) -> dict[str, Any]:
+        """Record human feedback and ratings for a mission."""
+        fb = self._hitl_coordinator.record_feedback(
+            mission_id=mission_id,
+            operator=operator,
+            rating=rating,
+            comments=comments,
+            corrections=corrections,
+        )
+        return fb.to_dict()
+
+    def get_mission_interventions(self, mission_id: UUID) -> list[dict[str, Any]]:
+        """Retrieve all recorded human interventions for a mission."""
+        intervs = self._hitl_coordinator.get_mission_interventions(mission_id)
+        return [i.to_dict() for i in intervs]
+
+    def get_mission_feedback(self, mission_id: UUID) -> list[dict[str, Any]]:
+        """Retrieve all operator feedback entries for a mission."""
+        fbs = self._hitl_coordinator.get_mission_feedback(mission_id)
+        return [f.to_dict() for f in fbs]

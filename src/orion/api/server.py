@@ -126,6 +126,21 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_recovery_metrics()
             return
 
+        # V7 Human-in-the-Loop endpoints
+        if path in ("/api/v1/hitl/clarifications", "/api/hitl/clarifications"):
+            self._handle_list_clarifications(query)
+            return
+
+        if path.startswith("/api/v1/hitl/interventions/") or path.startswith(
+            "/api/hitl/interventions/"
+        ):
+            self._handle_get_hitl_interventions(path)
+            return
+
+        if path.startswith("/api/v1/hitl/feedback/") or path.startswith("/api/hitl/feedback/"):
+            self._handle_get_hitl_feedback(path)
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -279,6 +294,38 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_recovery_plan(body)
+            return
+
+        # V7 Human-in-the-Loop action endpoints
+        if path in ("/api/v1/hitl/intervene", "/api/hitl/intervene"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_hitl_intervene(body)
+            return
+
+        if path in ("/api/v1/hitl/clarifications/request", "/api/hitl/clarifications/request"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_hitl_request_clarification(body)
+            return
+
+        if (
+            path.startswith("/api/v1/hitl/clarifications/")
+            or path.startswith("/api/hitl/clarifications/")
+        ) and path.endswith("/respond"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_hitl_respond_clarification(path, body)
+            return
+
+        if path in ("/api/v1/hitl/feedback", "/api/hitl/feedback"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_hitl_feedback(body)
             return
 
         # Resource action endpoints
@@ -452,6 +499,148 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.OK, comparison)
         except KeyError as exc:
             self._send_error_json(HTTPStatus.NOT_FOUND, str(exc))
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    # -------------------------------------------------------------
+    # V7 Human-in-the-Loop Handlers
+    # -------------------------------------------------------------
+    def _handle_list_clarifications(self, query: dict[str, list[str]]) -> None:
+        mid_raw = query.get("mission_id", [None])[0]
+        status = query.get("status", [None])[0]
+        mission_id = UUID(mid_raw) if mid_raw else None
+        clarifications = self.service.list_clarifications(mission_id=mission_id, status=status)
+        self._send_json(
+            HTTPStatus.OK,
+            {"clarifications": clarifications, "total": len(clarifications)},
+        )
+
+    def _handle_get_hitl_interventions(self, path: str) -> None:
+        prefix = (
+            "/api/v1/hitl/interventions/"
+            if path.startswith("/api/v1/hitl/interventions/")
+            else "/api/hitl/interventions/"
+        )
+        mid_str = path[len(prefix):].strip("/")
+        try:
+            mid = UUID(mid_str)
+            intervs = self.service.get_mission_interventions(mid)
+            self._send_json(HTTPStatus.OK, {"interventions": intervs, "total": len(intervs)})
+        except ValueError:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid UUID '{mid_str}'.")
+
+    def _handle_get_hitl_feedback(self, path: str) -> None:
+        prefix = (
+            "/api/v1/hitl/feedback/"
+            if path.startswith("/api/v1/hitl/feedback/")
+            else "/api/hitl/feedback/"
+        )
+        mid_str = path[len(prefix):].strip("/")
+        try:
+            mid = UUID(mid_str)
+            fb = self.service.get_mission_feedback(mid)
+            self._send_json(HTTPStatus.OK, {"feedback": fb, "total": len(fb)})
+        except ValueError:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid UUID '{mid_str}'.")
+
+    def _handle_hitl_intervene(self, body: dict[str, Any]) -> None:
+        mid_raw = body.get("mission_id")
+        action = body.get("action")
+        operator = body.get("operator", "Operator")
+        reason = body.get("reason", "")
+        payload = body.get("payload")
+        if not mid_raw or not action:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'mission_id' and 'action' are required.",
+            )
+            return
+        try:
+            res = self.service.intervene_mission(
+                mission_id=UUID(str(mid_raw)),
+                action=str(action),
+                operator=str(operator),
+                reason=str(reason),
+                payload=dict(payload) if isinstance(payload, dict) else None,
+            )
+            self._send_json(HTTPStatus.OK, res)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_hitl_request_clarification(self, body: dict[str, Any]) -> None:
+        mid_raw = body.get("mission_id")
+        tid_raw = body.get("task_id")
+        question = body.get("question")
+        context = body.get("context", "")
+        options = tuple(body.get("options", ()))
+        default_choice = body.get("default_choice")
+        if not mid_raw or not tid_raw or not question:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'mission_id', 'task_id', and 'question' are required.",
+            )
+            return
+        try:
+            req = self.service.request_clarification(
+                mission_id=UUID(str(mid_raw)),
+                task_id=UUID(str(tid_raw)),
+                question=str(question),
+                context=str(context),
+                options=options,
+                default_choice=str(default_choice) if default_choice else None,
+            )
+            self._send_json(HTTPStatus.CREATED, req)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_hitl_respond_clarification(self, path: str, body: dict[str, Any]) -> None:
+        prefix = (
+            "/api/v1/hitl/clarifications/"
+            if path.startswith("/api/v1/hitl/clarifications/")
+            else "/api/hitl/clarifications/"
+        )
+        req_id_str = path[len(prefix):-len("/respond")].strip("/")
+        resp_text = body.get("response") or body.get("answer")
+        operator = body.get("operator", "Operator")
+        if not resp_text:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Field 'response' (or 'answer') is required.",
+            )
+            return
+        try:
+            res = self.service.respond_clarification(
+                request_id=UUID(req_id_str),
+                response_text=str(resp_text),
+                operator=str(operator),
+            )
+            self._send_json(HTTPStatus.OK, res)
+        except KeyError as exc:
+            self._send_error_json(HTTPStatus.NOT_FOUND, str(exc))
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_hitl_feedback(self, body: dict[str, Any]) -> None:
+        mid_raw = body.get("mission_id")
+        operator = body.get("operator", "Operator")
+        rating = body.get("rating")
+        comments = body.get("comments", "")
+        corrections = tuple(body.get("corrections", ()))
+        if not mid_raw or rating is None:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'mission_id' and 'rating' are required.",
+            )
+            return
+        try:
+            fb = self.service.submit_operator_feedback(
+                mission_id=UUID(str(mid_raw)),
+                operator=str(operator),
+                rating=int(rating),
+                comments=str(comments),
+                corrections=corrections,
+            )
+            self._send_json(HTTPStatus.CREATED, fb)
         except Exception as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
