@@ -75,6 +75,15 @@ def test_ui_html_structure_and_identifiers():
     assert 'id="tab-verification"' in index_html
     assert 'id="verifStatusBox"' in index_html
 
+    # Execution Graph (DAG) & Workforce Observatory
+    assert 'id="tab-graph"' in index_html
+    assert 'id="dagNodesGrid"' in index_html
+    assert 'id="dagNodeDetailPanel"' in index_html
+    assert 'id="tab-workforce"' in index_html
+    assert 'id="workforceCardsGrid"' in index_html
+    assert 'id="btnCancelMission"' in index_html
+    assert 'id="connectionLostBanner"' in index_html
+
 
 def test_ui_css_visual_system_tokens():
     """Verify app.css implements the Cinematic Obsidian visual design system."""
@@ -100,6 +109,12 @@ def test_ui_css_visual_system_tokens():
     assert ".diff-line-del" in app_css
     assert ".diff-code-block" in app_css
 
+    # Graph DAG and Workforce styles
+    assert ".dag-node-card" in app_css
+    assert ".agent-roster-card" in app_css
+    assert ".btn-rose-subtle" in app_css
+    assert ".connection-lost-banner" in app_css
+
     # Responsive media queries
     assert "@media (max-width:" in app_css
 
@@ -112,10 +127,13 @@ def test_ui_js_api_bindings_and_event_listeners():
     assert "/api/tasks" in app_js
     assert "/api/tasks/${taskId}/events" in app_js or "/api/tasks/" in app_js
     assert "/approve" in app_js
+    assert "/cancel" in app_js
     assert "/changes" in app_js
     assert "/tests" in app_js
     assert "/recovery" in app_js
     assert "/verification" in app_js
+    assert "/graph" in app_js
+    assert "/agents" in app_js
 
     # Real-time SSE event handling
     required_events = [
@@ -129,6 +147,7 @@ def test_ui_js_api_bindings_and_event_listeners():
         "RECOVERY_STARTED",
         "RECOVERY_COMPLETED",
         "TASK_COMPLETED",
+        "TASK_CANCELLED",
         "TASK_TERMINATED",
     ]
     for ev in required_events:

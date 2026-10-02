@@ -14,6 +14,7 @@ from uuid import UUID
 from orion.api.dto import (
     HealthResponse,
     TaskApprovalRequest,
+    TaskCancellationRequest,
     TaskSubmissionRequest,
 )
 from orion.api.service import MissionAPIService
@@ -74,6 +75,10 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_evaluation(resource_id)
             elif sub_resource == "report":
                 self._handle_get_report(resource_id)
+            elif sub_resource == "agents":
+                self._handle_get_agents(resource_id)
+            elif sub_resource == "graph":
+                self._handle_get_graph(resource_id)
             else:
                 self._send_error_json(HTTPStatus.NOT_FOUND, f"Resource '{sub_resource}' not found.")
             return
@@ -111,6 +116,8 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
             if sub_resource == "approve":
                 self._handle_approve_task(resource_id, body)
+            elif sub_resource == "cancel":
+                self._handle_cancel_mission(resource_id, body)
             elif sub_resource == "run":
                 self._handle_run_task(resource_id, body)
             elif sub_resource == "advance":
@@ -233,6 +240,20 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             return
         self._send_json(HTTPStatus.OK, report)
 
+    def _handle_get_agents(self, mission_id: UUID) -> None:
+        roster = self.service.get_mission_agents(mission_id)
+        if roster is None:
+            self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
+            return
+        self._send_json(HTTPStatus.OK, roster.to_dict())
+
+    def _handle_get_graph(self, mission_id: UUID) -> None:
+        graph = self.service.get_execution_graph(mission_id)
+        if graph is None:
+            self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
+            return
+        self._send_json(HTTPStatus.OK, graph.to_dict())
+
     def _handle_events_stream(self, mission_id: UUID) -> None:
         """Handle Server-Sent Events (SSE) streaming."""
         try:
@@ -335,6 +356,20 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
         except ValueError as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.UNPROCESSABLE_ENTITY, str(exc))
+
+    def _handle_cancel_mission(self, mission_id: UUID, body: dict[str, Any]) -> None:
+        reason = body.get("reason", "Operator requested cancellation")
+        cancelled_by = body.get("cancelled_by", "Operator")
+        try:
+            req = TaskCancellationRequest(
+                reason=str(reason), cancelled_by=str(cancelled_by)
+            )
+            resp = self.service.cancel_mission(mission_id, req)
+            self._send_json(HTTPStatus.OK, resp.to_dict())
+        except KeyError:
+            self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
         except Exception as exc:
             self._send_error_json(HTTPStatus.UNPROCESSABLE_ENTITY, str(exc))
 

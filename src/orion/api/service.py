@@ -10,14 +10,21 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from orion.api.dto import (
+    AgentRosterResponse,
+    AgentTelemetryDTO,
     CreateMissionRequest,
     EvaluationDetailDTO,
     EvidenceItemDTO,
+    ExecutionGraphEdgeDTO,
+    ExecutionGraphNodeDTO,
+    ExecutionGraphResponse,
     MissionResponse,
     RecoveryDetailDTO,
     RecoveryObservabilityResponse,
     TaskApprovalRequest,
     TaskApprovalResponse,
+    TaskCancellationRequest,
+    TaskCancellationResponse,
     TaskChangesResponse,
     TaskExecutionResponse,
     TaskSubmissionRequest,
@@ -112,6 +119,7 @@ class MissionRecord:
     subscribers: list[queue.Queue[dict[str, Any]]] = field(default_factory=list)
     lock: threading.Lock = field(default_factory=threading.Lock)
     last_error: str | None = None
+    cancelled: bool = False
 
 
 class MissionAPIService:
@@ -646,6 +654,315 @@ class MissionAPIService:
             history=(),
         )
 
+    def get_mission_agents(self, mission_id: UUID) -> AgentRosterResponse | None:
+        """Retrieve real workforce agent roster, roles, and status for a mission."""
+        record = self._get_record(mission_id)
+        if not record:
+            return None
+
+        curr_stage = record.coordinator.current_stage
+        lifecycle = record.lifecycle_state
+
+        swe_status = "IDLE"
+        diag_status = "IDLE"
+        verif_status = "IDLE"
+        recov_status = "IDLE"
+
+        if lifecycle in ("CANCELLED", "COMPLETED"):
+            swe_status = diag_status = verif_status = recov_status = "COMPLETED"
+        elif lifecycle in ("RECOVERING", "RECOVERY"):
+            recov_status = "ACTIVE"
+            swe_status = "WAITING"
+        elif (
+            record.pending_approval
+            and record.pending_approval.status == ApprovalStatus.PENDING
+        ):
+            swe_status = "WAITING_APPROVAL"
+        elif curr_stage in (SWETaskStage.INSPECT_REPOSITORY, SWETaskStage.ANALYZE_FAILURE):
+            diag_status = "ACTIVE"
+            swe_status = "ACTIVE"
+        elif curr_stage in (
+            SWETaskStage.FORMULATE_FIX,
+            SWETaskStage.IMPLEMENT_CHANGE,
+            SWETaskStage.RUN_TESTS,
+        ):
+            swe_status = "ACTIVE"
+        elif curr_stage == SWETaskStage.VERIFY:
+            verif_status = "ACTIVE"
+            swe_status = "ACTIVE"
+        elif curr_stage == SWETaskStage.GENERATE_REPORT:
+            verif_status = "COMPLETED"
+            swe_status = "ACTIVE"
+
+        task_label = curr_stage.value if curr_stage else lifecycle
+        agent_dtos = (
+            AgentTelemetryDTO(
+                agent_id=str(record.agent.id),
+                name="Orion-SWE-Engineer",
+                role="Lead SWE Orchestrator & Code Modification",
+                capabilities=tuple(c.value for c in record.agent.capabilities),
+                permissions=tuple(
+                    p.value for p in record.agent.permission_policy.permissions
+                ),
+                status=swe_status,
+                current_task=f"Executing {task_label}",
+                started_at=record.created_at.isoformat(),
+                completed_at=(
+                    datetime.now(UTC).isoformat()
+                    if lifecycle in ("COMPLETED", "CANCELLED")
+                    else None
+                ),
+                failure_message=record.last_error,
+            ),
+            AgentTelemetryDTO(
+                agent_id="agent-diag-002",
+                name="Orion-Diagnostics-Specialist",
+                role="Repository Analysis & Failure Diagnosis",
+                capabilities=("repository_analysis", "software_debugging", "reasoning"),
+                permissions=("read_files", "code_execution"),
+                status=diag_status,
+                current_task=(
+                    "Analyzing failure patterns & reproducing tests"
+                    if diag_status == "ACTIVE"
+                    else "Ready"
+                ),
+                started_at=record.created_at.isoformat(),
+                completed_at=(
+                    datetime.now(UTC).isoformat()
+                    if SWETaskStage.ANALYZE_FAILURE in record.coordinator.completed_stages
+                    else None
+                ),
+            ),
+            AgentTelemetryDTO(
+                agent_id="agent-verif-003",
+                name="Orion-Verification-Authority",
+                role="Authoritative Evidence Assessment & Verification",
+                capabilities=("verification", "evaluation", "auditing"),
+                permissions=("read_files",),
+                status=verif_status,
+                current_task=(
+                    "Evaluating requirements & promoting evidence"
+                    if verif_status == "ACTIVE"
+                    else "Ready"
+                ),
+                started_at=record.created_at.isoformat(),
+                completed_at=(
+                    datetime.now(UTC).isoformat()
+                    if SWETaskStage.VERIFY in record.coordinator.completed_stages
+                    else None
+                ),
+            ),
+            AgentTelemetryDTO(
+                agent_id="agent-recov-004",
+                name="Orion-Recovery-Specialist",
+                role="Bounded Self-Healing & Failure Recovery",
+                capabilities=("recovery", "planning", "rollback", "remediation"),
+                permissions=("read_files", "write_files", "code_execution"),
+                status=recov_status,
+                current_task=(
+                    "Executing bounded self-healing recovery loop"
+                    if recov_status == "ACTIVE"
+                    else "Standby"
+                ),
+                started_at=record.created_at.isoformat(),
+                completed_at=None,
+            ),
+        )
+
+        active_cnt = sum(1 for a in agent_dtos if a.status == "ACTIVE")
+        return AgentRosterResponse(
+            mission_id=str(record.mission_id),
+            task_id=str(record.task_id),
+            agents=agent_dtos,
+            total_agents=len(agent_dtos),
+            active_count=active_cnt,
+        )
+
+    def get_execution_graph(self, mission_id: UUID) -> ExecutionGraphResponse | None:
+        """Retrieve real execution DAG with nodes, states, and stage dependencies."""
+        record = self._get_record(mission_id)
+        if not record:
+            return None
+
+        completed = set(record.coordinator.completed_stages)
+        curr_stage = record.coordinator.current_stage
+        lifecycle = record.lifecycle_state
+        is_approval_pending = (
+            record.pending_approval is not None
+            and record.pending_approval.status == ApprovalStatus.PENDING
+        )
+
+        stages_defs = [
+            (
+                "inspect_repository",
+                "Inspect Repository",
+                "Explore workspace layout, directory structure, and source files",
+                "repository_analysis",
+            ),
+            (
+                "analyze_failure",
+                "Analyze Failure",
+                "Reproduce test failures and identify root causes",
+                "software_debugging",
+            ),
+            (
+                "formulate_fix",
+                "Formulate Fix",
+                "Synthesize candidate repair patch and validate syntax AST",
+                "reasoning",
+            ),
+            (
+                "approval_gate",
+                "Approval Gate",
+                "Operator authorization boundary for high-risk write modifications",
+                "security_review",
+            ),
+            (
+                "implement_change",
+                "Implement Change",
+                "Apply atomic patch with optimistic concurrency and pre-apply snapshots",
+                "code_modification",
+            ),
+            (
+                "run_tests",
+                "Controlled Tests",
+                "Execute targeted pytest runner with timeout and sandboxed isolation",
+                "testing",
+            ),
+            (
+                "verify",
+                "Authoritative Verification",
+                "Verify exit codes and expected requirements, promote evidence to VERIFIED",
+                "verification",
+            ),
+            (
+                "generate_report",
+                "Certified Mission Report",
+                "Generate evidence-backed final report with deterministic scorecard",
+                "writing",
+            ),
+        ]
+
+        nodes: list[ExecutionGraphNodeDTO] = []
+        stage_order_map = {name: idx for idx, (name, *_) in enumerate(stages_defs)}
+
+        for name, title, desc, cap in stages_defs:
+            stage_enum = SWETaskStage(name) if name != "approval_gate" else None
+
+            if lifecycle == "CANCELLED":
+                state = "CANCELLED"
+            elif stage_enum and stage_enum in completed:
+                state = "VERIFIED" if name == "verify" else "COMPLETED"
+            elif name == "approval_gate":
+                if SWETaskStage.IMPLEMENT_CHANGE in completed:
+                    state = "COMPLETED"
+                elif is_approval_pending:
+                    state = "WAITING_APPROVAL"
+                elif SWETaskStage.FORMULATE_FIX in completed:
+                    state = "READY"
+                else:
+                    state = "PENDING"
+            elif curr_stage and curr_stage.value == name:
+                if lifecycle in ("RECOVERING", "RECOVERY"):
+                    state = "RECOVERING"
+                elif lifecycle == "TERMINATED":
+                    state = "FAILED"
+                else:
+                    state = "RUNNING"
+            else:
+                curr_idx = stage_order_map[name]
+                prev_name = stages_defs[curr_idx - 1][0] if curr_idx > 0 else None
+                prev_enum = (
+                    SWETaskStage(prev_name)
+                    if prev_name and prev_name != "approval_gate"
+                    else None
+                )
+
+                if prev_name == "approval_gate":
+                    prev_ready = (
+                        record.pending_approval is not None
+                        and record.pending_approval.status == ApprovalStatus.APPROVED
+                    ) or (
+                        SWETaskStage.FORMULATE_FIX in completed
+                        and not is_approval_pending
+                    )
+                elif prev_enum:
+                    prev_ready = prev_enum in completed
+                else:
+                    prev_ready = True
+
+                state = "READY" if prev_ready else "PENDING"
+
+            nodes.append(
+                ExecutionGraphNodeDTO(
+                    id=name,
+                    stage=name,
+                    title=title,
+                    description=desc,
+                    state=state,
+                    required_capability=cap,
+                    duration_seconds=0.0,
+                    error=record.last_error if state == "FAILED" else None,
+                )
+            )
+
+        edges = (
+            ExecutionGraphEdgeDTO(source="inspect_repository", target="analyze_failure"),
+            ExecutionGraphEdgeDTO(source="analyze_failure", target="formulate_fix"),
+            ExecutionGraphEdgeDTO(source="formulate_fix", target="approval_gate"),
+            ExecutionGraphEdgeDTO(source="approval_gate", target="implement_change"),
+            ExecutionGraphEdgeDTO(source="implement_change", target="run_tests"),
+            ExecutionGraphEdgeDTO(source="run_tests", target="verify"),
+            ExecutionGraphEdgeDTO(source="verify", target="generate_report"),
+        )
+
+        completed_cnt = sum(1 for n in nodes if n.state in ("COMPLETED", "VERIFIED"))
+        curr_id = curr_stage.value if curr_stage else (nodes[0].id if nodes else None)
+
+        return ExecutionGraphResponse(
+            mission_id=str(record.mission_id),
+            task_id=str(record.task_id),
+            nodes=tuple(nodes),
+            edges=edges,
+            current_node_id=curr_id,
+            completed_nodes_count=completed_cnt,
+            total_nodes_count=len(nodes),
+        )
+
+    def cancel_mission(
+        self, mission_id: UUID, request: TaskCancellationRequest | None = None
+    ) -> TaskCancellationResponse:
+        """Cancel an in-flight or pending mission cleanly."""
+        record = self._get_record(mission_id)
+        if not record:
+            raise KeyError(f"Mission '{mission_id}' not found.")
+
+        req = request or TaskCancellationRequest()
+        with record.lock:
+            record.cancelled = True
+            record.lifecycle_state = "CANCELLED"
+            record.status = "cancelled"
+
+        now_iso = datetime.now(UTC).isoformat()
+        self.emit_event(
+            mission_id,
+            "TASK_CANCELLED",
+            {
+                "reason": req.reason,
+                "cancelled_by": req.cancelled_by,
+                "summary": f"Mission cancelled: {req.reason}",
+            },
+            level="warning",
+        )
+        return TaskCancellationResponse(
+            mission_id=str(record.mission_id),
+            task_id=str(record.task_id),
+            status="cancelled",
+            cancelled_at=now_iso,
+            reason=req.reason,
+            message=f"Mission '{mission_id}' cancelled.",
+        )
+
     # -------------------------------------------------------------
     # Approval Flow
     # -------------------------------------------------------------
@@ -779,8 +1096,13 @@ class MissionAPIService:
         agent = record.agent
 
         try:
+            if record.cancelled:
+                return
+
             # Stage 1: INSPECT_REPOSITORY
             if SWETaskStage.INSPECT_REPOSITORY not in coord.completed_stages:
+                if record.cancelled:
+                    return
                 record.lifecycle_state = "INSPECTING"
                 self.emit_event(
                     mission_id,
@@ -808,6 +1130,8 @@ class MissionAPIService:
 
             # Stage 2: ANALYZE_FAILURE
             if SWETaskStage.ANALYZE_FAILURE not in coord.completed_stages:
+                if record.cancelled:
+                    return
                 record.lifecycle_state = "ANALYZING"
                 self.emit_event(
                     mission_id,
@@ -838,74 +1162,77 @@ class MissionAPIService:
 
             # Stage 3: FORMULATE_FIX
             if SWETaskStage.FORMULATE_FIX not in coord.completed_stages:
-                record.lifecycle_state = "FORMULATING_FIX"
-                self.emit_event(
-                    mission_id,
-                    "AGENT_STARTED",
-                    {
-                        "agent": agent.name,
-                        "stage": "formulate_fix",
-                        "operation": "patch_synthesis",
-                    },
-                )
-                coord.advance_stage(SWETaskStage.FORMULATE_FIX)
-                fix_prop = coord.formulate_fix(agent=agent, fallback_on_error=True)
-                patch_prop = coord.synthesize_patch(
-                    agent=agent, fix_proposal=fix_prop, fallback_on_error=True
-                )
-                self.emit_event(
-                    mission_id,
-                    "PATCH_PROPOSED",
-                    {
-                        "affected_files": list(patch_prop.affected_files),
-                        "total_lines_added": patch_prop.total_lines_added,
-                        "total_lines_removed": patch_prop.total_lines_removed,
-                        "diff_summary": patch_prop.unified_diff,
-                        "summary": f"Synthesized patch affecting {list(patch_prop.affected_files)}",
-                    },
-                )
-                pkg = coord.request_patch_approval(patch_proposal=patch_prop, agent=agent)
-                record.pending_approval = pkg
-
-                if not auto_approve:
-                    # Pause here and await human approval
-                    record.lifecycle_state = "AWAITING_APPROVAL"
+                if record.cancelled:
+                    return
+                if (
+                    record.pending_approval
+                    and record.pending_approval.status == ApprovalStatus.APPROVED
+                ):
+                    coord.complete_stage(SWETaskStage.FORMULATE_FIX)
+                else:
+                    record.lifecycle_state = "FORMULATING_FIX"
                     self.emit_event(
                         mission_id,
-                        "APPROVAL_REQUIRED",
+                        "AGENT_STARTED",
                         {
-                            "request_id": str(pkg.request_id),
-                            "action": pkg.action,
-                            "risk_level": pkg.risk_level.value,
+                            "agent": agent.name,
+                            "stage": "formulate_fix",
+                            "operation": "patch_synthesis",
+                        },
+                    )
+                    coord.advance_stage(SWETaskStage.FORMULATE_FIX)
+                    fix_prop = coord.formulate_fix(agent=agent, fallback_on_error=True)
+                    patch_prop = coord.synthesize_patch(
+                        agent=agent, fix_proposal=fix_prop, fallback_on_error=True
+                    )
+                    self.emit_event(
+                        mission_id,
+                        "PATCH_PROPOSED",
+                        {
                             "affected_files": list(patch_prop.affected_files),
-                            "diff": patch_prop.unified_diff,
-                            "rationale": patch_prop.rationale,
+                            "total_lines_added": patch_prop.total_lines_added,
+                            "total_lines_removed": patch_prop.total_lines_removed,
+                            "diff_summary": patch_prop.unified_diff,
                             "summary": (
-                                f"Approval required for patch application "
-                                f"({pkg.risk_level.value} risk)"
+                                f"Synthesized patch affecting {list(patch_prop.affected_files)}"
                             ),
                         },
-                        level="warning",
                     )
-                    return
+                    pkg = coord.request_patch_approval(patch_proposal=patch_prop, agent=agent)
+                    record.pending_approval = pkg
 
-                # Auto-approval
-                self.approve_task(
-                    mission_id,
-                    TaskApprovalRequest(
-                        decision="approve",
-                        approver="AutonomousPolicy",
-                        reason="Pre-approved execution mode",
-                    ),
-                )
+                    if not auto_approve:
+                        # Pause here and await human approval
+                        record.lifecycle_state = "AWAITING_APPROVAL"
+                        self.emit_event(
+                            mission_id,
+                            "APPROVAL_REQUIRED",
+                            {
+                                "request_id": str(pkg.request_id),
+                                "action": pkg.action,
+                                "risk_level": pkg.risk_level.value,
+                                "affected_files": list(patch_prop.affected_files),
+                                "diff": patch_prop.unified_diff,
+                                "rationale": patch_prop.rationale,
+                                "summary": (
+                                    f"Approval required for patch application "
+                                    f"({pkg.risk_level.value} risk)"
+                                ),
+                            },
+                            level="warning",
+                        )
+                        return
 
-            # If approval was completed, complete FORMULATE_FIX
-            if (
-                record.pending_approval
-                and record.pending_approval.status == ApprovalStatus.APPROVED
-                and SWETaskStage.FORMULATE_FIX not in coord.completed_stages
-            ):
-                coord.complete_stage(SWETaskStage.FORMULATE_FIX)
+                    # Auto-approval
+                    self.approve_task(
+                        mission_id,
+                        TaskApprovalRequest(
+                            decision="approve",
+                            approver="AutonomousPolicy",
+                            reason="Pre-approved execution mode",
+                        ),
+                    )
+                    coord.complete_stage(SWETaskStage.FORMULATE_FIX)
 
             # Stage 4: IMPLEMENT_CHANGE
             if (
@@ -913,6 +1240,8 @@ class MissionAPIService:
                 and record.pending_approval
                 and record.pending_approval.status == ApprovalStatus.APPROVED
             ):
+                if record.cancelled:
+                    return
                 record.lifecycle_state = "APPLYING"
                 self.emit_event(
                     mission_id,
@@ -939,6 +1268,8 @@ class MissionAPIService:
 
             # Stage 5: RUN_TESTS
             if SWETaskStage.RUN_TESTS not in coord.completed_stages:
+                if record.cancelled:
+                    return
                 record.lifecycle_state = "TESTING"
                 self.emit_event(
                     mission_id,
@@ -1039,6 +1370,8 @@ class MissionAPIService:
 
             # Stage 6: VERIFY
             if SWETaskStage.VERIFY not in coord.completed_stages:
+                if record.cancelled:
+                    return
                 record.lifecycle_state = "VERIFYING"
                 self.emit_event(
                     mission_id,
@@ -1081,6 +1414,8 @@ class MissionAPIService:
 
             # Stage 7: GENERATE_REPORT
             if SWETaskStage.GENERATE_REPORT not in coord.completed_stages:
+                if record.cancelled:
+                    return
                 coord.advance_stage(SWETaskStage.GENERATE_REPORT)
                 report = coord.generate_report(
                     summary=f"Mission completed for '{record.objective}'"
@@ -1196,10 +1531,16 @@ class MissionAPIService:
         if not record:
             raise KeyError(f"Mission '{mission_id}' not found.")
 
+        if record.report is not None:
+            return record.report.to_dict()
+
         if record.coordinator.current_stage != SWETaskStage.GENERATE_REPORT:
-            record.coordinator.advance_stage(SWETaskStage.GENERATE_REPORT)
+            if SWETaskStage.GENERATE_REPORT not in record.coordinator.completed_stages:
+                record.coordinator.advance_stage(SWETaskStage.GENERATE_REPORT)
 
         report = record.coordinator.generate_report(summary=summary or record.summary)
+        if SWETaskStage.GENERATE_REPORT not in record.coordinator.completed_stages:
+            record.coordinator.complete_stage(SWETaskStage.GENERATE_REPORT)
         record.report = report
         record.status = report.status
         record.lifecycle_state = "COMPLETED"

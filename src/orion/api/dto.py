@@ -427,3 +427,149 @@ class HealthResponse:
             "missions_count": self.missions_count,
             "timestamp": self.timestamp,
         }
+
+
+@dataclass(frozen=True)
+class AgentTelemetryDTO:
+    """Telemetry data representing an autonomous workforce agent."""
+
+    agent_id: str
+    name: str
+    role: str
+    capabilities: tuple[str, ...]
+    permissions: tuple[str, ...]
+    status: str  # IDLE, ACTIVE, WAITING_APPROVAL, COMPLETED, FAILED
+    current_task: str | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    failure_message: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "role": self.role,
+            "capabilities": list(self.capabilities),
+            "permissions": list(self.permissions),
+            "status": self.status,
+            "current_task": self.current_task,
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "failure_message": self.failure_message,
+        }
+
+
+@dataclass(frozen=True)
+class AgentRosterResponse:
+    """Workforce observatory roster exposing all participating agents."""
+
+    mission_id: str
+    task_id: str
+    agents: tuple[AgentTelemetryDTO, ...]
+    total_agents: int
+    active_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "mission_id": self.mission_id,
+            "task_id": self.task_id,
+            "agents": [a.to_dict() for a in self.agents],
+            "total_agents": self.total_agents,
+            "active_count": self.active_count,
+        }
+
+
+@dataclass(frozen=True)
+class ExecutionGraphNodeDTO:
+    """Node in the execution DAG representing a stage or unit of work."""
+
+    id: str
+    stage: str
+    title: str
+    description: str
+    state: str  # PENDING, READY, RUNNING, BLOCKED, COMPLETED, FAILED, RECOVERING, VERIFIED
+    required_capability: str | None = None
+    duration_seconds: float = 0.0
+    error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "stage": self.stage,
+            "title": self.title,
+            "description": self.description,
+            "state": self.state,
+            "required_capability": self.required_capability,
+            "duration_seconds": self.duration_seconds,
+            "error": self.error,
+        }
+
+
+@dataclass(frozen=True)
+class ExecutionGraphEdgeDTO:
+    """Edge in the execution DAG representing execution dependency."""
+
+    source: str
+    target: str
+    relationship: str = "depends_on"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source": self.source,
+            "target": self.target,
+            "relationship": self.relationship,
+        }
+
+
+@dataclass(frozen=True)
+class ExecutionGraphResponse:
+    """Execution DAG visualization response."""
+
+    mission_id: str
+    task_id: str
+    nodes: tuple[ExecutionGraphNodeDTO, ...]
+    edges: tuple[ExecutionGraphEdgeDTO, ...]
+    current_node_id: str | None
+    completed_nodes_count: int
+    total_nodes_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "mission_id": self.mission_id,
+            "task_id": self.task_id,
+            "nodes": [n.to_dict() for n in self.nodes],
+            "edges": [e.to_dict() for e in self.edges],
+            "current_node_id": self.current_node_id,
+            "completed_nodes_count": self.completed_nodes_count,
+            "total_nodes_count": self.total_nodes_count,
+        }
+
+
+@dataclass(frozen=True)
+class TaskCancellationRequest:
+    """Request payload to cancel an in-flight mission."""
+
+    reason: str = "Operator requested cancellation"
+    cancelled_by: str = "Operator"
+
+
+@dataclass(frozen=True)
+class TaskCancellationResponse:
+    """Response payload acknowledging mission cancellation."""
+
+    mission_id: str
+    task_id: str
+    status: str
+    cancelled_at: str
+    reason: str
+    message: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "mission_id": self.mission_id,
+            "task_id": self.task_id,
+            "status": self.status,
+            "cancelled_at": self.cancelled_at,
+            "reason": self.reason,
+            "message": self.message,
+        }

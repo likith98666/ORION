@@ -66,6 +66,16 @@
   <!-- MAIN VIEWPORT -->
   <main class="dashboard-container" id="dashboardContainer">
 
+    <!-- CONNECTION LOST / DISCONNECTED BANNER -->
+    <div class="connection-lost-banner card" id="connectionLostBanner" style="display: none;">
+      <div class="connection-lost-content">
+        <span class="status-dot pulsing-amber"></span>
+        <span class="banner-title">STREAM DISCONNECTED:</span>
+        <span class="banner-text">Real-time telemetry connection lost. ORION Command Center is reconnecting with exponential backoff...</span>
+      </div>
+      <button class="btn btn-xs btn-outline" id="btnReconnectNow">Reconnect Now</button>
+    </div>
+
     <!-- COMMAND CENTER ENTRY BAR -->
     <section class="command-input-section card glass" id="commandInputSection">
       <div class="command-input-header">
@@ -143,6 +153,10 @@
             Execute Pipeline
           </button>
           <button class="btn btn-outline" id="btnAdvanceStage">Advance Stage &rarr;</button>
+          <button class="btn btn-rose-subtle" id="btnCancelMission" title="Halt and cancel active mission pipeline">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            Cancel Mission
+          </button>
         </div>
       </div>
 
@@ -300,6 +314,14 @@
           <!-- NAVIGATION TABS -->
           <nav class="tab-bar" id="commandTabBar">
             <button class="tab-btn active" data-tab="tab-overview" id="tabBtnOverview">Overview</button>
+            <button class="tab-btn" data-tab="tab-graph" id="tabBtnGraph">
+              Execution Graph
+              <span class="tab-counter" id="tabCounterNodes">8</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-workforce" id="tabBtnWorkforce">
+              Workforce Observatory
+              <span class="tab-counter" id="tabCounterAgents">4</span>
+            </button>
             <button class="tab-btn" data-tab="tab-changes" id="tabBtnChanges">
               Code Changes &amp; Diff
               <span class="tab-counter" id="tabCounterChanges">0</span>
@@ -365,6 +387,55 @@
                   </li>
                 </ul>
               </div>
+            </div>
+          </div>
+
+          <!-- TAB: EXECUTION GRAPH (DAG VIEW) -->
+          <div class="tab-panel" id="tab-graph">
+            <div class="graph-header-bar">
+              <div class="graph-title-group">
+                <span class="sub-label">DIRECTED ACYCLIC GRAPH (DAG):</span>
+                <span class="badge badge-cyan" id="graphNodeCountBadge">8 Work Nodes</span>
+                <span class="badge badge-outline" id="graphActiveNodeBadge">CURRENT: STANDBY</span>
+                <span class="badge badge-purple" id="graphStateBadge">TOPOLOGY: DETERMINISTIC SWE</span>
+              </div>
+              <div class="graph-legend">
+                <span class="legend-item"><span class="dot-legend dot-pending"></span> PENDING</span>
+                <span class="legend-item"><span class="dot-legend dot-ready"></span> READY</span>
+                <span class="legend-item"><span class="dot-legend dot-running"></span> RUNNING</span>
+                <span class="legend-item"><span class="dot-legend dot-gate"></span> GATE</span>
+                <span class="legend-item"><span class="dot-legend dot-completed"></span> COMPLETED</span>
+                <span class="legend-item"><span class="dot-legend dot-verified"></span> VERIFIED</span>
+                <span class="legend-item"><span class="dot-legend dot-failed"></span> FAILED</span>
+              </div>
+            </div>
+
+            <div class="dag-container" id="dagContainer">
+              <div class="dag-nodes-grid" id="dagNodesGrid">
+                <!-- Dynamically populated or default rendered -->
+              </div>
+            </div>
+
+            <div class="dag-node-detail-panel" id="dagNodeDetailPanel" style="display: none;">
+              <h4 class="block-title" id="dagDetailNodeTitle">Node Details</h4>
+              <div class="node-meta-grid" id="dagDetailMetaGrid"></div>
+            </div>
+          </div>
+
+          <!-- TAB: WORKFORCE OBSERVATORY (AGENT ROSTER) -->
+          <div class="tab-panel" id="tab-workforce">
+            <div class="workforce-header-bar">
+              <div class="workforce-title-group">
+                <span class="sub-label">WORKFORCE SPECIALISTS:</span>
+                <span class="badge badge-purple" id="workforceTotalBadge">4 Autonomous Agents</span>
+                <span class="badge badge-cyan" id="workforceActiveBadge">1 Active</span>
+                <span class="badge badge-emerald">AUTHORITY: GOVERNED</span>
+              </div>
+              <p class="workforce-subtext">Each specialist operates under strict capability policies, execution identities, and evidence boundaries.</p>
+            </div>
+
+            <div class="workforce-cards-grid" id="workforceCardsGrid">
+              <!-- Dynamically rendered agent cards -->
             </div>
           </div>
 

@@ -60,6 +60,9 @@
     missionObjective: document.getElementById('missionObjective'),
     btnRunPipeline: document.getElementById('btnRunPipeline'),
     btnAdvanceStage: document.getElementById('btnAdvanceStage'),
+    btnCancelMission: document.getElementById('btnCancelMission'),
+    connectionLostBanner: document.getElementById('connectionLostBanner'),
+    btnReconnectNow: document.getElementById('btnReconnectNow'),
     stepperFill: document.getElementById('stepperFill'),
     stepperNodes: document.getElementById('stepperNodes'),
 
@@ -83,6 +86,21 @@
     commandTabBar: document.getElementById('commandTabBar'),
     tabCounterChanges: document.getElementById('tabCounterChanges'),
     tabRecoveryPulse: document.getElementById('tabRecoveryPulse'),
+    tabCounterNodes: document.getElementById('tabCounterNodes'),
+    tabCounterAgents: document.getElementById('tabCounterAgents'),
+
+    // Execution Graph
+    graphNodeCountBadge: document.getElementById('graphNodeCountBadge'),
+    graphActiveNodeBadge: document.getElementById('graphActiveNodeBadge'),
+    dagNodesGrid: document.getElementById('dagNodesGrid'),
+    dagNodeDetailPanel: document.getElementById('dagNodeDetailPanel'),
+    dagDetailNodeTitle: document.getElementById('dagDetailNodeTitle'),
+    dagDetailMetaGrid: document.getElementById('dagDetailMetaGrid'),
+
+    // Workforce Observatory
+    workforceTotalBadge: document.getElementById('workforceTotalBadge'),
+    workforceActiveBadge: document.getElementById('workforceActiveBadge'),
+    workforceCardsGrid: document.getElementById('workforceCardsGrid'),
 
     // Tab 1: Overview
     ovTaskId: document.getElementById('ovTaskId'),
@@ -226,6 +244,14 @@
 
     dom.btnRunPipeline.addEventListener('click', handleRunPipelineClick);
     dom.btnAdvanceStage.addEventListener('click', handleAdvanceStageClick);
+    if (dom.btnCancelMission) {
+      dom.btnCancelMission.addEventListener('click', handleCancelMissionClick);
+    }
+    if (dom.btnReconnectNow) {
+      dom.btnReconnectNow.addEventListener('click', () => {
+        if (currentTaskId) connectEventStream(currentTaskId);
+      });
+    }
     dom.btnGenReportNow.addEventListener('click', handleGenerateReportClick);
     dom.btnCopyDiff.addEventListener('click', handleCopyDiffClick);
   }
@@ -258,11 +284,13 @@
     eventSource.onopen = function () {
       dom.sseStatusDot.className = 'status-dot online';
       dom.sseStatusText.textContent = 'SSE LIVE';
+      if (dom.connectionLostBanner) dom.connectionLostBanner.style.display = 'none';
     };
 
     eventSource.onerror = function () {
       dom.sseStatusDot.className = 'status-dot pulsing-amber';
       dom.sseStatusText.textContent = 'RETRYING...';
+      if (dom.connectionLostBanner) dom.connectionLostBanner.style.display = 'flex';
     };
 
     eventSource.onmessage = function (e) {
@@ -301,6 +329,7 @@
       'STAGE_COMPLETED',
       'TOOL_EXECUTED',
       'TASK_COMPLETED',
+      'TASK_CANCELLED',
       'TASK_TERMINATED',
     ];
 
@@ -325,7 +354,7 @@
       title: evName ? evName.replace(/_/g, ' ') : 'System Event',
       detail: data.summary || data.detail || evName,
       timestamp: payload.timestamp || new Date().toISOString(),
-      level: data.level || (evName.includes('FAIL') || evName.includes('DENIED') ? 'error' : (evName.includes('APPROVED') || evName.includes('COMPLETED') ? 'success' : 'info')),
+      level: data.level || (evName.includes('FAIL') || evName.includes('DENIED') || evName.includes('CANCEL') ? 'error' : (evName.includes('APPROVED') || evName.includes('COMPLETED') ? 'success' : 'info')),
     });
 
     // Update active agent based on AGENT_STARTED
@@ -343,6 +372,16 @@
     } else if (evName === 'PATCH_APPROVED' || evName === 'PATCH_DENIED') {
       hideApprovalAlert();
       closeApprovalModal();
+    }
+
+    // Handle TASK_CANCELLED
+    if (evName === 'TASK_CANCELLED') {
+      dom.missionStatusBadge.textContent = 'CANCELLED';
+      dom.missionStatusBadge.className = 'badge badge-rose';
+      dom.missionLifecycleBadge.textContent = 'STATE: CANCELLED';
+      dom.btnRunPipeline.disabled = true;
+      dom.btnAdvanceStage.disabled = true;
+      if (dom.btnCancelMission) dom.btnCancelMission.disabled = true;
     }
 
     // Refresh telemetry components asynchronously
@@ -545,6 +584,20 @@
         const timeData = await timeRes.json();
         renderTimeline(timeData.timeline || []);
       }
+
+      // 9. Execution Graph (DAG)
+      const grRes = await fetch(`/api/tasks/${taskId}/graph`);
+      if (grRes.ok) {
+        const grData = await grRes.json();
+        renderExecutionGraph(grData);
+      }
+
+      // 10. Workforce Roster
+      const agRes = await fetch(`/api/tasks/${taskId}/agents`);
+      if (agRes.ok) {
+        const agData = await agRes.json();
+        renderWorkforceRoster(agData);
+      }
     } catch (err) {
       console.error('Error refreshing task data:', err);
     }
@@ -559,6 +612,19 @@
     dom.missionStatusBadge.textContent = (task.status || 'STANDBY').toUpperCase();
     dom.missionLifecycleBadge.textContent = `STATE: ${task.lifecycle_state || 'RECEIVED'}`;
     dom.missionWorkspaceBadge.textContent = `WORKSPACE: ${task.workspace_root ? task.workspace_root.split(/[\\/]/).pop() : 'LOCALHOST'}`;
+
+    if (task.cancelled) {
+      dom.missionStatusBadge.textContent = 'CANCELLED';
+      dom.missionStatusBadge.className = 'badge badge-rose';
+      dom.missionLifecycleBadge.textContent = 'STATE: CANCELLED';
+      dom.btnRunPipeline.disabled = true;
+      dom.btnAdvanceStage.disabled = true;
+      if (dom.btnCancelMission) dom.btnCancelMission.disabled = true;
+    } else {
+      dom.btnRunPipeline.disabled = false;
+      dom.btnAdvanceStage.disabled = false;
+      if (dom.btnCancelMission) dom.btnCancelMission.disabled = false;
+    }
 
     // Overview panel
     dom.ovTaskId.textContent = task.task_id || 'None';
@@ -1024,6 +1090,186 @@
         <span>${label}: <strong>${passed ? 'SATISFIED' : 'UNMET'}</strong></span>
       </div>
     `;
+  }
+
+  // -------------------------------------------------------------
+  // Cancel Mission Handler
+  // -------------------------------------------------------------
+  async function handleCancelMissionClick() {
+    if (!currentTaskId) return;
+    if (!confirm('Are you sure you want to halt and cancel this active mission?')) return;
+
+    try {
+      const res = await fetch(`/api/tasks/${currentTaskId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Operator requested mission cancellation' }),
+      });
+
+      if (res.ok) {
+        dom.missionStatusBadge.textContent = 'CANCELLED';
+        dom.missionStatusBadge.className = 'badge badge-rose';
+        dom.missionLifecycleBadge.textContent = 'STATE: CANCELLED';
+        dom.btnRunPipeline.disabled = true;
+        dom.btnAdvanceStage.disabled = true;
+        if (dom.btnCancelMission) dom.btnCancelMission.disabled = true;
+        await refreshTaskData(currentTaskId);
+      } else {
+        const err = await res.json();
+        alert(`Failed to cancel mission: ${err.error}`);
+      }
+    } catch (err) {
+      alert(`Network error cancelling mission: ${err}`);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Execution Graph (DAG) Renderer
+  // -------------------------------------------------------------
+  function renderExecutionGraph(graph) {
+    if (!graph || !graph.nodes || !dom.dagNodesGrid) return;
+
+    if (dom.graphNodeCountBadge) {
+      dom.graphNodeCountBadge.textContent = `${graph.total_nodes} Work Nodes`;
+    }
+    if (dom.tabCounterNodes) {
+      dom.tabCounterNodes.textContent = graph.total_nodes;
+    }
+    if (dom.graphActiveNodeBadge) {
+      dom.graphActiveNodeBadge.textContent = `CURRENT: ${(graph.active_node_id || 'STANDBY').toUpperCase()}`;
+    }
+
+    dom.dagNodesGrid.innerHTML = '';
+    graph.nodes.forEach((node) => {
+      const card = document.createElement('div');
+      const stateClass = `state-${node.state.toLowerCase()}`;
+      card.className = `dag-node-card ${stateClass}`;
+      card.id = `node-${node.node_id}`;
+
+      const durationStr = node.duration_seconds !== null ? `${node.duration_seconds.toFixed(2)}s` : '--';
+      const depsHtml = (node.dependencies || []).map(d => `<span class="dep-chip">&larr; ${escapeHtml(d)}</span>`).join('');
+
+      card.innerHTML = `
+        <div class="dag-node-header">
+          <span class="dag-node-id">STAGE ${escapeHtml(node.stage_id)}</span>
+          <span class="badge ${getNodeBadgeClass(node.state)}">${escapeHtml(node.state)}</span>
+        </div>
+        <div class="dag-node-name">${escapeHtml(node.title)}</div>
+        <div class="dag-node-agent">Agent: <strong>${escapeHtml(node.assigned_agent || 'Unassigned')}</strong></div>
+        ${node.error ? `<div class="code-val text-rose" style="font-size:11px; margin-top:4px;">${escapeHtml(node.error)}</div>` : ''}
+        <div class="dag-node-header" style="margin-top:6px;">
+          <span class="diff-file-label" style="font-size:10px;">DURATION: ${durationStr}</span>
+        </div>
+        ${depsHtml ? `<div class="dag-node-deps">${depsHtml}</div>` : ''}
+      `;
+
+      card.addEventListener('click', () => showNodeDetail(node));
+      dom.dagNodesGrid.appendChild(card);
+    });
+  }
+
+  function getNodeBadgeClass(state) {
+    switch (state) {
+      case 'RUNNING': return 'badge-cyan pulsing-cyan';
+      case 'WAITING_APPROVAL': return 'badge-amber pulsing-amber';
+      case 'COMPLETED': return 'badge-purple';
+      case 'VERIFIED': return 'badge-emerald';
+      case 'FAILED': return 'badge-rose';
+      case 'RECOVERING': return 'badge-amber';
+      case 'READY': return 'badge-cyan';
+      case 'CANCELLED': return 'badge-rose';
+      default: return 'badge-idle';
+    }
+  }
+
+  function showNodeDetail(node) {
+    if (!dom.dagNodeDetailPanel) return;
+    dom.dagNodeDetailPanel.style.display = 'block';
+    dom.dagDetailNodeTitle.textContent = `Node: ${node.title} (${node.node_id})`;
+
+    const startTime = node.start_time ? formatTime(node.start_time) : '--';
+    const endTime = node.end_time ? formatTime(node.end_time) : '--';
+    const dur = node.duration_seconds !== null ? `${node.duration_seconds.toFixed(2)}s` : '--';
+
+    dom.dagDetailMetaGrid.innerHTML = `
+      <div><strong>State:</strong> <span class="badge ${getNodeBadgeClass(node.state)}">${node.state}</span></div>
+      <div><strong>Assigned Agent:</strong> ${escapeHtml(node.assigned_agent || 'None')}</div>
+      <div><strong>Duration:</strong> ${dur}</div>
+      <div><strong>Started:</strong> ${startTime}</div>
+      <div><strong>Ended:</strong> ${endTime}</div>
+      <div><strong>Dependencies:</strong> ${(node.dependencies || []).join(', ') || 'Root'}</div>
+      ${node.error ? `<div style="grid-column: 1 / -1;"><strong>Error:</strong> <span class="text-rose">${escapeHtml(node.error)}</span></div>` : ''}
+    `;
+  }
+
+  // -------------------------------------------------------------
+  // Workforce Observatory Renderer
+  // -------------------------------------------------------------
+  function renderWorkforceRoster(roster) {
+    if (!roster || !roster.agents || !dom.workforceCardsGrid) return;
+
+    if (dom.workforceTotalBadge) {
+      dom.workforceTotalBadge.textContent = `${roster.total_agents} Autonomous Agents`;
+    }
+    if (dom.tabCounterAgents) {
+      dom.tabCounterAgents.textContent = roster.total_agents;
+    }
+    if (dom.workforceActiveBadge) {
+      dom.workforceActiveBadge.textContent = `${roster.active_agents} Active`;
+    }
+
+    dom.workforceCardsGrid.innerHTML = '';
+    roster.agents.forEach((ag) => {
+      const card = document.createElement('div');
+      card.className = 'agent-roster-card';
+      card.id = `roster-${ag.agent_id}`;
+
+      const avatarClass = getAgentAvatarClass(ag.role);
+      const avatarLetters = ag.role.slice(0, 2).toUpperCase();
+      const isActive = ag.status === 'ACTIVE' || ag.status === 'RECOVERING';
+      const statusBadgeClass = isActive ? 'badge-active' : 'badge-idle';
+
+      const capsHtml = (ag.capabilities || []).map(c => `<span class="cap-pill">${escapeHtml(c)}</span>`).join('');
+      const permsHtml = (ag.permissions || []).map(p => `<span class="perm-pill">${escapeHtml(p)}</span>`).join('');
+
+      card.innerHTML = `
+        <div class="agent-roster-header">
+          <div class="agent-roster-id-block">
+            <div class="agent-roster-avatar ${avatarClass}">${avatarLetters}</div>
+            <div>
+              <div class="agent-roster-name">${escapeHtml(ag.name)}</div>
+              <div class="agent-roster-role">${escapeHtml(ag.role)} &bull; ${escapeHtml(ag.agent_id)}</div>
+            </div>
+          </div>
+          <span class="agent-state-badge ${statusBadgeClass}">${escapeHtml(ag.status)}</span>
+        </div>
+
+        <div class="agent-current-task">
+          <div class="agent-task-label">CURRENT WORK OBJECTIVE</div>
+          <div>${escapeHtml(ag.current_task || 'Awaiting assignment')}</div>
+          ${ag.current_stage ? `<div style="margin-top:4px; font-size:11px; color:var(--accent-cyan);">Active Stage: ${escapeHtml(ag.current_stage)}</div>` : ''}
+        </div>
+
+        <div class="agent-caps-section">
+          <div class="caps-label">Specialist Capabilities</div>
+          <div class="caps-tags-row">${capsHtml || '<span class="text-dim">Standard execution</span>'}</div>
+        </div>
+
+        <div class="agent-caps-section">
+          <div class="caps-label">Permission Boundaries</div>
+          <div class="caps-tags-row">${permsHtml || '<span class="text-dim">Guarded read-only</span>'}</div>
+        </div>
+      `;
+      dom.workforceCardsGrid.appendChild(card);
+    });
+  }
+
+  function getAgentAvatarClass(role) {
+    if (role.includes('SWE') || role.includes('ENGINEER')) return 'avatar-cyan';
+    if (role.includes('DIAG') || role.includes('DIAGNOSTICS')) return 'avatar-purple';
+    if (role.includes('VERIF') || role.includes('VERIFIER')) return 'avatar-emerald';
+    if (role.includes('RECOV') || role.includes('RECOVERY')) return 'avatar-amber';
+    return 'avatar-cyan';
   }
 
   function handleCopyDiffClick() {

@@ -417,3 +417,103 @@ def test_api_error_handling(product_server):
         urlopen(req_missing)
     assert exc_missing.value.code == HTTPStatus.NOT_FOUND
 
+
+def test_api_get_agents(product_server):
+    """Test GET /api/v1/missions/{id}/agents returns the full workforce roster."""
+    base_url, _, repo = product_server
+
+    payload = {"task": "Analyze test failure", "workspace": str(repo)}
+    post_req = Request(
+        f"{base_url}/api/v1/missions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(post_req) as resp:
+        mission_id = json.loads(resp.read().decode("utf-8"))["mission_id"]
+
+    agents_req = Request(f"{base_url}/api/v1/missions/{mission_id}/agents")
+    with urlopen(agents_req) as resp:
+        assert resp.status == HTTPStatus.OK
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data["mission_id"] == mission_id
+        assert data["total_agents"] == 4
+        assert len(data["agents"]) == 4
+
+        names = [a["name"] for a in data["agents"]]
+        assert "Orion-SWE-Engineer" in names
+        assert "Orion-Diagnostics-Specialist" in names
+        assert "Orion-Verification-Authority" in names
+        assert "Orion-Recovery-Specialist" in names
+
+        # Verify permissions and capabilities are present
+        for agent in data["agents"]:
+            assert "capabilities" in agent
+            assert "permissions" in agent
+            assert "status" in agent
+
+
+def test_api_get_graph(product_server):
+    """Test GET /api/v1/missions/{id}/graph returns the full execution DAG."""
+    base_url, _, repo = product_server
+
+    payload = {"task": "Analyze test failure", "workspace": str(repo)}
+    post_req = Request(
+        f"{base_url}/api/v1/missions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(post_req) as resp:
+        mission_id = json.loads(resp.read().decode("utf-8"))["mission_id"]
+
+    graph_req = Request(f"{base_url}/api/v1/missions/{mission_id}/graph")
+    with urlopen(graph_req) as resp:
+        assert resp.status == HTTPStatus.OK
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data["mission_id"] == mission_id
+        assert data["total_nodes_count"] == 8
+        assert len(data["nodes"]) == 8
+        assert len(data["edges"]) == 7
+
+        stage_ids = [n["id"] for n in data["nodes"]]
+        assert "inspect_repository" in stage_ids
+        assert "approval_gate" in stage_ids
+        assert "verify" in stage_ids
+        assert "generate_report" in stage_ids
+
+
+def test_api_cancel_mission(product_server):
+    """Test POST /api/v1/missions/{id}/cancel halts and updates mission state."""
+    base_url, _, repo = product_server
+
+    payload = {"task": "Analyze test failure", "workspace": str(repo)}
+    post_req = Request(
+        f"{base_url}/api/v1/missions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(post_req) as resp:
+        mission_id = json.loads(resp.read().decode("utf-8"))["mission_id"]
+
+    cancel_payload = {"reason": "Manual operator stop", "cancelled_by": "TestUser"}
+    cancel_req = Request(
+        f"{base_url}/api/v1/missions/{mission_id}/cancel",
+        data=json.dumps(cancel_payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(cancel_req) as resp:
+        assert resp.status == HTTPStatus.OK
+        cancel_data = json.loads(resp.read().decode("utf-8"))
+        assert cancel_data["status"] == "cancelled"
+        assert cancel_data["reason"] == "Manual operator stop"
+
+    # Verify subsequent GET /api/v1/missions/{id} reflects cancelled state
+    get_req = Request(f"{base_url}/api/v1/missions/{mission_id}")
+    with urlopen(get_req) as resp:
+        mission_data = json.loads(resp.read().decode("utf-8"))
+        assert mission_data["status"] == "cancelled"
+        assert mission_data["lifecycle_state"] == "CANCELLED"
+
