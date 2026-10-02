@@ -86,9 +86,29 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_list_missions()
             return
 
-        # Benchmark suites endpoint
-        if path in ("/api/benchmarks", "/api/v1/benchmarks"):
+        # Benchmark & V6 Evaluation suites endpoints
+        if path in (
+            "/api/v1/evaluation/benchmarks",
+            "/api/evaluation/benchmarks",
+            "/api/benchmarks",
+            "/api/v1/benchmarks",
+        ):
             self._handle_list_benchmarks()
+            return
+
+        # V6 Evaluation Runs collection endpoint
+        if path in ("/api/v1/evaluation/runs", "/api/evaluation/runs"):
+            self._handle_list_evaluation_runs()
+            return
+
+        # V6 Evaluation Compare endpoint (GET query)
+        if path in ("/api/v1/evaluation/compare", "/api/evaluation/compare"):
+            self._handle_compare_evaluation_runs_get(query)
+            return
+
+        # V6 Evaluation Run detail endpoints (/runs/{id}, /runs/{id}/metrics, /runs/{id}/failures)
+        if path.startswith("/api/v1/evaluation/runs/") or path.startswith("/api/evaluation/runs/"):
+            self._handle_get_evaluation_run_detail(path)
             return
 
         # V3 Repository Index endpoint
@@ -170,12 +190,28 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_submit_task(body)
             return
 
-        # Benchmark run endpoint
+        # Legacy Benchmark run endpoint
         if path in ("/api/benchmarks/run", "/api/v1/benchmarks/run"):
             body = self._read_json_body() if self._has_body() else {}
             if body is None:
                 return
             self._handle_run_benchmark(body)
+            return
+
+        # V6 Evaluation run endpoint
+        if path in ("/api/v1/evaluation/run", "/api/evaluation/run"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_run_evaluation(body)
+            return
+
+        # V6 Evaluation Compare endpoint (POST)
+        if path in ("/api/v1/evaluation/compare", "/api/evaluation/compare"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_compare_evaluation_runs_post(body)
             return
 
         # V2 Mission Plan endpoint
@@ -320,6 +356,104 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 f"Benchmark error: {exc}",
                 code="BENCHMARK_ERROR",
             )
+
+    def _handle_run_evaluation(self, body: dict[str, Any]) -> None:
+        suite = str(body.get("suite") or body.get("suite_name") or "smoke")
+        auto_repair = bool(body.get("auto_repair", True))
+        config = body.get("configuration")
+        try:
+            exp = self.service.run_evaluation_experiment(
+                suite_name=suite,
+                configuration=config,
+                auto_repair=auto_repair,
+            )
+            self._send_json(HTTPStatus.CREATED, exp.to_dict())
+        except KeyError as exc:
+            self._send_error_json(HTTPStatus.NOT_FOUND, str(exc), code="SUITE_NOT_FOUND")
+        except Exception as exc:
+            self._send_error_json(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Evaluation experiment error: {exc}",
+                code="EVALUATION_ERROR",
+            )
+
+    def _handle_list_evaluation_runs(self) -> None:
+        runs = self.service.list_evaluation_experiments()
+        self._send_json(HTTPStatus.OK, {"runs": runs, "total": len(runs)})
+
+    def _handle_get_evaluation_run_detail(self, path: str) -> None:
+        prefix = (
+            "/api/v1/evaluation/runs/"
+            if path.startswith("/api/v1/evaluation/runs/")
+            else "/api/evaluation/runs/"
+        )
+        subpath = path[len(prefix):].strip("/")
+        parts = subpath.split("/")
+        if not parts or not parts[0]:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Experiment ID is required.")
+            return
+
+        exp_id = parts[0]
+        if len(parts) == 1:
+            exp = self.service.get_evaluation_experiment(exp_id)
+            if not exp:
+                self._send_error_json(HTTPStatus.NOT_FOUND, f"Experiment '{exp_id}' not found.")
+                return
+            self._send_json(HTTPStatus.OK, exp)
+        elif len(parts) == 2 and parts[1] == "metrics":
+            metrics = self.service.get_evaluation_metrics(exp_id)
+            if not metrics:
+                self._send_error_json(HTTPStatus.NOT_FOUND, f"Experiment '{exp_id}' not found.")
+                return
+            self._send_json(HTTPStatus.OK, metrics)
+        elif len(parts) == 2 and parts[1] == "failures":
+            failures = self.service.get_evaluation_failures(exp_id)
+            if not failures:
+                self._send_error_json(HTTPStatus.NOT_FOUND, f"Experiment '{exp_id}' not found.")
+                return
+            self._send_json(HTTPStatus.OK, failures)
+        else:
+            self._send_error_json(HTTPStatus.NOT_FOUND, f"Subresource '{parts[1]}' not found.")
+
+    def _handle_compare_evaluation_runs_get(self, query: dict[str, list[str]]) -> None:
+        base_id = query.get("base_id", [None])[0]
+        target_id = query.get("target_id", [None])[0]
+        if not base_id or not target_id:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Query parameters 'base_id' and 'target_id' are required.",
+            )
+            return
+        try:
+            comparison = self.service.compare_evaluation_experiments(
+                base_id=str(base_id),
+                target_id=str(target_id),
+            )
+            self._send_json(HTTPStatus.OK, comparison)
+        except KeyError as exc:
+            self._send_error_json(HTTPStatus.NOT_FOUND, str(exc))
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    def _handle_compare_evaluation_runs_post(self, body: dict[str, Any]) -> None:
+        base_id = body.get("base_id")
+        target_id = body.get("target_id")
+        if not base_id or not target_id:
+            self._send_error_json(
+                HTTPStatus.BAD_REQUEST,
+                "Fields 'base_id' and 'target_id' are required in request body.",
+            )
+            return
+        try:
+            comparison = self.service.compare_evaluation_experiments(
+                base_id=str(base_id),
+                target_id=str(target_id),
+            )
+            self._send_json(HTTPStatus.OK, comparison)
+        except KeyError as exc:
+            self._send_error_json(HTTPStatus.NOT_FOUND, str(exc))
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def _handle_get_repo_index(self, query: dict[str, list[str]]) -> None:
         ws_list = query.get("workspace", [None])

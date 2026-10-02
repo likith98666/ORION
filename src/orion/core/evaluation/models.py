@@ -42,6 +42,12 @@ class BenchmarkTask:
     target_files: tuple[str, ...] = ()
     expected_exit_code: int = 0
     timeout_seconds: float = 60.0
+    allowed_operations: tuple[str, ...] = ("read", "write", "test")
+    risk_classification: str = "low"
+    expected_failure: str = ""
+    expected_verification_condition: str = "all_tests_pass"
+    expected_outcome: str = "PASS"
+    failure_category: str = "unknown"
 
     def __post_init__(self) -> None:
         if not self.task_id or not self.task_id.strip():
@@ -73,6 +79,12 @@ class BenchmarkTask:
             "test_files": list(self.test_files.keys()),
             "target_files": list(self.target_files),
             "timeout_seconds": self.timeout_seconds,
+            "allowed_operations": list(self.allowed_operations),
+            "risk_classification": self.risk_classification,
+            "expected_failure": self.expected_failure,
+            "expected_verification_condition": self.expected_verification_condition,
+            "expected_outcome": self.expected_outcome,
+            "failure_category": self.failure_category,
         }
 
 
@@ -90,6 +102,11 @@ class TaskRunResult:
     recovery_attempts: int
     files_changed: int
     error_message: str | None = None
+    recovery_strategies: tuple[str, ...] = ()
+    rollback_events: int = 0
+    evidence_count: int = 0
+    failure_category: str | None = None
+    termination_reason: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize task run result to dictionary."""
@@ -104,6 +121,11 @@ class TaskRunResult:
             "recovery_attempts": self.recovery_attempts,
             "files_changed": self.files_changed,
             "error_message": self.error_message,
+            "recovery_strategies": list(self.recovery_strategies),
+            "rollback_events": self.rollback_events,
+            "evidence_count": self.evidence_count,
+            "failure_category": self.failure_category,
+            "termination_reason": self.termination_reason,
         }
 
 

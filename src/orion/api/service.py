@@ -42,7 +42,15 @@ from orion.core.agents.workforce.conflict import AgentConflictResolver
 from orion.core.agents.workforce.contracts import WorkforceContractRegistry
 from orion.core.agents.workforce.models import AgentProposal, WorkforceRole
 from orion.core.agents.workforce.reviewer import IndependentReviewer
-from orion.core.evaluation.models import BenchmarkReport
+from orion.core.evaluation import (
+    FAILURE_TAXONOMY_CORPUS,
+    SMOKE_CORPUS,
+    STANDARD_CORPUS,
+    BenchmarkReport,
+    BenchmarkRunner,
+    ExperimentRecord,
+    ExperimentTracker,
+)
 from orion.core.missions.engine import MissionExecutionEngine
 from orion.core.missions.graph import MissionTaskGraph
 from orion.core.missions.memory import MissionMemory
@@ -168,6 +176,8 @@ class MissionAPIService:
         self._mission_engines: dict[UUID, MissionExecutionEngine] = {}
         self._workforce_registry = WorkforceContractRegistry.create_default_roster()
         self._adaptive_recovery_memory = AdaptiveRecoveryMemory()
+        self._experiment_tracker = ExperimentTracker(self._redaction_engine)
+        self._benchmark_runner = BenchmarkRunner()
 
     @property
     def config(self) -> AppConfig:
@@ -374,13 +384,12 @@ class MissionAPIService:
     # Evaluation & Benchmarking Operations
     # -------------------------------------------------------------
     def list_benchmark_suites(self) -> dict[str, Any]:
-        """List standard benchmark suites and task metadata."""
-        from orion.core.evaluation.corpus import SMOKE_CORPUS, STANDARD_CORPUS
-
+        """List all available standardized SWE benchmark suites and tasks."""
         return {
             "suites": {
                 "standard": [t.to_dict() for t in STANDARD_CORPUS],
                 "smoke": [t.to_dict() for t in SMOKE_CORPUS],
+                "taxonomy": [t.to_dict() for t in FAILURE_TAXONOMY_CORPUS],
             },
             "total_suites": 2,
         }
@@ -389,12 +398,11 @@ class MissionAPIService:
         self,
         suite_name: str = "smoke",
         output_dir: Path | str | None = None,
+        auto_repair: bool = True,
     ) -> BenchmarkReport:
         """Execute a benchmark evaluation suite and produce a certified report."""
-        from orion.core.evaluation.runner import BenchmarkRunner
-
         runner = BenchmarkRunner(output_dir=output_dir)
-        return runner.run_suite(suite_name)
+        return runner.run_suite(suite=suite_name, auto_repair=auto_repair)
 
     # -------------------------------------------------------------
     # Mission & Task Creation
@@ -2023,3 +2031,55 @@ class MissionAPIService:
     def get_recovery_strategy_metrics(self) -> dict[str, dict[str, Any]]:
         """Return empirical strategy metrics across past recovery attempts."""
         return self._adaptive_recovery_memory.get_strategy_metrics()
+
+    # -------------------------------------------------------------
+    # V6 Evaluation & Benchmarking Intelligence
+    # -------------------------------------------------------------
+    @property
+    def experiment_tracker(self) -> ExperimentTracker:
+        """Return the active ExperimentTracker registry."""
+        return self._experiment_tracker
+
+    def run_evaluation_experiment(
+        self,
+        suite_name: str = "standard",
+        configuration: dict[str, Any] | None = None,
+        auto_repair: bool = True,
+        orion_version: str = "6.0.0",
+    ) -> ExperimentRecord:
+        """Execute a benchmark experiment and return an immutable, tracked ExperimentRecord."""
+        return self._benchmark_runner.run_experiment(
+            suite=suite_name,
+            tracker=self._experiment_tracker,
+            configuration=configuration,
+            auto_repair=auto_repair,
+            orion_version=orion_version,
+        )
+
+    def list_evaluation_experiments(self) -> list[dict[str, Any]]:
+        """List all recorded evaluation experiments ordered chronologically."""
+        return [e.to_dict() for e in self._experiment_tracker.list_experiments()]
+
+    def get_evaluation_experiment(self, experiment_id: str) -> dict[str, Any] | None:
+        """Retrieve full experiment record by ID."""
+        record = self._experiment_tracker.get_experiment(experiment_id)
+        return record.to_dict() if record else None
+
+    def get_evaluation_metrics(self, experiment_id: str) -> dict[str, Any] | None:
+        """Retrieve strictly computed engineering metrics for an experiment."""
+        record = self._experiment_tracker.get_experiment(experiment_id)
+        return record.metrics.to_dict() if record else None
+
+    def get_evaluation_failures(self, experiment_id: str) -> dict[str, Any] | None:
+        """Retrieve aggregated failure analysis report for an experiment."""
+        record = self._experiment_tracker.get_experiment(experiment_id)
+        return record.failure_analysis.to_dict() if record else None
+
+    def compare_evaluation_experiments(
+        self,
+        base_id: str,
+        target_id: str,
+    ) -> dict[str, Any]:
+        """Empirically compare two evaluation experiments."""
+        res = self._experiment_tracker.compare_experiments(base_id, target_id)
+        return res.to_dict()

@@ -40,6 +40,7 @@ TASK_BUG_FIX_CALCULATOR = BenchmarkTask(
     },
     target_files=("src/calc.py",),
     timeout_seconds=30.0,
+    failure_category="assertion_failure",
 )
 
 # ---------------------------------------------------------------------------
@@ -72,6 +73,7 @@ TASK_BUG_FIX_CONFIG_PARSER = BenchmarkTask(
     },
     target_files=("src/parser.py",),
     timeout_seconds=30.0,
+    failure_category="assertion_failure",
 )
 
 # ---------------------------------------------------------------------------
@@ -114,6 +116,7 @@ TASK_REGRESSION_CACHE = BenchmarkTask(
     },
     target_files=("src/cache.py",),
     timeout_seconds=30.0,
+    failure_category="test_regression",
 )
 
 # ---------------------------------------------------------------------------
@@ -143,6 +146,103 @@ TASK_SYNTAX_VALIDATOR = BenchmarkTask(
     },
     target_files=("src/validator.py",),
     timeout_seconds=30.0,
+    failure_category="syntax_failure",
+)
+
+# ---------------------------------------------------------------------------
+# Task 5: Type Failure — Formatting Incompatible Types
+# ---------------------------------------------------------------------------
+TASK_TYPE_FORMATTER = BenchmarkTask(
+    task_id="SWE-TYP-001",
+    name="Fix Formatter Type Incompatibility",
+    category=BenchmarkCategory.BUG_FIX,
+    difficulty=BenchmarkDifficulty.EASY,
+    problem_statement="format_badge in formatter.py raises TypeError by concatenating int to str.",
+    workspace_files={
+        "src/formatter.py": (
+            "def format_badge(label: str, count: int) -> str:\n"
+            "    return label + ': ' + count\n"
+        ),
+    },
+    test_files={
+        "tests/test_formatter.py": (
+            "from src.formatter import format_badge\n\n"
+            "def test_badge():\n"
+            "    assert format_badge('Issues', 5) == 'Issues: 5'\n"
+        ),
+    },
+    target_files=("src/formatter.py",),
+    timeout_seconds=30.0,
+    failure_category="type_failure",
+)
+
+# ---------------------------------------------------------------------------
+# Task 6: Import Failure — Unresolved Module Import
+# ---------------------------------------------------------------------------
+TASK_IMPORT_RESOLVER = BenchmarkTask(
+    task_id="SWE-IMP-001",
+    name="Fix Unresolved Module Import",
+    category=BenchmarkCategory.BUG_FIX,
+    difficulty=BenchmarkDifficulty.EASY,
+    problem_statement="app.py imports non-existent 'math_utils' instead of 'utils'.",
+    workspace_files={
+        "src/utils.py": (
+            "def square(x: int) -> int:\n"
+            "    return x * x\n"
+        ),
+        "src/app.py": (
+            "from src.math_utils import square\n\n"
+            "def run_square(n: int) -> int:\n"
+            "    return square(n)\n"
+        ),
+    },
+    test_files={
+        "tests/test_app.py": (
+            "from src.app import run_square\n\n"
+            "def test_square():\n"
+            "    assert run_square(4) == 16\n"
+        ),
+    },
+    target_files=("src/app.py",),
+    timeout_seconds=30.0,
+    failure_category="import_failure",
+)
+
+# ---------------------------------------------------------------------------
+# Task 7: Security Boundary — Path Traversal Guard
+# ---------------------------------------------------------------------------
+TASK_SECURITY_TRAVERSAL_GUARD = BenchmarkTask(
+    task_id="SWE-SEC-001",
+    name="Enforce Path Traversal Boundary",
+    category=BenchmarkCategory.RECOVERY_CHALLENGE,
+    difficulty=BenchmarkDifficulty.HARD,
+    problem_statement=(
+        "sanitize_path in storage.py allows directory traversal via '../'. "
+        "Block traversal attempts and raise ValueError."
+    ),
+    workspace_files={
+        "src/storage.py": (
+            "from pathlib import Path\n\n"
+            "def sanitize_path(base_dir: str, rel_path: str) -> Path:\n"
+            "    return Path(base_dir) / rel_path\n"
+        ),
+    },
+    test_files={
+        "tests/test_storage.py": (
+            "import pytest\n"
+            "from src.storage import sanitize_path\n\n"
+            "def test_valid_path():\n"
+            "    p = sanitize_path('/app/data', 'user.txt')\n"
+            "    assert str(p).replace('\\\\', '/').endswith('/app/data/user.txt')\n\n"
+            "def test_traversal_blocked():\n"
+            "    with pytest.raises(ValueError):\n"
+            "        sanitize_path('/app/data', '../../etc/passwd')\n"
+        ),
+    },
+    target_files=("src/storage.py",),
+    timeout_seconds=30.0,
+    risk_classification="high",
+    failure_category="security_failure",
 )
 
 # ---------------------------------------------------------------------------
@@ -161,6 +261,15 @@ SMOKE_CORPUS: tuple[BenchmarkTask, ...] = (
     TASK_BUG_FIX_CONFIG_PARSER,
 )
 
+FAILURE_TAXONOMY_CORPUS: tuple[BenchmarkTask, ...] = (
+    TASK_SYNTAX_VALIDATOR,
+    TASK_BUG_FIX_CALCULATOR,
+    TASK_TYPE_FORMATTER,
+    TASK_IMPORT_RESOLVER,
+    TASK_REGRESSION_CACHE,
+    TASK_SECURITY_TRAVERSAL_GUARD,
+)
+
 
 def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ...]:
     """Retrieve benchmark tasks by suite name."""
@@ -169,4 +278,9 @@ def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ..
         return SMOKE_CORPUS
     if normalized in ("standard", "full", "default"):
         return STANDARD_CORPUS
-    raise KeyError(f"Unknown benchmark suite '{suite_name}'. Available: 'standard', 'smoke'.")
+    if normalized in ("taxonomy", "failures", "v6", "comprehensive"):
+        return FAILURE_TAXONOMY_CORPUS
+    raise KeyError(
+        f"Unknown benchmark suite '{suite_name}'. "
+        "Available: 'standard', 'smoke', 'taxonomy'."
+    )
