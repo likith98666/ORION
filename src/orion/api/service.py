@@ -38,6 +38,7 @@ from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
 from orion.core.agents.permission_policy import AgentPermissionPolicy
 from orion.core.agents.permissions import AgentPermission
+from orion.core.evaluation.models import BenchmarkReport
 from orion.core.observability.context import TelemetryContext
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_engine import RecoveryEngine
@@ -346,6 +347,32 @@ class MissionAPIService:
                     except (queue.Full, OSError):
                         pass
                 record.subscribers.clear()
+
+    # -------------------------------------------------------------
+    # Evaluation & Benchmarking Operations
+    # -------------------------------------------------------------
+    def list_benchmark_suites(self) -> dict[str, Any]:
+        """List standard benchmark suites and task metadata."""
+        from orion.core.evaluation.corpus import SMOKE_CORPUS, STANDARD_CORPUS
+
+        return {
+            "suites": {
+                "standard": [t.to_dict() for t in STANDARD_CORPUS],
+                "smoke": [t.to_dict() for t in SMOKE_CORPUS],
+            },
+            "total_suites": 2,
+        }
+
+    def run_benchmark_suite(
+        self,
+        suite_name: str = "smoke",
+        output_dir: Path | str | None = None,
+    ) -> BenchmarkReport:
+        """Execute a benchmark evaluation suite and produce a certified report."""
+        from orion.core.evaluation.runner import BenchmarkRunner
+
+        runner = BenchmarkRunner(output_dir=output_dir)
+        return runner.run_suite(suite_name)
 
     # -------------------------------------------------------------
     # Mission & Task Creation

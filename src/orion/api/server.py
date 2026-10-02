@@ -86,6 +86,11 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_list_missions()
             return
 
+        # Benchmark suites endpoint
+        if path in ("/api/benchmarks", "/api/v1/benchmarks"):
+            self._handle_list_benchmarks()
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -148,6 +153,14 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_submit_task(body)
             return
 
+        # Benchmark run endpoint
+        if path in ("/api/benchmarks/run", "/api/v1/benchmarks/run"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_run_benchmark(body)
+            return
+
         # Resource action endpoints
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -205,6 +218,24 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 "total": len(missions),
             },
         )
+
+    def _handle_list_benchmarks(self) -> None:
+        suites = self.service.list_benchmark_suites()
+        self._send_json(HTTPStatus.OK, suites)
+
+    def _handle_run_benchmark(self, body: dict[str, Any]) -> None:
+        suite_name = str(body.get("suite", "smoke"))
+        try:
+            report = self.service.run_benchmark_suite(suite_name=suite_name)
+            self._send_json(HTTPStatus.OK, report.to_dict())
+        except KeyError as exc:
+            self._send_error_json(HTTPStatus.NOT_FOUND, str(exc), code="SUITE_NOT_FOUND")
+        except Exception as exc:
+            self._send_error_json(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Benchmark error: {exc}",
+                code="BENCHMARK_ERROR",
+            )
 
     def _handle_get_mission(self, mission_id: UUID) -> None:
         mission = self.service.get_mission(mission_id)
