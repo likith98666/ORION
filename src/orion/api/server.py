@@ -120,6 +120,8 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_agents(resource_id)
             elif sub_resource == "graph":
                 self._handle_get_graph(resource_id)
+            elif sub_resource == "memory":
+                self._handle_get_mission_memory(resource_id)
             else:
                 self._send_error_json(HTTPStatus.NOT_FOUND, f"Resource '{sub_resource}' not found.")
             return
@@ -159,6 +161,14 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_run_benchmark(body)
+            return
+
+        # V2 Mission Plan endpoint
+        if path in ("/api/missions/plan", "/api/v1/missions/plan"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_plan_mission(body)
             return
 
         # Resource action endpoints
@@ -328,10 +338,23 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_get_graph(self, mission_id: UUID) -> None:
         graph = self.service.get_execution_graph(mission_id)
-        if graph is None:
-            self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
+        if graph is not None:
+            self._send_json(HTTPStatus.OK, graph.to_dict())
             return
-        self._send_json(HTTPStatus.OK, graph.to_dict())
+        v2_graph = self.service.get_mission_graph(mission_id)
+        if v2_graph is not None:
+            self._send_json(HTTPStatus.OK, v2_graph)
+            return
+        self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
+
+    def _handle_get_mission_memory(self, mission_id: UUID) -> None:
+        mem = self.service.get_mission_memory(mission_id)
+        if mem is None:
+            self._send_error_json(
+                HTTPStatus.NOT_FOUND, f"Mission memory for '{mission_id}' not found."
+            )
+            return
+        self._send_json(HTTPStatus.OK, mem)
 
     def _handle_events_stream(self, mission_id: UUID) -> None:
         """Handle Server-Sent Events (SSE) streaming."""
@@ -449,9 +472,41 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             resp = self.service.cancel_mission(mission_id, req)
             self._send_json(HTTPStatus.OK, resp.to_dict())
         except KeyError:
+            # Check if it's a V2 mission plan
+            cancelled_v2 = self.service.cancel_mission_plan(mission_id, reason=str(reason))
+            if cancelled_v2:
+                self._send_json(
+                    HTTPStatus.OK,
+                    {
+                        "mission_id": str(mission_id),
+                        "status": "cancelled",
+                        "reason": str(reason),
+                    },
+                )
+                return
             self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
         except Exception as exc:
             self._send_error_json(HTTPStatus.UNPROCESSABLE_ENTITY, str(exc))
+
+    def _handle_plan_mission(self, body: dict[str, Any]) -> None:
+        objective = body.get("objective") or body.get("task")
+        if not objective or not str(objective).strip():
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Field 'objective' is required.")
+            return
+
+        mid_raw = body.get("mission_id")
+        mission_id = UUID(str(mid_raw)) if mid_raw else None
+        max_duration = float(body.get("max_duration_seconds", 300.0))
+
+        try:
+            plan = self.service.plan_mission(
+                objective=str(objective),
+                mission_id=mission_id,
+                max_duration_seconds=max_duration,
+            )
+            self._send_json(HTTPStatus.CREATED, plan)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
     def _handle_run_task(self, mission_id: UUID, body: dict[str, Any]) -> None:
         auto_approve = bool(body.get("auto_approve", False))

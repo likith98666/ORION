@@ -39,6 +39,11 @@ from orion.core.agents.models import Agent
 from orion.core.agents.permission_policy import AgentPermissionPolicy
 from orion.core.agents.permissions import AgentPermission
 from orion.core.evaluation.models import BenchmarkReport
+from orion.core.missions.engine import MissionExecutionEngine
+from orion.core.missions.graph import MissionTaskGraph
+from orion.core.missions.memory import MissionMemory
+from orion.core.missions.models import MissionPlan, ResourceBudget
+from orion.core.missions.planner import MissionPlanner
 from orion.core.observability.context import TelemetryContext
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_engine import RecoveryEngine
@@ -146,6 +151,9 @@ class MissionAPIService:
         )
         self._redaction_engine = RedactionEngine(secrets=self._config.known_secrets)
         self._is_shutting_down: bool = False
+        self._mission_plans: dict[UUID, tuple[MissionPlan, MissionTaskGraph]] = {}
+        self._mission_memories: dict[UUID, MissionMemory] = {}
+        self._mission_engines: dict[UUID, MissionExecutionEngine] = {}
 
     @property
     def config(self) -> AppConfig:
@@ -1756,3 +1764,68 @@ class MissionAPIService:
                 "total": len(ev_items),
             },
         )
+
+    # -------------------------------------------------------------
+    # V2 Mission Intelligence
+    # -------------------------------------------------------------
+
+    def plan_mission(
+        self,
+        objective: str,
+        mission_id: UUID | None = None,
+        max_duration_seconds: float = 300.0,
+    ) -> dict[str, Any]:
+        """Decompose a complex objective into a validated V2 Mission Plan."""
+        planner = MissionPlanner()
+        budget = ResourceBudget(max_duration_seconds=max_duration_seconds)
+        plan, graph = planner.decompose_objective(
+            objective=objective,
+            mission_id=mission_id,
+            default_budget=budget,
+        )
+        memory = MissionMemory(mission_id=plan.mission_id)
+        engine = MissionExecutionEngine(
+            plan=plan,
+            graph=graph,
+            memory=memory,
+            mission_budget=budget,
+        )
+
+        self._mission_plans[plan.mission_id] = (plan, graph)
+        self._mission_memories[plan.mission_id] = memory
+        self._mission_engines[plan.mission_id] = engine
+
+        return plan.to_dict()
+
+    def get_mission_graph(self, mission_id: UUID) -> dict[str, Any] | None:
+        """Retrieve the task graph and readiness state for a mission."""
+        entry = self._mission_plans.get(mission_id)
+        if not entry:
+            return None
+        plan, graph = entry
+        ready = [t.to_dict() for t in graph.get_ready_tasks()]
+        return {
+            "mission_id": str(mission_id),
+            "objective": plan.objective,
+            "status": plan.status.value,
+            "tasks": {str(k): v.to_dict() for k, v in graph.tasks.items()},
+            "ready_tasks": ready,
+            "is_completed": graph.is_completed(),
+        }
+
+    def cancel_mission_plan(
+        self, mission_id: UUID, reason: str = "Mission cancelled by user."
+    ) -> bool:
+        """Cancel a V2 mission plan and all contained tasks."""
+        engine = self._mission_engines.get(mission_id)
+        if not engine:
+            return False
+        engine.cancel(reason=reason)
+        return True
+
+    def get_mission_memory(self, mission_id: UUID) -> dict[str, Any] | None:
+        """Retrieve memory entries for a V2 mission."""
+        memory = self._mission_memories.get(mission_id)
+        if not memory:
+            return None
+        return memory.to_dict()
