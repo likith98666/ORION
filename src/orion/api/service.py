@@ -62,7 +62,14 @@ from orion.core.missions.graph import MissionTaskGraph
 from orion.core.missions.memory import MissionMemory
 from orion.core.missions.models import MissionPlan, ResourceBudget
 from orion.core.missions.planner import MissionPlanner
-from orion.core.observability.context import TelemetryContext
+from orion.core.observability import (
+    DistributedTracer,
+    SpanKind,
+    SpanRecord,
+    SpanStatus,
+    SystemOptimizer,
+    TelemetryContext,
+)
 from orion.core.policy import (
     PolicyContext,
     PolicyEffect,
@@ -193,6 +200,8 @@ class MissionAPIService:
         self._benchmark_runner = BenchmarkRunner()
         self._hitl_coordinator = HITLCoordinator()
         self._policy_engine = PolicyEngine()
+        self._tracer = DistributedTracer()
+        self._system_optimizer = SystemOptimizer(self._tracer)
 
     @property
     def config(self) -> AppConfig:
@@ -2300,3 +2309,61 @@ class MissionAPIService:
         """Retrieve recent policy evaluation decisions."""
         decisions = self._policy_engine.get_decision_history(limit=limit)
         return [d.to_dict() for d in decisions]
+
+    # -------------------------------------------------------------
+    # V9 Advanced Observability & System Optimization
+    # -------------------------------------------------------------
+    @property
+    def tracer(self) -> DistributedTracer:
+        """Return the active DistributedTracer instance."""
+        return self._tracer
+
+    @property
+    def system_optimizer(self) -> SystemOptimizer:
+        """Return the active SystemOptimizer instance."""
+        return self._system_optimizer
+
+    def record_telemetry_span(
+        self,
+        name: str,
+        trace_id: UUID | None = None,
+        parent_span_id: UUID | None = None,
+        kind: str = "internal",
+        status: str = "ok",
+        duration_ms: float = 0.0,
+        attributes: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Manually record a completed execution span."""
+        span = SpanRecord(
+            name=name,
+            trace_id=trace_id or uuid4(),
+            parent_span_id=parent_span_id,
+            kind=SpanKind(kind.lower().strip()),
+            status=SpanStatus(status.lower().strip()),
+            duration_ms=duration_ms,
+            attributes=attributes or {},
+        )
+        self._tracer.record_span(span)
+        return span.to_dict()
+
+    def get_mission_spans(self, mission_id: UUID) -> list[dict[str, Any]]:
+        """Retrieve all execution spans recorded for a mission."""
+        spans = self._tracer.get_mission_spans(mission_id)
+        return [s.to_dict() for s in spans]
+
+    def get_cost_metrics(self, mission_id: UUID | None = None) -> dict[str, Any]:
+        """Retrieve aggregated token usage and cost metrics."""
+        return self._system_optimizer.calculate_cost_metrics(mission_id=mission_id)
+
+    def get_system_bottlenecks(
+        self, mission_id: UUID | None = None, top_n: int = 5
+    ) -> dict[str, Any]:
+        """Analyze slowest spans, error rates, and latency quantiles."""
+        return self._system_optimizer.analyze_bottlenecks(mission_id=mission_id, top_n=top_n)
+
+    def generate_optimization_recommendations(
+        self, mission_id: UUID | None = None
+    ) -> list[dict[str, Any]]:
+        """Generate actionable performance, token, and system recommendations."""
+        insights = self._system_optimizer.generate_recommendations(mission_id=mission_id)
+        return [i.to_dict() for i in insights]

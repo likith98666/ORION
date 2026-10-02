@@ -150,6 +150,34 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_policy_decisions(query)
             return
 
+        # V9 Advanced Observability endpoints
+        if path.startswith("/api/v1/observability/spans/") or path.startswith(
+            "/api/observability/spans/"
+        ):
+            self._handle_get_observability_spans(path)
+            return
+
+        if path in (
+            "/api/v1/observability/metrics/cost",
+            "/api/observability/metrics/cost",
+        ):
+            self._handle_get_cost_metrics(query)
+            return
+
+        if path in (
+            "/api/v1/observability/bottlenecks",
+            "/api/observability/bottlenecks",
+        ):
+            self._handle_get_system_bottlenecks(query)
+            return
+
+        if path in (
+            "/api/v1/observability/optimize",
+            "/api/observability/optimize",
+        ):
+            self._handle_get_optimization_recommendations(query)
+            return
+
         # Resource endpoints: /api/tasks/{id}/... or /api/v1/missions/{id}/...
         resource_id, sub_resource = self._extract_resource_params(path)
         if resource_id is not None:
@@ -350,6 +378,14 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if body is None:
                 return
             self._handle_add_policy_rule(body)
+            return
+
+        # V9 Advanced Observability span ingestion endpoint
+        if path in ("/api/v1/observability/spans", "/api/observability/spans"):
+            body = self._read_json_body() if self._has_body() else {}
+            if body is None:
+                return
+            self._handle_record_span(body)
             return
 
         # Resource action endpoints
@@ -721,6 +757,71 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         try:
             res = self.service.add_policy_rule(body)
             self._send_json(HTTPStatus.CREATED, res)
+        except Exception as exc:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
+
+    # -------------------------------------------------------------
+    # V9 Advanced Observability Handlers
+    # -------------------------------------------------------------
+    def _handle_get_observability_spans(self, path: str) -> None:
+        prefix = (
+            "/api/v1/observability/spans/"
+            if path.startswith("/api/v1/observability/spans/")
+            else "/api/observability/spans/"
+        )
+        mid_str = path[len(prefix):].strip("/")
+        try:
+            mid = UUID(mid_str)
+            spans = self.service.get_mission_spans(mid)
+            self._send_json(HTTPStatus.OK, {"spans": spans, "total": len(spans)})
+        except ValueError:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid UUID '{mid_str}'.")
+
+    def _handle_get_cost_metrics(self, query: dict[str, list[str]]) -> None:
+        mid_raw = query.get("mission_id", [None])[0]
+        mission_id = UUID(mid_raw) if mid_raw else None
+        metrics = self.service.get_cost_metrics(mission_id=mission_id)
+        self._send_json(HTTPStatus.OK, metrics)
+
+    def _handle_get_system_bottlenecks(self, query: dict[str, list[str]]) -> None:
+        mid_raw = query.get("mission_id", [None])[0]
+        top_n_raw = query.get("top_n", ["5"])[0]
+        mission_id = UUID(mid_raw) if mid_raw else None
+        try:
+            top_n = int(top_n_raw)
+        except ValueError:
+            top_n = 5
+        bottlenecks = self.service.get_system_bottlenecks(mission_id=mission_id, top_n=top_n)
+        self._send_json(HTTPStatus.OK, bottlenecks)
+
+    def _handle_get_optimization_recommendations(self, query: dict[str, list[str]]) -> None:
+        mid_raw = query.get("mission_id", [None])[0]
+        mission_id = UUID(mid_raw) if mid_raw else None
+        insights = self.service.generate_optimization_recommendations(mission_id=mission_id)
+        self._send_json(HTTPStatus.OK, {"recommendations": insights, "total": len(insights)})
+
+    def _handle_record_span(self, body: dict[str, Any]) -> None:
+        name = body.get("name")
+        if not name:
+            self._send_error_json(HTTPStatus.BAD_REQUEST, "Field 'name' is required.")
+            return
+
+        trace_id_raw = body.get("trace_id")
+        parent_id_raw = body.get("parent_span_id")
+        trace_id = UUID(str(trace_id_raw)) if trace_id_raw else None
+        parent_id = UUID(str(parent_id_raw)) if parent_id_raw else None
+
+        try:
+            span = self.service.record_telemetry_span(
+                name=str(name),
+                trace_id=trace_id,
+                parent_span_id=parent_id,
+                kind=str(body.get("kind", "internal")),
+                status=str(body.get("status", "ok")),
+                duration_ms=float(body.get("duration_ms", 0.0)),
+                attributes=body.get("attributes"),
+            )
+            self._send_json(HTTPStatus.CREATED, span)
         except Exception as exc:
             self._send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
 
