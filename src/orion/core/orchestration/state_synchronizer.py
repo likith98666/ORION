@@ -1,4 +1,4 @@
-﻿from orion.core.agents.execution_manager import AgentExecutionStatus
+from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.task_service import AgentTaskService
 from orion.core.agents.tasks import AgentTaskStatus
@@ -43,29 +43,43 @@ class StateSynchronizer:
             )
 
         if execution.status == AgentExecutionStatus.RUNNING:
-            self._task_service.update_status(
-                task.id,
-                AgentTaskStatus.RUNNING,
-            )
+            if task.status != AgentTaskStatus.RUNNING:
+                self._task_service.update_status(
+                    task.id,
+                    AgentTaskStatus.RUNNING,
+                )
             plan_step.status = PlanStepStatus.RUNNING
 
         elif execution.status == AgentExecutionStatus.COMPLETED:
-            self._task_service.update_status(
-                task.id,
-                AgentTaskStatus.COMPLETED,
-            )
+            if task.status != AgentTaskStatus.COMPLETED:
+                if task.status in (AgentTaskStatus.ASSIGNED, AgentTaskStatus.FAILED):
+                    self._task_service.update_status(
+                        task.id,
+                        AgentTaskStatus.RUNNING,
+                    )
+                self._task_service.update_status(
+                    task.id,
+                    AgentTaskStatus.COMPLETED,
+                )
             plan_step.status = PlanStepStatus.COMPLETED
 
         elif execution.status == AgentExecutionStatus.FAILED:
-            self._task_service.update_status(
-                task.id,
-                AgentTaskStatus.FAILED,
-            )
+            if task.status != AgentTaskStatus.FAILED:
+                if task.status == AgentTaskStatus.ASSIGNED:
+                    self._task_service.update_status(
+                        task.id,
+                        AgentTaskStatus.RUNNING,
+                    )
+                self._task_service.update_status(
+                    task.id,
+                    AgentTaskStatus.FAILED,
+                )
             plan_step.status = PlanStepStatus.FAILED
 
         elif execution.status == AgentExecutionStatus.CANCELLED:
-            self._task_service.update_status(
-                task.id,
-                AgentTaskStatus.CANCELLED,
-            )
+            if task.status != AgentTaskStatus.CANCELLED:
+                self._task_service.update_status(
+                    task.id,
+                    AgentTaskStatus.CANCELLED,
+                )
             plan_step.status = PlanStepStatus.SKIPPED

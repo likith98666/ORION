@@ -24,9 +24,7 @@ def create_agent(
         name=name,
         description=f"{name} agent.",
         capabilities=capabilities,
-        permission_policy=AgentPermissionPolicy.create(
-            permissions or frozenset()
-        ),
+        permission_policy=AgentPermissionPolicy.create(permissions or frozenset()),
     )
 
 
@@ -62,9 +60,7 @@ def test_assigner_assigns_capable_agent() -> None:
     )
     registry.register(researcher)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == researcher.id
     assert assignment.capability == AgentCapability.RESEARCH
@@ -86,9 +82,7 @@ def test_assigner_selects_first_active_capable_agent_when_load_is_equal() -> Non
     registry.register(first)
     registry.register(second)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == first.id
 
@@ -114,9 +108,7 @@ def test_assigner_selects_least_loaded_agent() -> None:
     busy_task.status = AgentTaskStatus.RUNNING
     repository.save(busy_task)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == second.id
 
@@ -142,9 +134,7 @@ def test_assigner_counts_assigned_tasks_as_load() -> None:
     assigned_task.status = AgentTaskStatus.ASSIGNED
     repository.save(assigned_task)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == second.id
 
@@ -170,9 +160,7 @@ def test_assigner_ignores_completed_tasks_when_calculating_load() -> None:
     completed_task.status = AgentTaskStatus.COMPLETED
     repository.save(completed_task)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == first.id
 
@@ -195,9 +183,7 @@ def test_assigner_skips_inactive_capable_agent() -> None:
     registry.register(inactive)
     registry.register(active)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == active.id
 
@@ -220,9 +206,7 @@ def test_assigner_skips_disabled_capable_agent() -> None:
     registry.register(disabled)
     registry.register(active)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == active.id
 
@@ -243,9 +227,7 @@ def test_assigner_ignores_agents_without_required_capability() -> None:
     registry.register(analyst)
     registry.register(researcher)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == researcher.id
 
@@ -260,9 +242,7 @@ def test_assigner_allows_task_without_required_permissions() -> None:
     )
     registry.register(researcher)
 
-    assignment = create_assigner(registry, repository).assign(
-        create_task(AgentCapability.RESEARCH)
-    )
+    assignment = create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
     assert assignment.agent_id == researcher.id
 
@@ -397,9 +377,7 @@ def test_assigner_rejects_task_without_active_capable_agent() -> None:
         ValueError,
         match="No active agent available with capability 'research'",
     ):
-        create_assigner(registry, repository).assign(
-            create_task(AgentCapability.RESEARCH)
-        )
+        create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))
 
 
 def test_assigner_rejects_task_without_capable_agent() -> None:
@@ -417,6 +395,4 @@ def test_assigner_rejects_task_without_capable_agent() -> None:
         ValueError,
         match="No agent available with capability 'research'",
     ):
-        create_assigner(registry, repository).assign(
-            create_task(AgentCapability.RESEARCH)
-        )
+        create_assigner(registry, repository).assign(create_task(AgentCapability.RESEARCH))

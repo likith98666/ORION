@@ -18,9 +18,7 @@ def test_agent_task_can_be_created() -> None:
     assert task.id is not None
     assert task.task_id == task_id
     assert task.plan_step_id is None
-    assert task.description == (
-        "Research competitors in the AI education market."
-    )
+    assert task.description == ("Research competitors in the AI education market.")
     assert task.required_capability == AgentCapability.RESEARCH
     assert task.status == AgentTaskStatus.PENDING
     assert task.assigned_agent_id is None

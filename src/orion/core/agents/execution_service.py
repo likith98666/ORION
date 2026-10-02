@@ -1,4 +1,4 @@
-﻿from dataclasses import replace
+from dataclasses import replace
 from datetime import datetime
 from uuid import UUID
 
@@ -8,7 +8,9 @@ from orion.core.agents.executions import (
     AgentExecution,
     AgentExecutionStatus,
 )
+from orion.core.observability.context import TelemetryContext
 from orion.core.recovery.failures import Failure, FailureType
+from orion.core.verification.models import VerificationResult, VerificationStatus
 
 
 class AgentExecutionService:
@@ -25,12 +27,14 @@ class AgentExecutionService:
         self,
         agent_task_id: UUID,
         agent_id: UUID,
+        telemetry_context: TelemetryContext | None = None,
     ) -> AgentExecution:
         """Create and persist a new running execution."""
 
         execution = AgentExecution.create(
             agent_task_id=agent_task_id,
             agent_id=agent_id,
+            telemetry_context=telemetry_context,
         )
 
         self._repository.save(execution)
@@ -55,9 +59,7 @@ class AgentExecutionService:
         execution = self._repository.get(execution_id)
 
         if execution is None:
-            raise ValueError(
-                f"Agent execution '{execution_id}' not found."
-            )
+            raise ValueError(f"Agent execution '{execution_id}' not found.")
 
         updated_execution = self._manager.update_status(
             execution,
@@ -83,9 +85,7 @@ class AgentExecutionService:
         execution = self._repository.get(execution_id)
 
         if execution is None:
-            raise ValueError(
-                f"Agent execution '{execution_id}' not found."
-            )
+            raise ValueError(f"Agent execution '{execution_id}' not found.")
 
         updated_execution = self._manager.update_status(
             execution,
@@ -101,6 +101,7 @@ class AgentExecutionService:
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
+            runtime_status=AgentExecutionStatus.COMPLETED,
         )
 
         self._repository.save(updated_execution)
@@ -116,15 +117,11 @@ class AgentExecutionService:
         """Fail an execution and persist its error and structured failure."""
 
         if failure is not None and not isinstance(failure, Failure):
-            raise TypeError(
-                "failure must be a Failure instance."
-            )
+            raise TypeError("failure must be a Failure instance.")
 
         if failure is None:
             if error_message is None or not error_message.strip():
-                raise ValueError(
-                    "Either error_message or failure must be provided."
-                )
+                raise ValueError("Either error_message or failure must be provided.")
 
             failure = Failure(
                 failure_type=FailureType.UNKNOWN,
@@ -134,9 +131,7 @@ class AgentExecutionService:
         execution = self._repository.get(execution_id)
 
         if execution is None:
-            raise ValueError(
-                f"Agent execution '{execution_id}' not found."
-            )
+            raise ValueError(f"Agent execution '{execution_id}' not found.")
 
         updated_execution = self._manager.update_status(
             execution,
@@ -148,6 +143,71 @@ class AgentExecutionService:
             completed_at=datetime.now(),
             error_message=failure.message,
             failure=failure,
+            runtime_status=AgentExecutionStatus.FAILED,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def fail_verification(
+        self,
+        execution_id: UUID,
+        failure: Failure,
+        verification_result: VerificationResult | None = None,
+    ) -> AgentExecution:
+        """Record verification failure on an execution attempt while preserving runtime outcome."""
+
+        if not isinstance(failure, Failure):
+            raise TypeError("failure must be a Failure instance.")
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(f"Agent execution '{execution_id}' not found.")
+
+        updated_execution = replace(
+            execution,
+            status=AgentExecutionStatus.FAILED,
+            runtime_status=(
+                execution.runtime_status or AgentExecutionStatus.COMPLETED
+            ),
+            verification_status=(
+                verification_result.status
+                if verification_result is not None
+                else VerificationStatus.FAILED
+            ),
+            failure=failure,
+            error_message=failure.message,
+        )
+
+        self._repository.save(updated_execution)
+
+        return updated_execution
+
+    def complete_verification(
+        self,
+        execution_id: UUID,
+        verification_result: VerificationResult | None = None,
+    ) -> AgentExecution:
+        """Record verification success on an execution attempt."""
+
+        execution = self._repository.get(execution_id)
+
+        if execution is None:
+            raise ValueError(f"Agent execution '{execution_id}' not found.")
+
+        updated_execution = replace(
+            execution,
+            status=AgentExecutionStatus.COMPLETED,
+            runtime_status=(
+                execution.runtime_status or AgentExecutionStatus.COMPLETED
+            ),
+            verification_status=(
+                verification_result.status
+                if verification_result is not None
+                else VerificationStatus.PASSED
+            ),
         )
 
         self._repository.save(updated_execution)

@@ -1,0 +1,21 @@
+services:
+  orion-mission-control:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orion_mission_control
+    ports:
+      - "8000:8000"
+    environment:
+      - ORION_HOST=0.0.0.0
+      - ORION_PORT=8000
+      - ORION_WORKSPACE=/workspace
+    volumes:
+      - ./workspace_data:/workspace:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

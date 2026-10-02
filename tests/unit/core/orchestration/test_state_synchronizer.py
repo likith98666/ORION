@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -142,3 +142,73 @@ def test_synchronization_preserves_unrelated_plan_steps():
 
     assert target_step.status == PlanStepStatus.COMPLETED
     assert unrelated_step.status == PlanStepStatus.PENDING
+
+
+def test_synchronize_completed_task_is_idempotent():
+    plan_step = create_plan_step()
+    task = create_agent_task(plan_step.id)
+    task.status = AgentTaskStatus.COMPLETED
+    execution = create_execution(task.id, AgentExecutionStatus.COMPLETED)
+
+    fake_service = FakeAgentTaskService(task)
+    synchronizer = create_synchronizer(fake_service)
+
+    synchronizer.synchronize(execution, [plan_step])
+
+    assert task.status == AgentTaskStatus.COMPLETED
+    assert plan_step.status == PlanStepStatus.COMPLETED
+    assert fake_service.updated_statuses == []
+
+
+def test_synchronize_failed_task_is_idempotent():
+    plan_step = create_plan_step()
+    task = create_agent_task(plan_step.id)
+    task.status = AgentTaskStatus.FAILED
+    execution = create_execution(task.id, AgentExecutionStatus.FAILED)
+
+    fake_service = FakeAgentTaskService(task)
+    synchronizer = create_synchronizer(fake_service)
+
+    synchronizer.synchronize(execution, [plan_step])
+
+    assert task.status == AgentTaskStatus.FAILED
+    assert plan_step.status == PlanStepStatus.FAILED
+    assert fake_service.updated_statuses == []
+
+
+def test_synchronize_completed_task_with_failed_execution_is_rejected():
+    from orion.core.agents.memory_task_repository import InMemoryAgentTaskRepository
+    from orion.core.agents.task_service import AgentTaskService
+
+    plan_step = create_plan_step()
+    task = create_agent_task(plan_step.id)
+    task.status = AgentTaskStatus.COMPLETED
+
+    task_repo = InMemoryAgentTaskRepository()
+    task_repo.save(task)
+    real_task_service = AgentTaskService(task_repo)
+
+    execution = create_execution(task.id, AgentExecutionStatus.FAILED)
+    synchronizer = create_synchronizer(real_task_service)
+
+    with pytest.raises(ValueError, match="Invalid agent task transition: completed -> failed"):
+        synchronizer.synchronize(execution, [plan_step])
+
+
+def test_synchronize_completed_task_with_running_execution_is_rejected():
+    from orion.core.agents.memory_task_repository import InMemoryAgentTaskRepository
+    from orion.core.agents.task_service import AgentTaskService
+
+    plan_step = create_plan_step()
+    task = create_agent_task(plan_step.id)
+    task.status = AgentTaskStatus.COMPLETED
+
+    task_repo = InMemoryAgentTaskRepository()
+    task_repo.save(task)
+    real_task_service = AgentTaskService(task_repo)
+
+    execution = create_execution(task.id, AgentExecutionStatus.RUNNING)
+    synchronizer = create_synchronizer(real_task_service)
+
+    with pytest.raises(ValueError, match="Invalid agent task transition: completed -> running"):
+        synchronizer.synchronize(execution, [plan_step])

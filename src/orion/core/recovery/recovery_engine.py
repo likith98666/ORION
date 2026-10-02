@@ -1,4 +1,4 @@
-﻿from orion.core.recovery.failures import Failure, FailureType
+from orion.core.recovery.failures import Failure, FailureType
 from orion.core.recovery.recovery_context import RecoveryContext
 from orion.core.recovery.recovery_strategy import (
     RecoveryDecision,
@@ -113,10 +113,18 @@ class RecoveryEngine:
         if failure.failure_type == FailureType.DEPENDENCY_FAILURE:
             return RecoveryStrategy.CHANGE_TASK_ORDER
 
+        if failure.failure_type == FailureType.VERIFICATION_FAILURE:
+            if context.retry_count < context.max_retries:
+                return RecoveryStrategy.RETRY_CURRENT_TASK
+
+            if context.alternative_models_available:
+                return RecoveryStrategy.CHANGE_MODEL
+
+            return RecoveryStrategy.ESCALATE_TO_HUMAN
+
         if failure.failure_type in {
             FailureType.INVALID_INPUT,
             FailureType.CONSTRAINT_VIOLATION,
-            FailureType.VERIFICATION_FAILURE,
         }:
             return RecoveryStrategy.MODIFY_TASK
 

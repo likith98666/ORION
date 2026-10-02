@@ -72,9 +72,7 @@ def create_agent() -> Agent:
         name="Researcher",
         description="Research specialist.",
         capabilities=frozenset({AgentCapability.RESEARCH}),
-        permission_policy=AgentPermissionPolicy.create(
-            frozenset()
-        ),
+        permission_policy=AgentPermissionPolicy.create(frozenset()),
     )
 
 
@@ -88,9 +86,7 @@ def create_executor(
     agent_repository = InMemoryAgentRepository()
 
     execution_repository = InMemoryAgentExecutionRepository()
-    execution_service = AgentExecutionService(
-        execution_repository
-    )
+    execution_service = AgentExecutionService(execution_repository)
 
     executor = AgentExecutor(
         agent_repository=agent_repository,
@@ -134,9 +130,7 @@ def test_executor_completes_assigned_task() -> None:
     )
 
     assert execution.status == AgentExecutionStatus.COMPLETED
-    assert execution.output == (
-        "Mock response for: Research autonomous agents."
-    )
+    assert execution.output == ("Mock response for: Research autonomous agents.")
     assert execution.agent_task_id == task.id
     assert execution.agent_id == agent.id
     assert execution.provider_name == "mock"
@@ -242,14 +236,13 @@ def test_executor_fails_when_agent_does_not_exist() -> None:
             ModelConfig(provider_name="mock"),
         )
 
+
 def test_executor_preserves_classified_model_failure() -> None:
     class ModelFailureRuntime:
         def generate(self, config, request):
             from orion.models.errors import ModelProviderUnavailableError
 
-            raise ModelProviderUnavailableError(
-                "Model provider unavailable."
-            )
+            raise ModelProviderUnavailableError("Model provider unavailable.")
 
     (
         executor,

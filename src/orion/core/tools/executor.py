@@ -56,6 +56,11 @@ class ToolExecutor:
         self._approval_service = approval_service
         self._audit_service = audit_service
 
+    @property
+    def approval_service(self) -> ApprovalService | None:
+        """Return configured ApprovalService, if any."""
+        return self._approval_service
+
     def execute(
         self,
         agent: Agent,

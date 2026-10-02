@@ -32,8 +32,7 @@ class AgentExecutionManager:
 
         if status not in allowed_statuses:
             raise ValueError(
-                f"Invalid agent execution transition: "
-                f"{execution.status.value} -> {status.value}"
+                f"Invalid agent execution transition: {execution.status.value} -> {status.value}"
             )
 
         execution.status = status

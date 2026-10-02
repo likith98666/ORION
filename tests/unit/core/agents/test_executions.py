@@ -1,4 +1,7 @@
+from dataclasses import FrozenInstanceError
 from uuid import uuid4
+
+import pytest
 
 from orion.core.agents.executions import (
     AgentExecution,
@@ -6,7 +9,7 @@ from orion.core.agents.executions import (
 )
 
 
-def test_create_execution():
+def test_create_execution() -> None:
     agent_task_id = uuid4()
     agent_id = uuid4()
 
@@ -25,7 +28,7 @@ def test_create_execution():
     assert execution.error_message is None
 
 
-def test_each_execution_gets_a_unique_id():
+def test_each_execution_gets_a_unique_id() -> None:
     agent_task_id = uuid4()
     agent_id = uuid4()
 
@@ -35,7 +38,7 @@ def test_each_execution_gets_a_unique_id():
     assert first.id != second.id
 
 
-def test_each_execution_gets_its_own_start_time():
+def test_each_execution_gets_its_own_start_time() -> None:
     agent_task_id = uuid4()
     agent_id = uuid4()
 
@@ -43,3 +46,30 @@ def test_each_execution_gets_its_own_start_time():
     second = AgentExecution.create(agent_task_id, agent_id)
 
     assert first.started_at is not second.started_at
+
+
+def test_agent_execution_creates_telemetry_context() -> None:
+    task_id = uuid4()
+    agent_id = uuid4()
+
+    execution = AgentExecution.create(
+        agent_task_id=task_id,
+        agent_id=agent_id,
+    )
+
+    assert execution.telemetry_context is not None
+    assert execution.telemetry_context.task_id == task_id
+    assert execution.telemetry_context.execution_id == execution.id
+    assert execution.telemetry_context.agent_id == agent_id
+
+
+def test_agent_execution_telemetry_context_is_immutable() -> None:
+    execution = AgentExecution.create(
+        agent_task_id=uuid4(),
+        agent_id=uuid4(),
+    )
+
+    assert execution.telemetry_context is not None
+
+    with pytest.raises(FrozenInstanceError):
+        execution.telemetry_context.task_id = uuid4()  # type: ignore[misc]

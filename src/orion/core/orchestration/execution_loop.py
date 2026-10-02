@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_manager import AgentExecutionStatus
+from orion.core.agents.execution_service import AgentExecutionService
 from orion.core.agents.executions import AgentExecution
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
 from orion.core.memory.context_provider import MemoryContextProvider
@@ -16,6 +17,8 @@ from orion.core.recovery.recovery_coordinator import RecoveryCoordinator
 from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
 from orion.core.recovery.recovery_service import RecoveryService
 from orion.core.verification.engine import VerificationEngine
+from orion.core.verification.failure_adapter import VerificationFailureAdapter
+from orion.core.verification.models import VerificationResult, VerificationStatus
 
 
 @dataclass(frozen=True)
@@ -40,6 +43,7 @@ class ExecutionLoop:
         memory_service: MemoryService | None = None,
         verification_engine: VerificationEngine | None = None,
         memory_context_provider: MemoryContextProvider | None = None,
+        execution_service: AgentExecutionService | None = None,
         max_recovery_attempts: int = DEFAULT_MAX_RECOVERY_ATTEMPTS,
     ) -> None:
         if not isinstance(max_recovery_attempts, int):
@@ -58,6 +62,15 @@ class ExecutionLoop:
         self._memory_service = memory_service
         self._verification_engine = verification_engine
         self._memory_context_provider = memory_context_provider
+        self._execution_service = execution_service or getattr(
+            getattr(execution_coordinator, "_agent_executor", None),
+            "_execution_service",
+            getattr(
+                getattr(recovery_service, "_agent_executor", None),
+                "_execution_service",
+                None,
+            ),
+        )
         self._max_recovery_attempts = max_recovery_attempts
 
     def execute(
@@ -149,22 +162,13 @@ class ExecutionLoop:
 
         executions = [execution]
 
-        self._synchronize_execution(
+        passed = self._evaluate_execution(
             execution=execution,
+            task=task,
             plan_steps=plan_steps,
         )
 
-        self._verify_execution(
-            execution=execution,
-            task=task,
-        )
-
-        self._remember_execution(
-            execution=execution,
-            task=task,
-        )
-
-        if execution.status != AgentExecutionStatus.FAILED:
+        if passed:
             return executions
 
         if self._recovery_coordinator is None:
@@ -263,22 +267,13 @@ class ExecutionLoop:
 
             current_execution = next_execution
 
-            self._synchronize_execution(
+            retry_passed = self._evaluate_execution(
                 execution=current_execution,
+                task=task,
                 plan_steps=plan_steps,
             )
 
-            self._verify_execution(
-                execution=current_execution,
-                task=task,
-            )
-
-            self._remember_execution(
-                execution=current_execution,
-                task=task,
-            )
-
-            if current_execution.status != AgentExecutionStatus.FAILED:
+            if retry_passed:
                 break
 
             if current_execution.failure is None:
@@ -294,20 +289,93 @@ class ExecutionLoop:
         self,
         execution: AgentExecution,
         task: AgentTask,
-    ) -> None:
+    ) -> VerificationResult | None:
         """Verify execution output when verification is configured."""
 
         if self._verification_engine is None:
-            return
+            return None
 
         if not task.expected_requirements:
-            return
+            return None
 
-        self._verification_engine.verify_output(
+        return self._verification_engine.verify_output(
             execution_id=execution.id,
             output=execution.output,
             expected_requirements=list(task.expected_requirements),
         )
+
+    def _evaluate_execution(
+        self,
+        execution: AgentExecution,
+        task: AgentTask,
+        plan_steps: list[PlanStep] | None,
+    ) -> bool:
+        """Verify execution output, adapt failures if needed, and synchronize state."""
+
+        if execution.status == AgentExecutionStatus.FAILED:
+            if execution.runtime_status is None:
+                execution.runtime_status = AgentExecutionStatus.FAILED
+            self._synchronize_execution(
+                execution=execution,
+                plan_steps=plan_steps,
+            )
+            return False
+
+        if execution.runtime_status is None:
+            execution.runtime_status = AgentExecutionStatus.COMPLETED
+
+        verification_result = self._verify_execution(
+            execution=execution,
+            task=task,
+        )
+
+        if (
+            verification_result is not None
+            and verification_result.status == VerificationStatus.FAILED
+        ):
+            failure = VerificationFailureAdapter.to_failure(
+                verification_result
+            )
+            execution.status = AgentExecutionStatus.FAILED
+            execution.verification_status = VerificationStatus.FAILED
+            execution.failure = failure
+            execution.error_message = failure.message
+
+            if self._execution_service is not None:
+                self._execution_service.fail_verification(
+                    execution_id=execution.id,
+                    failure=failure,
+                    verification_result=verification_result,
+                )
+
+            self._synchronize_execution(
+                execution=execution,
+                plan_steps=plan_steps,
+            )
+            return False
+
+        if (
+            verification_result is not None
+            and verification_result.status == VerificationStatus.PASSED
+        ):
+            execution.verification_status = VerificationStatus.PASSED
+            if self._execution_service is not None:
+                self._execution_service.complete_verification(
+                    execution_id=execution.id,
+                    verification_result=verification_result,
+                )
+
+        self._synchronize_execution(
+            execution=execution,
+            plan_steps=plan_steps,
+        )
+
+        self._remember_execution(
+            execution=execution,
+            task=task,
+        )
+
+        return True
 
     def _remember_execution(
         self,

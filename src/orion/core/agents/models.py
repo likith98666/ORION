@@ -50,9 +50,7 @@ class Agent:
             raise ValueError("Agent description cannot be empty.")
 
         if len(cleaned_description) > 2_000:
-            raise ValueError(
-                "Agent description cannot exceed 2,000 characters."
-            )
+            raise ValueError("Agent description cannot exceed 2,000 characters.")
 
         if not capabilities:
             raise ValueError("Agent must have at least one capability.")
@@ -63,9 +61,7 @@ class Agent:
             raise ValueError("Agent must have at least one capability.")
 
         if permission_policy is None:
-            permission_policy = AgentPermissionPolicy.create(
-                frozenset()
-            )
+            permission_policy = AgentPermissionPolicy.create(frozenset())
 
         return cls(
             id=uuid4(),

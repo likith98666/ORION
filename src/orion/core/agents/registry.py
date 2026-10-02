@@ -11,9 +11,7 @@ class AgentRegistry:
         """Register an agent."""
 
         if agent.name in self._agents:
-            raise ValueError(
-                f"Agent '{agent.name}' is already registered."
-            )
+            raise ValueError(f"Agent '{agent.name}' is already registered.")
 
         self._agents[agent.name] = agent
 
@@ -26,9 +24,7 @@ class AgentRegistry:
             raise ValueError("Agent name cannot be empty.")
 
         if cleaned_name not in self._agents:
-            raise KeyError(
-                f"Agent '{cleaned_name}' is not registered."
-            )
+            raise KeyError(f"Agent '{cleaned_name}' is not registered.")
 
         return self._agents[cleaned_name]
 

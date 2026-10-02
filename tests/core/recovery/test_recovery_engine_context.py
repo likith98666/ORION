@@ -140,3 +140,47 @@ def test_unknown_failure_escalates() -> None:
 
     assert decision.strategy == RecoveryStrategy.ESCALATE_TO_HUMAN
     assert decision.requires_human is True
+
+
+def test_verification_failure_retries_when_retries_remain() -> None:
+    engine = RecoveryEngine()
+
+    decision = engine.decide(
+        Failure(FailureType.VERIFICATION_FAILURE, "Output missing requirements."),
+        RecoveryContext(retry_count=0, max_retries=3),
+    )
+
+    assert decision.strategy == RecoveryStrategy.RETRY_CURRENT_TASK
+    assert decision.requires_human is False
+
+
+def test_verification_failure_changes_model_when_retries_exhausted_and_alternative_models_available() -> None:
+    engine = RecoveryEngine()
+
+    decision = engine.decide(
+        Failure(FailureType.VERIFICATION_FAILURE, "Output missing requirements."),
+        RecoveryContext(
+            retry_count=3,
+            max_retries=3,
+            alternative_models_available=True,
+        ),
+    )
+
+    assert decision.strategy == RecoveryStrategy.CHANGE_MODEL
+    assert decision.requires_human is False
+
+
+def test_verification_failure_escalates_when_retries_exhausted_and_no_alternative_model() -> None:
+    engine = RecoveryEngine()
+
+    decision = engine.decide(
+        Failure(FailureType.VERIFICATION_FAILURE, "Output missing requirements."),
+        RecoveryContext(
+            retry_count=3,
+            max_retries=3,
+            alternative_models_available=False,
+        ),
+    )
+
+    assert decision.strategy == RecoveryStrategy.ESCALATE_TO_HUMAN
+    assert decision.requires_human is True

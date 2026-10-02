@@ -12,9 +12,7 @@ class AgentCapabilityRegistry:
         """Register an agent for capability-based lookup."""
 
         if agent in self._agents:
-            raise ValueError(
-                f"Agent '{agent.name}' is already registered."
-            )
+            raise ValueError(f"Agent '{agent.name}' is already registered.")
 
         self._agents.append(agent)
 
@@ -24,11 +22,7 @@ class AgentCapabilityRegistry:
     ) -> list[Agent]:
         """Return all agents that have the requested capability."""
 
-        return [
-            agent
-            for agent in self._agents
-            if capability in agent.capabilities
-        ]
+        return [agent for agent in self._agents if capability in agent.capabilities]
 
     def list_capabilities(self) -> frozenset[AgentCapability]:
         """Return every capability provided by registered agents."""

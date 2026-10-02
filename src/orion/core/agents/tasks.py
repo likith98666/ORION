@@ -49,9 +49,7 @@ class AgentTask:
             raise ValueError("Agent task description cannot be empty.")
 
         if len(cleaned_description) > 5_000:
-            raise ValueError(
-                "Agent task description cannot exceed 5,000 characters."
-            )
+            raise ValueError("Agent task description cannot exceed 5,000 characters.")
 
         if required_permissions is None:
             required_permissions = frozenset()
@@ -59,20 +57,13 @@ class AgentTask:
         if expected_requirements is None:
             expected_requirements = ()
 
-        cleaned_requirements = tuple(
-            requirement.strip()
-            for requirement in expected_requirements
-        )
+        cleaned_requirements = tuple(requirement.strip() for requirement in expected_requirements)
 
         if any(not requirement for requirement in cleaned_requirements):
-            raise ValueError(
-                "Expected verification requirements cannot be empty."
-            )
+            raise ValueError("Expected verification requirements cannot be empty.")
 
         if any(len(requirement) > 1_000 for requirement in cleaned_requirements):
-            raise ValueError(
-                "Expected verification requirements cannot exceed 1,000 characters."
-            )
+            raise ValueError("Expected verification requirements cannot exceed 1,000 characters.")
 
         return cls(
             id=uuid4(),

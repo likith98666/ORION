@@ -69,9 +69,7 @@ def test_service_can_find_agents_by_capability() -> None:
     service.register_agent(researcher)
     service.register_agent(analyst)
 
-    result = service.find_agents_by_capability(
-        AgentCapability.RESEARCH
-    )
+    result = service.find_agents_by_capability(AgentCapability.RESEARCH)
 
     assert result == [researcher, analyst]
 
@@ -86,9 +84,7 @@ def test_service_returns_empty_for_unused_capability() -> None:
 
     service.register_agent(agent)
 
-    result = service.find_agents_by_capability(
-        AgentCapability.CODE_EXECUTION
-    )
+    result = service.find_agents_by_capability(AgentCapability.CODE_EXECUTION)
 
     assert result == []
 

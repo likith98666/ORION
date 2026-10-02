@@ -27,13 +27,9 @@ class AgentExecutor:
         self._agent_repository = agent_repository
         self._execution_service = execution_service
         self._model_runtime = model_runtime
-        self._failure_classifier = (
-            failure_classifier or FailureClassifier()
-        )
+        self._failure_classifier = failure_classifier or FailureClassifier()
         self._tool_executor = tool_executor
-        self._memory_context_formatter = (
-            memory_context_formatter or MemoryContextFormatter()
-        )
+        self._memory_context_formatter = memory_context_formatter or MemoryContextFormatter()
 
     def execute(
         self,
@@ -44,16 +40,12 @@ class AgentExecutor:
         """Execute an assigned agent task."""
 
         if task.assigned_agent_id is None:
-            raise ValueError(
-                f"Agent task '{task.id}' has no assigned agent."
-            )
+            raise ValueError(f"Agent task '{task.id}' has no assigned agent.")
 
         agent = self._agent_repository.get(task.assigned_agent_id)
 
         if agent is None:
-            raise ValueError(
-                f"Agent '{task.assigned_agent_id}' was not found."
-            )
+            raise ValueError(f"Agent '{task.assigned_agent_id}' was not found.")
 
         execution = self._execution_service.create_execution(
             agent_task_id=task.id,
@@ -112,21 +104,15 @@ class AgentExecutor:
         """Execute a registered tool on behalf of an assigned agent."""
 
         if self._tool_executor is None:
-            raise ValueError(
-                "Tool executor is required for tool execution."
-            )
+            raise ValueError("Tool executor is required for tool execution.")
 
         if task.assigned_agent_id is None:
-            raise ValueError(
-                f"Agent task '{task.id}' has no assigned agent."
-            )
+            raise ValueError(f"Agent task '{task.id}' has no assigned agent.")
 
         agent = self._agent_repository.get(task.assigned_agent_id)
 
         if agent is None:
-            raise ValueError(
-                f"Agent '{task.assigned_agent_id}' was not found."
-            )
+            raise ValueError(f"Agent '{task.assigned_agent_id}' was not found.")
 
         return self._tool_executor.execute(
             agent=agent,

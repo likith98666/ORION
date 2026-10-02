@@ -22,10 +22,7 @@ class AgentAssignment:
         """Create a validated agent assignment."""
 
         if capability not in agent.capabilities:
-            raise ValueError(
-                f"Agent '{agent.name}' does not have capability "
-                f"'{capability.value}'."
-            )
+            raise ValueError(f"Agent '{agent.name}' does not have capability '{capability.value}'.")
 
         return cls(
             id=uuid4(),

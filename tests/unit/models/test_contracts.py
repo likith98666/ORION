@@ -82,3 +82,29 @@ def test_model_response_is_immutable() -> None:
 
     with pytest.raises(AttributeError):
         response.text = "Changed"
+
+
+def test_model_request_extended_fields() -> None:
+    request = ModelRequest(
+        prompt="Analyze diff",
+        structured_output=True,
+        response_format={"type": "json_object"},
+        request_id="req-abc-123",
+    )
+    assert request.structured_output is True
+    assert request.response_format == {"type": "json_object"}
+    assert request.request_id == "req-abc-123"
+
+
+def test_model_response_extended_fields() -> None:
+    response = ModelResponse(
+        text="Analysis done",
+        model_name="gpt-4o",
+        provider_name="openai",
+        finish_reason="stop",
+        request_id="req-abc-123",
+        raw_usage={"total_tokens": 100},
+    )
+    assert response.finish_reason == "stop"
+    assert response.request_id == "req-abc-123"
+    assert response.raw_usage == {"total_tokens": 100}

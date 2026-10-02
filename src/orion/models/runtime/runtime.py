@@ -18,9 +18,12 @@ class ModelRuntime:
         config: ModelConfig,
         request: ModelRequest,
     ) -> ModelResponse:
-        """Select a provider and execute a model request."""
+        """Select a provider and execute a model request through ModelGateway."""
         provider = self._selector.select(config.provider_name)
-        gateway = ModelGateway(provider)
+        gateway = ModelGateway(
+            provider=provider,
+            max_response_chars=config.max_response_bytes,
+        )
 
         configured_request = ModelRequest(
             prompt=request.prompt,
@@ -28,6 +31,9 @@ class ModelRuntime:
             temperature=config.temperature,
             max_tokens=config.max_tokens,
             metadata=request.metadata,
+            structured_output=request.structured_output,
+            response_format=request.response_format,
+            request_id=request.request_id,
         )
 
         return gateway.generate(configured_request)

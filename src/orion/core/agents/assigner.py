@@ -19,14 +19,11 @@ class AgentAssigner:
     def assign(self, task: AgentTask) -> AgentAssignment:
         """Assign a task to the least-loaded eligible active agent."""
 
-        agents = self._capability_registry.find_by_capability(
-            task.required_capability
-        )
+        agents = self._capability_registry.find_by_capability(task.required_capability)
 
         if not agents:
             raise ValueError(
-                f"No agent available with capability "
-                f"'{task.required_capability.value}'."
+                f"No agent available with capability '{task.required_capability.value}'."
             )
 
         available_agents = [
@@ -41,8 +38,7 @@ class AgentAssigner:
 
         if not available_agents:
             raise ValueError(
-                f"No active agent available with capability "
-                f"'{task.required_capability.value}'."
+                f"No active agent available with capability '{task.required_capability.value}'."
             )
 
         all_tasks = self._task_repository.list_all()
@@ -72,4 +68,3 @@ class AgentAssigner:
             agent=agent,
             capability=task.required_capability,
         )
-

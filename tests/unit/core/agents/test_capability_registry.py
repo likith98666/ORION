@@ -29,9 +29,7 @@ def test_registry_can_register_agent() -> None:
 
     registry.register(agent)
 
-    assert registry.find_by_capability(
-        AgentCapability.RESEARCH
-    ) == [agent]
+    assert registry.find_by_capability(AgentCapability.RESEARCH) == [agent]
 
 
 def test_registry_finds_multiple_agents_with_same_capability() -> None:
@@ -60,9 +58,7 @@ def test_registry_finds_multiple_agents_with_same_capability() -> None:
     registry.register(researcher)
     registry.register(analyst)
 
-    result = registry.find_by_capability(
-        AgentCapability.RESEARCH
-    )
+    result = registry.find_by_capability(AgentCapability.RESEARCH)
 
     assert result == [researcher, analyst]
 
@@ -77,9 +73,7 @@ def test_registry_returns_empty_for_unused_capability() -> None:
 
     registry.register(agent)
 
-    assert registry.find_by_capability(
-        AgentCapability.CODE_EXECUTION
-    ) == []
+    assert registry.find_by_capability(AgentCapability.CODE_EXECUTION) == []
 
 
 def test_registry_lists_all_capabilities() -> None:

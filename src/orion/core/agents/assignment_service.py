@@ -20,9 +20,7 @@ class AgentAssignmentService:
 
     def assign_task(self, task: AgentTask) -> AgentTask:
         if task.status != AgentTaskStatus.PENDING:
-            raise ValueError(
-                "Only pending tasks can be assigned"
-            )
+            raise ValueError("Only pending tasks can be assigned")
 
         assignment = self._assigner.assign(task)
 

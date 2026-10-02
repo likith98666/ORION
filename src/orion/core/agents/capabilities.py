@@ -14,3 +14,7 @@ class AgentCapability(str, Enum):
     REASONING = "reasoning"
     WRITING = "writing"
     VERIFICATION = "verification"
+    REPOSITORY_ANALYSIS = "repository_analysis"
+    SOFTWARE_DEBUGGING = "software_debugging"
+    CODE_MODIFICATION = "code_modification"
+    TESTING = "testing"

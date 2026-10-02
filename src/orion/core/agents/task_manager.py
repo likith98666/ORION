@@ -40,8 +40,7 @@ class AgentTaskManager:
 
         if status not in allowed_statuses:
             raise ValueError(
-                f"Invalid agent task transition: "
-                f"{task.status.value} -> {status.value}"
+                f"Invalid agent task transition: {task.status.value} -> {status.value}"
             )
 
         task.status = status

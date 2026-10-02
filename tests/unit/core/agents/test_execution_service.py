@@ -7,6 +7,7 @@ from orion.core.agents.execution_repository_memory import (
 )
 from orion.core.agents.execution_service import AgentExecutionService
 from orion.core.agents.executions import AgentExecutionStatus
+from orion.core.observability.context import TelemetryContext
 
 
 def create_service() -> tuple[
@@ -215,3 +216,155 @@ def test_list_for_agent_task_returns_all_executions() -> None:
     result = service.list_for_agent_task(agent_task_id)
 
     assert result == [first, second]
+
+
+def test_create_execution_propagates_parent_telemetry_context() -> None:
+    service, repository = create_service()
+
+    request_id = uuid.uuid4()
+    trace_id = uuid.uuid4()
+    span_id = uuid.uuid4()
+    parent_span_id = uuid.uuid4()
+    tool_id = uuid.uuid4()
+
+    parent_context = TelemetryContext(
+        request_id=request_id,
+        trace_id=trace_id,
+        span_id=span_id,
+        parent_span_id=parent_span_id,
+        tool_id=tool_id,
+    )
+
+    execution = service.create_execution(
+        agent_task_id=uuid.uuid4(),
+        agent_id=uuid.uuid4(),
+        telemetry_context=parent_context,
+    )
+
+    assert execution.telemetry_context is not None
+    assert execution.telemetry_context.request_id == request_id
+    assert execution.telemetry_context.trace_id == trace_id
+    assert execution.telemetry_context.span_id == span_id
+    assert execution.telemetry_context.parent_span_id == parent_span_id
+    assert execution.telemetry_context.tool_id == tool_id
+    assert execution.telemetry_context.task_id == execution.agent_task_id
+    assert execution.telemetry_context.execution_id == execution.id
+    assert execution.telemetry_context.agent_id == execution.agent_id
+    assert repository.get(execution.id) is execution
+
+
+def test_create_execution_without_parent_context_preserves_base_context() -> None:
+    service, _ = create_service()
+
+    execution = service.create_execution(
+        agent_task_id=uuid.uuid4(),
+        agent_id=uuid.uuid4(),
+    )
+
+    assert execution.telemetry_context is not None
+    assert execution.telemetry_context.request_id is None
+    assert execution.telemetry_context.trace_id is None
+    assert execution.telemetry_context.span_id is None
+    assert execution.telemetry_context.parent_span_id is None
+    assert execution.telemetry_context.task_id == execution.agent_task_id
+    assert execution.telemetry_context.execution_id == execution.id
+    assert execution.telemetry_context.agent_id == execution.agent_id
+    assert execution.telemetry_context.tool_id is None
+
+
+def test_fail_verification_updates_execution_status_and_preserves_runtime_status() -> None:
+    from orion.core.recovery.failures import Failure, FailureType
+    from orion.core.verification.models import (
+        VerificationResult,
+        VerificationStatus,
+        VerificationType,
+    )
+
+    service, repository = create_service()
+
+    execution = service.create_execution(
+        agent_task_id=uuid.uuid4(),
+        agent_id=uuid.uuid4(),
+    )
+
+    completed = service.complete_execution(
+        execution_id=execution.id,
+        output="Generated output",
+        model_name="test-model",
+        provider_name="test-provider",
+    )
+
+    assert completed.status == AgentExecutionStatus.COMPLETED
+    assert completed.runtime_status == AgentExecutionStatus.COMPLETED
+    assert completed.verification_status is None
+
+    verification_result = VerificationResult.create(
+        execution_id=execution.id,
+        verification_type=VerificationType.OUTPUT,
+        status=VerificationStatus.FAILED,
+        reason="Missing expected keywords.",
+    )
+    failure = Failure(
+        failure_type=FailureType.VERIFICATION_FAILURE,
+        message=verification_result.reason,
+    )
+
+    failed = service.fail_verification(
+        execution_id=execution.id,
+        failure=failure,
+        verification_result=verification_result,
+    )
+
+    assert failed.status == AgentExecutionStatus.FAILED
+    assert failed.runtime_status == AgentExecutionStatus.COMPLETED
+    assert failed.verification_status == VerificationStatus.FAILED
+    assert failed.failure == failure
+    assert failed.output == "Generated output"
+
+    persisted = repository.get(execution.id)
+    assert persisted is not None
+    assert persisted.status == AgentExecutionStatus.FAILED
+    assert persisted.runtime_status == AgentExecutionStatus.COMPLETED
+    assert persisted.verification_status == VerificationStatus.FAILED
+
+
+def test_complete_verification_updates_verification_status() -> None:
+    from orion.core.verification.models import (
+        VerificationResult,
+        VerificationStatus,
+        VerificationType,
+    )
+
+    service, repository = create_service()
+
+    execution = service.create_execution(
+        agent_task_id=uuid.uuid4(),
+        agent_id=uuid.uuid4(),
+    )
+
+    service.complete_execution(
+        execution_id=execution.id,
+        output="Valid output",
+        model_name="test-model",
+        provider_name="test-provider",
+    )
+
+    verification_result = VerificationResult.create(
+        execution_id=execution.id,
+        verification_type=VerificationType.OUTPUT,
+        status=VerificationStatus.PASSED,
+        reason="All requirements met.",
+    )
+
+    verified = service.complete_verification(
+        execution_id=execution.id,
+        verification_result=verification_result,
+    )
+
+    assert verified.status == AgentExecutionStatus.COMPLETED
+    assert verified.runtime_status == AgentExecutionStatus.COMPLETED
+    assert verified.verification_status == VerificationStatus.PASSED
+
+    persisted = repository.get(execution.id)
+    assert persisted is not None
+    assert persisted.verification_status == VerificationStatus.PASSED
