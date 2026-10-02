@@ -28,7 +28,7 @@ def get_default_security_rules() -> list[PolicyRule]:
             enabled=True,
             resource_patterns=(
                 r"(\.env|\.aws/credentials|id_rsa|id_ed25519|/etc/passwd|"
-                r"/etc/shadow|credentials\.json|\.secret)",
+                r"/etc/shadow|credentials\.json|\.secret|serviceaccount|secrets/)",
             ),
             reason="Access to sensitive credential and secret files is strictly prohibited.",
         ),

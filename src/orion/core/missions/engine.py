@@ -70,7 +70,31 @@ class MissionExecutionEngine:
         self.memory = memory or MissionMemory(mission_id=plan.mission_id)
         self.mission_budget = mission_budget or ResourceBudget(max_duration_seconds=1800.0)
         self._is_cancelled = False
+        self._is_paused = False
         self._started_at: datetime | None = None
+
+    @property
+    def is_paused(self) -> bool:
+        """Return whether execution is paused by operator intervention."""
+        return self._is_paused
+
+    def pause(self, reason: str = "Mission paused by operator.") -> None:
+        """Pause the mission execution engine."""
+        self._is_paused = True
+        self.memory.record(
+            entry_type=MemoryEntryType.OBSERVATION,
+            title="Mission Paused",
+            content=reason,
+        )
+
+    def resume(self) -> None:
+        """Resume execution of a paused mission engine."""
+        self._is_paused = False
+        self.memory.record(
+            entry_type=MemoryEntryType.OBSERVATION,
+            title="Mission Resumed",
+            content="Mission resumed by operator.",
+        )
 
     def cancel(self, reason: str = "Mission cancelled by user or operator.") -> None:
         """Cancel the entire mission and all pending/running tasks."""
@@ -93,6 +117,8 @@ class MissionExecutionEngine:
         """
         if self._is_cancelled:
             raise MissionCancelledError("Cannot execute tasks on a cancelled mission.")
+        if self._is_paused:
+            return None
 
         ready_tasks = self.graph.get_ready_tasks()
         if not ready_tasks:
@@ -189,6 +215,8 @@ class MissionExecutionEngine:
 
         if self._is_cancelled:
             overall_status = TaskState.CANCELLED
+        elif self._is_paused:
+            overall_status = TaskState.BLOCKED
         elif failed > 0 or blocked > 0:
             overall_status = TaskState.FAILED
         else:

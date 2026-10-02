@@ -448,6 +448,7 @@ class MissionAPIService:
         tool_executor = ToolExecutor(
             registry=tool_registry,
             approval_service=approval_service,
+            policy_engine=self._policy_engine,
         )
 
         verif_service = VerificationService(repository=InMemoryVerificationRepository())
@@ -2179,9 +2180,25 @@ class MissionAPIService:
             reason=reason,
             payload=payload,
         )
-        # Apply cancellation if force_fail
-        if interv_type == InterventionType.FORCE_FAIL:
-            record = self._get_record(mission_id)
+        # Connect lifecycle state changes directly to the mission engine and task record
+        engine = self._mission_engines.get(mission_id)
+        record = self._get_record(mission_id)
+
+        if interv_type == InterventionType.PAUSE:
+            if engine:
+                engine.pause(reason=reason)
+            if record:
+                record.status = "paused"
+                record.lifecycle_state = "PAUSED"
+        elif interv_type == InterventionType.RESUME:
+            if engine:
+                engine.resume()
+            if record:
+                record.status = "running"
+                record.lifecycle_state = "RUNNING"
+        elif interv_type == InterventionType.FORCE_FAIL:
+            if engine:
+                engine.cancel(reason=reason)
             if record:
                 record.cancelled = True
                 record.status = "failed"

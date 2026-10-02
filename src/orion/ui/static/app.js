@@ -185,6 +185,88 @@
     modalCloseBtn: document.getElementById('modalCloseBtn'),
     btnCancelModal: document.getElementById('btnCancelModal'),
     createMissionForm: document.getElementById('createMissionForm'),
+
+    // Quick Interventions & Overview Metrics
+    btnQuickPause: document.getElementById('btnQuickPause'),
+    btnQuickResume: document.getElementById('btnQuickResume'),
+    btnQuickSteer: document.getElementById('btnQuickSteer'),
+    btnQuickForceFail: document.getElementById('btnQuickForceFail'),
+    ovBlockerStatus: document.getElementById('ovBlockerStatus'),
+    ovRecoveryState: document.getElementById('ovRecoveryState'),
+    ovVerificationState: document.getElementById('ovVerificationState'),
+    ovEvidenceTier: document.getElementById('ovEvidenceTier'),
+
+    // Repo Intelligence (Screen 4)
+    repoIndexStatusBadge: document.getElementById('repoIndexStatusBadge'),
+    repoTotalFilesBadge: document.getElementById('repoTotalFilesBadge'),
+    repoTotalSymbolsBadge: document.getElementById('repoTotalSymbolsBadge'),
+    repoImpactTargetFile: document.getElementById('repoImpactTargetFile'),
+    btnAnalyzeImpact: document.getElementById('btnAnalyzeImpact'),
+    repoDirectDependentsCount: document.getElementById('repoDirectDependentsCount'),
+    repoTransitiveDependentsCount: document.getElementById('repoTransitiveDependentsCount'),
+    repoBlastRadiusScore: document.getElementById('repoBlastRadiusScore'),
+    repoImpactedPathsList: document.getElementById('repoImpactedPathsList'),
+    repoContextTargetFile: document.getElementById('repoContextTargetFile'),
+    btnAnalyzeContext: document.getElementById('btnAnalyzeContext'),
+    repoContextFilesCount: document.getElementById('repoContextFilesCount'),
+    repoContextTokensCount: document.getElementById('repoContextTokensCount'),
+    repoContextSnippets: document.getElementById('repoContextSnippets'),
+
+    // Human Oversight / HITL (Screen 8)
+    hitlPendingCountBadge: document.getElementById('hitlPendingCountBadge'),
+    hitlClarificationsBadge: document.getElementById('hitlClarificationsBadge'),
+    hitlClarificationsList: document.getElementById('hitlClarificationsList'),
+    hitlInterveneForm: document.getElementById('hitlInterveneForm'),
+    hitlInterveneAction: document.getElementById('hitlInterveneAction'),
+    hitlInterveneOperator: document.getElementById('hitlInterveneOperator'),
+    hitlInterveneReason: document.getElementById('hitlInterveneReason'),
+    hitlIntervenePayload: document.getElementById('hitlIntervenePayload'),
+    btnSubmitHitlIntervention: document.getElementById('btnSubmitHitlIntervention'),
+    hitlFeedbackForm: document.getElementById('hitlFeedbackForm'),
+    hitlFeedbackRating: document.getElementById('hitlFeedbackRating'),
+    hitlFeedbackCorrections: document.getElementById('hitlFeedbackCorrections'),
+    hitlFeedbackComments: document.getElementById('hitlFeedbackComments'),
+    btnSubmitFeedback: document.getElementById('btnSubmitFeedback'),
+    hitlHistoryList: document.getElementById('hitlHistoryList'),
+
+    // Policy & Security (Screen 9)
+    policyRulesCountBadge: document.getElementById('policyRulesCountBadge'),
+    policyRulesList: document.getElementById('policyRulesList'),
+    policyDecisionsCountBadge: document.getElementById('policyDecisionsCountBadge'),
+    policyDecisionsList: document.getElementById('policyDecisionsList'),
+    policySimForm: document.getElementById('policySimForm'),
+    policySimSubject: document.getElementById('policySimSubject'),
+    policySimAction: document.getElementById('policySimAction'),
+    policySimResource: document.getElementById('policySimResource'),
+    policySimRisk: document.getElementById('policySimRisk'),
+    btnSimulatePolicy: document.getElementById('btnSimulatePolicy'),
+    policySimResult: document.getElementById('policySimResult'),
+
+    // Evaluation Lab (Screen 10)
+    evalSuitesCountBadge: document.getElementById('evalSuitesCountBadge'),
+    evalSuiteSelect: document.getElementById('evalSuiteSelect'),
+    evalVersionTag: document.getElementById('evalVersionTag'),
+    evalRunForm: document.getElementById('evalRunForm'),
+    btnRunEvaluation: document.getElementById('btnRunEvaluation'),
+    btnRefreshEvalRuns: document.getElementById('btnRefreshEvalRuns'),
+    evalRunsList: document.getElementById('evalRunsList'),
+    evalCompareBaseSelect: document.getElementById('evalCompareBaseSelect'),
+    evalCompareTargetSelect: document.getElementById('evalCompareTargetSelect'),
+    btnCompareExperiments: document.getElementById('btnCompareExperiments'),
+    evalCompareResults: document.getElementById('evalCompareResults'),
+
+    // Observability (Screen 11)
+    obsTotalSpansBadge: document.getElementById('obsTotalSpansBadge'),
+    obsP50Val: document.getElementById('obsP50Val'),
+    obsP90Val: document.getElementById('obsP90Val'),
+    obsP99Val: document.getElementById('obsP99Val'),
+    obsPromptTokens: document.getElementById('obsPromptTokens'),
+    obsCompletionTokens: document.getElementById('obsCompletionTokens'),
+    obsTotalCost: document.getElementById('obsTotalCost'),
+    btnRefreshSpans: document.getElementById('btnRefreshSpans'),
+    obsTraceWaterfall: document.getElementById('obsTraceWaterfall'),
+    obsBottlenecksList: document.getElementById('obsBottlenecksList'),
+    obsRecommendationsList: document.getElementById('obsRecommendationsList'),
   };
 
   // -------------------------------------------------------------
@@ -194,6 +276,8 @@
     bindEvents();
     await syncHealth();
     await loadInitialTasks();
+    await loadPolicyData();
+    await loadEvalData();
     startFallbackPolling();
   }
 
@@ -240,6 +324,8 @@
     dom.btnRefresh.addEventListener('click', async () => {
       await syncHealth();
       if (currentTaskId) await refreshTaskData(currentTaskId);
+      await loadPolicyData();
+      await loadEvalData();
     });
 
     dom.btnRunPipeline.addEventListener('click', handleRunPipelineClick);
@@ -254,6 +340,53 @@
     }
     dom.btnGenReportNow.addEventListener('click', handleGenerateReportClick);
     dom.btnCopyDiff.addEventListener('click', handleCopyDiffClick);
+
+    // Quick Operator Interventions (Screen 1 & 8)
+    if (dom.btnQuickPause) dom.btnQuickPause.addEventListener('click', () => handleIntervention('pause', 'Manual operator pause from Mission Command Center'));
+    if (dom.btnQuickResume) dom.btnQuickResume.addEventListener('click', () => handleIntervention('resume', 'Manual operator resume from Mission Command Center'));
+    if (dom.btnQuickSteer) dom.btnQuickSteer.addEventListener('click', handleQuickSteerPrompt);
+    if (dom.btnQuickForceFail) dom.btnQuickForceFail.addEventListener('click', () => handleIntervention('force_fail', 'Manual operator emergency termination'));
+
+    // Repo Intelligence (Screen 4)
+    if (dom.btnAnalyzeImpact) dom.btnAnalyzeImpact.addEventListener('click', handleAnalyzeImpact);
+    if (dom.btnAnalyzeContext) dom.btnAnalyzeContext.addEventListener('click', handleAnalyzeContext);
+
+    // Human Oversight (Screen 8)
+    if (dom.hitlInterveneForm) {
+      dom.hitlInterveneForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const action = dom.hitlInterveneAction ? dom.hitlInterveneAction.value : 'pause';
+        const reason = dom.hitlInterveneReason ? dom.hitlInterveneReason.value : 'Operator directive';
+        const payload = dom.hitlIntervenePayload ? dom.hitlIntervenePayload.value : '';
+        handleIntervention(action, reason, payload);
+      });
+    }
+    if (dom.hitlFeedbackForm) {
+      dom.hitlFeedbackForm.addEventListener('submit', handleFeedbackSubmit);
+    }
+
+    // Policy Simulator (Screen 9)
+    if (dom.policySimForm) {
+      dom.policySimForm.addEventListener('submit', handlePolicySimulate);
+    }
+
+    // Evaluation Lab (Screen 10)
+    if (dom.evalRunForm) {
+      dom.evalRunForm.addEventListener('submit', handleEvalRunSubmit);
+    }
+    if (dom.btnRefreshEvalRuns) {
+      dom.btnRefreshEvalRuns.addEventListener('click', loadEvalData);
+    }
+    if (dom.btnCompareExperiments) {
+      dom.btnCompareExperiments.addEventListener('click', handleEvalCompareClick);
+    }
+
+    // Observability (Screen 11)
+    if (dom.btnRefreshSpans) {
+      dom.btnRefreshSpans.addEventListener('click', () => {
+        if (currentTaskId) loadObsData(currentTaskId);
+      });
+    }
   }
 
   function switchTab(tabId) {
@@ -264,6 +397,13 @@
     const panel = document.getElementById(tabId);
     if (btn) btn.classList.add('active');
     if (panel) panel.classList.add('active');
+
+    // Trigger tab-specific refresh
+    if (tabId === 'tab-repo') loadRepoData();
+    if (tabId === 'tab-hitl') loadHitlData(currentTaskId);
+    if (tabId === 'tab-policy') loadPolicyData();
+    if (tabId === 'tab-eval') loadEvalData();
+    if (tabId === 'tab-observability') loadObsData(currentTaskId);
   }
 
   // -------------------------------------------------------------
@@ -638,6 +778,32 @@
       dom.ovApprovalStatus.innerHTML = '<span class="badge badge-amber pulsing-amber">APPROVAL REQUIRED</span>';
     } else {
       dom.ovApprovalStatus.innerHTML = '<span class="badge badge-emerald">CLEAN // PERMITTED</span>';
+    }
+
+    if (dom.ovBlockerStatus) {
+      if (task.approval_required) {
+        dom.ovBlockerStatus.innerHTML = '<span class="badge badge-amber">OPERATOR APPROVAL GATE</span>';
+      } else if (task.status === 'paused') {
+        dom.ovBlockerStatus.innerHTML = '<span class="badge badge-amber">OPERATOR PAUSED</span>';
+      } else if (task.status === 'failed') {
+        dom.ovBlockerStatus.innerHTML = '<span class="badge badge-rose">EXECUTION FAILURE</span>';
+      } else {
+        dom.ovBlockerStatus.innerHTML = '<span class="badge badge-emerald">UNBLOCKED</span>';
+      }
+    }
+
+    if (dom.ovRecoveryState) {
+      const isRec = task.status === 'recovering' || task.status === 'RECOVERING';
+      dom.ovRecoveryState.innerHTML = `<span class="badge ${isRec ? 'badge-amber' : 'badge-idle'}">${isRec ? 'ACTIVE' : 'IDLE'}</span>`;
+    }
+
+    if (dom.ovVerificationState) {
+      const isVer = task.completed_stages && task.completed_stages.includes('verify');
+      dom.ovVerificationState.innerHTML = `<span class="badge ${isVer ? 'badge-emerald' : 'badge-idle'}">${isVer ? 'CERTIFIED' : 'PENDING'}</span>`;
+    }
+
+    if (dom.ovEvidenceTier && task.evidence_counts) {
+      dom.ovEvidenceTier.innerHTML = `<span class="badge badge-cyan">${task.evidence_counts.total || 0} RECORDS</span>`;
     }
 
     // Stepper
@@ -1308,6 +1474,597 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  // =============================================================
+  // V10 FLAGSHIP OBSERVATORIES HANDLERS & LOGIC
+  // =============================================================
+
+  // -------------------------------------------------------------
+  // Screen 4: Repository Intelligence
+  // -------------------------------------------------------------
+  async function loadRepoData() {
+    try {
+      const res = await fetch('/api/v1/repo/index');
+      if (res.ok) {
+        const data = await res.json();
+        if (dom.repoTotalFilesBadge) dom.repoTotalFilesBadge.textContent = `FILES: ${data.total_files || data.file_count || Object.keys(data.files || {}).length || 0}`;
+        if (dom.repoTotalSymbolsBadge) dom.repoTotalSymbolsBadge.textContent = `SYMBOLS: ${data.total_symbols || data.symbol_count || 0}`;
+        if (dom.repoIndexStatusBadge) dom.repoIndexStatusBadge.textContent = 'GRAPH: INDEXED';
+      }
+    } catch (e) {
+      console.warn('Failed to load repo index:', e);
+    }
+  }
+
+  async function handleAnalyzeImpact() {
+    const targetFile = (dom.repoImpactTargetFile ? dom.repoImpactTargetFile.value.trim() : '') || 'src/orion/api/service.py';
+    try {
+      const res = await fetch('/api/v1/repo/impact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_file: targetFile }),
+      });
+      if (res.ok) {
+        const report = await res.json();
+        if (dom.repoDirectDependentsCount) dom.repoDirectDependentsCount.textContent = (report.direct_dependents || []).length;
+        if (dom.repoTransitiveDependentsCount) dom.repoTransitiveDependentsCount.textContent = (report.transitive_dependents || []).length;
+        if (dom.repoBlastRadiusScore) dom.repoBlastRadiusScore.textContent = (report.blast_radius_score !== undefined ? report.blast_radius_score.toFixed(2) : '0.00');
+        if (dom.repoImpactedPathsList) {
+          const list = (report.transitive_dependents || []).map(p => `<div>&bull; ${escapeHtml(p)}</div>`).join('');
+          dom.repoImpactedPathsList.innerHTML = list || '<span class="text-emerald">No transitive dependents affected. Low blast radius.</span>';
+        }
+      }
+    } catch (err) {
+      console.error('Impact analysis error:', err);
+    }
+  }
+
+  async function handleAnalyzeContext() {
+    const targetFile = (dom.repoContextTargetFile ? dom.repoContextTargetFile.value.trim() : '') || 'src/orion/core/tools/executor.py';
+    try {
+      const res = await fetch('/api/v1/repo/context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_file: targetFile, max_tokens: 4000 }),
+      });
+      if (res.ok) {
+        const ctx = await res.json();
+        const files = ctx.included_files || [];
+        if (dom.repoContextFilesCount) dom.repoContextFilesCount.textContent = files.length;
+        if (dom.repoContextTokensCount) dom.repoContextTokensCount.textContent = ctx.total_tokens || ctx.estimated_tokens || 0;
+        if (dom.repoContextSnippets) {
+          const items = files.map(f => `<div><strong>${escapeHtml(f.file_path || f)}</strong> (${f.token_count || '--'} tokens)</div>`).join('');
+          dom.repoContextSnippets.innerHTML = items || '<span class="text-dim">No neighborhood files included.</span>';
+        }
+      }
+    } catch (err) {
+      console.error('Context analysis error:', err);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Screen 8: Human Oversight (HITL)
+  // -------------------------------------------------------------
+  function handleQuickSteerPrompt() {
+    const directive = prompt('Enter steering guidance or architectural constraints for ORION:');
+    if (directive && directive.trim()) {
+      handleIntervention('steer', 'Manual steering guidance', directive.trim());
+    }
+  }
+
+  async function handleIntervention(action, reason, payload) {
+    if (!currentTaskId) {
+      alert('Please create or select an active mission first.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/hitl/intervene', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mission_id: currentTaskId,
+          action: action,
+          operator: (dom.hitlInterveneOperator ? dom.hitlInterveneOperator.value.trim() : 'Operator') || 'Operator',
+          reason: reason || 'Operator directive',
+          payload: payload ? { directive: payload } : null,
+        }),
+      });
+      if (res.ok) {
+        await refreshTaskData(currentTaskId);
+        await loadHitlData(currentTaskId);
+      }
+    } catch (err) {
+      console.error('Intervention error:', err);
+    }
+  }
+
+  async function handleFeedbackSubmit(e) {
+    e.preventDefault();
+    if (!currentTaskId) {
+      alert('Please create or select an active mission before submitting feedback.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/hitl/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mission_id: currentTaskId,
+          operator: (dom.hitlInterveneOperator ? dom.hitlInterveneOperator.value.trim() : 'LeadReviewer') || 'LeadReviewer',
+          rating: parseInt(dom.hitlFeedbackRating ? dom.hitlFeedbackRating.value : '5', 10),
+          comments: dom.hitlFeedbackComments ? dom.hitlFeedbackComments.value.trim() : '',
+          corrections: dom.hitlFeedbackCorrections && dom.hitlFeedbackCorrections.value.trim() ? dom.hitlFeedbackCorrections.value.split(',').map(s => s.trim()) : [],
+        }),
+      });
+      if (res.ok) {
+        alert('Operator review and feedback successfully certified.');
+        await loadHitlData(currentTaskId);
+      }
+    } catch (err) {
+      console.error('Feedback submit error:', err);
+    }
+  }
+
+  async function loadHitlData(missionId) {
+    try {
+      const url = missionId ? `/api/v1/hitl/clarifications?mission_id=${missionId}` : '/api/v1/hitl/clarifications';
+      const res = await fetch(url);
+      if (res.ok) {
+        const clarifications = await res.json();
+        renderClarifications(clarifications);
+      }
+
+      if (missionId) {
+        const intRes = await fetch(`/api/v1/hitl/interventions/${missionId}`);
+        if (intRes.ok) {
+          const intervs = await intRes.json();
+          renderHitlHistory(intervs);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load HITL data:', e);
+    }
+  }
+
+  function renderClarifications(clarifications) {
+    if (!dom.hitlClarificationsList) return;
+    const list = Array.isArray(clarifications) ? clarifications : (clarifications.clarifications || []);
+    if (dom.hitlPendingCountBadge) {
+      dom.hitlPendingCountBadge.textContent = `${list.filter(c => c.status === 'PENDING').length} Pending Clarifications`;
+    }
+
+    if (list.length === 0) {
+      dom.hitlClarificationsList.innerHTML = '<div class="empty-state">No pending clarification requests. Autonomous execution unblocked.</div>';
+      return;
+    }
+
+    dom.hitlClarificationsList.innerHTML = '';
+    list.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'clarification-item';
+      const isPending = c.status === 'PENDING';
+      const chips = (c.options || []).map(opt => `<button type="button" class="clarification-chip" data-choice="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`).join('');
+
+      item.innerHTML = `
+        <div class="clarification-question">${escapeHtml(c.question)}</div>
+        <div class="clarification-context">${escapeHtml(c.context || '')}</div>
+        ${chips ? `<div class="clarification-chips">${chips}</div>` : ''}
+        ${isPending ? `
+          <div class="form-group-inline" style="margin-top:6px;">
+            <input type="text" class="input-field clarif-input" placeholder="Type resolution or click choice chip above" style="font-size:12px; padding:4px 8px;">
+            <button type="button" class="btn btn-amber btn-xs btn-respond-clarif" data-id="${c.request_id}">Resolve</button>
+          </div>
+        ` : `<div class="badge badge-emerald" style="align-self:flex-start;">RESOLVED: ${escapeHtml(c.response || '')}</div>`}
+      `;
+
+      item.querySelectorAll('.clarification-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = item.querySelector('.clarif-input');
+          if (input) input.value = btn.dataset.choice;
+        });
+      });
+
+      const submitBtn = item.querySelector('.btn-respond-clarif');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+          const input = item.querySelector('.clarif-input');
+          const respText = input ? input.value.trim() : '';
+          if (!respText) return;
+          await respondClarification(c.request_id, respText);
+        });
+      }
+
+      dom.hitlClarificationsList.appendChild(item);
+    });
+  }
+
+  async function respondClarification(reqId, responseText) {
+    try {
+      const res = await fetch(`/api/v1/hitl/clarifications/${reqId}/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response_text: responseText, operator: 'Operator' }),
+      });
+      if (res.ok) {
+        if (currentTaskId) await loadHitlData(currentTaskId);
+      }
+    } catch (e) {
+      console.error('Clarification response error:', e);
+    }
+  }
+
+  function renderHitlHistory(interventions) {
+    if (!dom.hitlHistoryList) return;
+    const list = Array.isArray(interventions) ? interventions : (interventions.interventions || []);
+    if (list.length === 0) {
+      dom.hitlHistoryList.innerHTML = '<div class="empty-state">No manual interventions recorded for active mission.</div>';
+      return;
+    }
+    dom.hitlHistoryList.innerHTML = '';
+    list.forEach(i => {
+      const item = document.createElement('div');
+      item.className = 'hitl-history-item';
+      item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+          <strong class="text-cyan">${escapeHtml((i.intervention_type || '').toUpperCase())}</strong>
+          <span class="text-dim" style="font-size:10px;">${formatTime(i.timestamp)}</span>
+        </div>
+        <div style="font-size:11.5px; color:var(--text-main);">${escapeHtml(i.reason || '')}</div>
+        <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">Operator: ${escapeHtml(i.operator || 'Unknown')}</div>
+      `;
+      dom.hitlHistoryList.appendChild(item);
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Screen 9: Policy & Security
+  // -------------------------------------------------------------
+  async function loadPolicyData() {
+    try {
+      const [rulesRes, decRes] = await Promise.all([
+        fetch('/api/v1/policy/rules'),
+        fetch('/api/v1/policy/decisions?limit=25'),
+      ]);
+
+      if (rulesRes.ok) {
+        const rules = await rulesRes.json();
+        renderPolicyRules(rules.rules || rules);
+      }
+
+      if (decRes.ok) {
+        const decData = await decRes.json();
+        renderPolicyDecisions(decData.decisions || []);
+      }
+    } catch (e) {
+      console.warn('Failed to load policy data:', e);
+    }
+  }
+
+  function renderPolicyRules(rules) {
+    if (!dom.policyRulesList) return;
+    const list = Array.isArray(rules) ? rules : [];
+    if (dom.policyRulesCountBadge) {
+      dom.policyRulesCountBadge.textContent = `${list.length} Guardrails Active`;
+    }
+    dom.policyRulesList.innerHTML = '';
+    list.forEach(r => {
+      const row = document.createElement('tr');
+      const effectClass = r.effect === 'ALLOW' ? 'badge-emerald' : (r.effect === 'DENY' ? 'badge-rose' : 'badge-amber');
+      const patterns = [...(r.actions || []), ...(r.resource_patterns || [])].join(', ');
+      row.innerHTML = `
+        <td class="code-val"><strong>${escapeHtml(r.rule_id)}</strong></td>
+        <td>${escapeHtml(r.name)}</td>
+        <td><span class="badge ${effectClass}">${escapeHtml(r.effect)}</span></td>
+        <td>${r.priority}</td>
+        <td class="text-dim" style="font-size:11px;">${escapeHtml(patterns || 'All')}</td>
+      `;
+      dom.policyRulesList.appendChild(row);
+    });
+  }
+
+  function renderPolicyDecisions(decisions) {
+    if (!dom.policyDecisionsList) return;
+    if (decisions.length === 0) {
+      dom.policyDecisionsList.innerHTML = '<div class="empty-state">No policy evaluation events recorded yet.</div>';
+      return;
+    }
+    dom.policyDecisionsList.innerHTML = '';
+    decisions.slice(0, 20).forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'policy-decision-row';
+      const effectClass = d.decision === 'ALLOW' ? 'text-emerald' : (d.decision === 'DENY' ? 'text-rose' : 'text-amber');
+      item.innerHTML = `
+        <div>
+          <span class="${effectClass}" style="font-weight:700;">${escapeHtml(d.decision)}</span>
+          <span style="margin: 0 8px; color:var(--text-muted);">&bull;</span>
+          <span>${escapeHtml(d.action || '')} &rarr; <span class="text-cyan">${escapeHtml(d.resource || '')}</span></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge badge-outline" style="font-size:9.5px;">${escapeHtml(d.risk_tier || 'LOW')}</span>
+          <span class="text-dim">${formatTime(d.timestamp)}</span>
+        </div>
+      `;
+      dom.policyDecisionsList.appendChild(item);
+    });
+  }
+
+  async function handlePolicySimulate(e) {
+    e.preventDefault();
+    if (!dom.policySimResult) return;
+    try {
+      const res = await fetch('/api/v1/policy/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: dom.policySimSubject.value.trim(),
+          action: dom.policySimAction.value.trim(),
+          resource: dom.policySimResource.value.trim(),
+          risk_tier: dom.policySimRisk.value,
+        }),
+      });
+      if (res.ok) {
+        const dec = await res.json();
+        dom.policySimResult.style.display = 'block';
+        const effBadge = dec.decision === 'ALLOW' ? 'badge-emerald' : (dec.decision === 'DENY' ? 'badge-rose' : 'badge-amber');
+        dom.policySimResult.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span>EVALUATION RESULT:</span>
+            <span class="badge ${effBadge}">${escapeHtml(dec.decision)}</span>
+          </div>
+          <div><strong>Triggered Rule:</strong> ${escapeHtml(dec.rule_id || 'DEFAULT_DENY')}</div>
+          <div><strong>Rationale:</strong> ${escapeHtml(dec.reason || 'Standard policy evaluation')}</div>
+        `;
+        await loadPolicyData();
+      }
+    } catch (err) {
+      console.error('Policy evaluation simulator error:', err);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Screen 10: Evaluation Lab
+  // -------------------------------------------------------------
+  async function loadEvalData() {
+    try {
+      const [benchRes, runsRes] = await Promise.all([
+        fetch('/api/v1/evaluation/benchmarks'),
+        fetch('/api/v1/evaluation/runs'),
+      ]);
+
+      if (benchRes.ok) {
+        const benchData = await benchRes.json();
+        if (dom.evalSuiteSelect && benchData.suites) {
+          dom.evalSuiteSelect.innerHTML = benchData.suites.map(s => `<option value="${escapeHtml(s.name || s)}">${escapeHtml(s.name || s)}</option>`).join('');
+        }
+      }
+
+      if (runsRes.ok) {
+        const runs = await runsRes.json();
+        renderEvalRuns(runs.runs || runs);
+      }
+    } catch (e) {
+      console.warn('Failed to load eval data:', e);
+    }
+  }
+
+  function renderEvalRuns(runs) {
+    if (!dom.evalRunsList) return;
+    const list = Array.isArray(runs) ? runs : [];
+    if (dom.evalRunsList) {
+      if (list.length === 0) {
+        dom.evalRunsList.innerHTML = '<tr><td colspan="8" class="text-dim" style="text-align:center; padding:16px;">No recorded benchmark runs. Execute suite above to run experiments.</td></tr>';
+      } else {
+        dom.evalRunsList.innerHTML = '';
+        list.forEach(r => {
+          const m = r.metrics || {};
+          const row = document.createElement('tr');
+          const succRate = m.mission_success_rate !== undefined ? `${(m.mission_success_rate * 100).toFixed(1)}%` : '--';
+          const recRate = m.recovery_success_rate !== undefined ? `${(m.recovery_success_rate * 100).toFixed(1)}%` : '--';
+          const safeRate = m.safe_termination_rate !== undefined ? `${(m.safe_termination_rate * 100).toFixed(1)}%` : '--';
+          const p90 = m.latency_p90_seconds !== undefined ? `${m.latency_p90_seconds.toFixed(2)}s` : '--';
+          const cost = m.total_cost_usd !== undefined ? `$${m.total_cost_usd.toFixed(4)}` : '$0.0000';
+
+          row.innerHTML = `
+            <td class="code-val">${escapeHtml(String(r.experiment_id || '').slice(0, 8))}</td>
+            <td><span class="badge badge-outline">${escapeHtml(r.suite || 'standard')}</span></td>
+            <td>${escapeHtml(r.orion_version || '10.0.0')}</td>
+            <td class="text-emerald" style="font-weight:600;">${succRate}</td>
+            <td class="text-cyan">${recRate}</td>
+            <td class="text-purple">${safeRate}</td>
+            <td class="text-dim">${p90}</td>
+            <td class="text-emerald">${cost}</td>
+          `;
+          dom.evalRunsList.appendChild(row);
+        });
+      }
+    }
+
+    // Populate comparison dropdowns
+    if (dom.evalCompareBaseSelect && dom.evalCompareTargetSelect) {
+      const opts = list.map(r => `<option value="${r.experiment_id}">${escapeHtml(r.suite || 'suite')} [${String(r.experiment_id).slice(0, 8)}] (${r.orion_version || 'v10'})</option>`).join('');
+      dom.evalCompareBaseSelect.innerHTML = opts || '<option value="">No experiments</option>';
+      dom.evalCompareTargetSelect.innerHTML = opts || '<option value="">No experiments</option>';
+      if (list.length > 1) {
+        dom.evalCompareTargetSelect.selectedIndex = 1;
+      }
+    }
+  }
+
+  async function handleEvalRunSubmit(e) {
+    e.preventDefault();
+    if (!dom.btnRunEvaluation) return;
+    dom.btnRunEvaluation.disabled = true;
+    dom.btnRunEvaluation.textContent = 'Running Benchmark...';
+    try {
+      const res = await fetch('/api/v1/evaluation/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suite_name: dom.evalSuiteSelect ? dom.evalSuiteSelect.value : 'standard',
+          orion_version: (dom.evalVersionTag ? dom.evalVersionTag.value.trim() : '10.0.0-rc1') || '10.0.0-rc1',
+          auto_repair: true,
+        }),
+      });
+      if (res.ok) {
+        await loadEvalData();
+      }
+    } catch (err) {
+      console.error('Benchmark run error:', err);
+    } finally {
+      dom.btnRunEvaluation.disabled = false;
+      dom.btnRunEvaluation.textContent = 'Execute Benchmark Suite';
+    }
+  }
+
+  async function handleEvalCompareClick() {
+    if (!dom.evalCompareBaseSelect || !dom.evalCompareTargetSelect || !dom.evalCompareResults) return;
+    const baseId = dom.evalCompareBaseSelect.value;
+    const targetId = dom.evalCompareTargetSelect.value;
+    if (!baseId || !targetId) return;
+
+    try {
+      const res = await fetch('/api/v1/evaluation/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base_id: baseId, target_id: targetId }),
+      });
+      if (res.ok) {
+        const comp = await res.json();
+        dom.evalCompareResults.style.display = 'block';
+        const dSucc = comp.delta_success_rate !== undefined ? `${comp.delta_success_rate > 0 ? '+' : ''}${(comp.delta_success_rate * 100).toFixed(1)}%` : '--';
+        const dPass = comp.delta_pass_rate !== undefined ? `${comp.delta_pass_rate > 0 ? '+' : ''}${(comp.delta_pass_rate * 100).toFixed(1)}%` : '--';
+        const dLatency = comp.delta_latency_p90 !== undefined ? `${comp.delta_latency_p90 > 0 ? '+' : ''}${comp.delta_latency_p90.toFixed(2)}s` : '--';
+        const regrCount = (comp.regressed_benchmarks || []).length;
+
+        dom.evalCompareResults.innerHTML = `
+          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px;">
+            <div>&Delta; Success Rate: <strong class="${comp.delta_success_rate >= 0 ? 'text-emerald' : 'text-rose'}">${dSucc}</strong></div>
+            <div>&Delta; Pass@1: <strong class="${comp.delta_pass_rate >= 0 ? 'text-emerald' : 'text-rose'}">${dPass}</strong></div>
+            <div>&Delta; P90 Latency: <strong class="text-cyan">${dLatency}</strong></div>
+            <div>Regressions: <strong class="${regrCount === 0 ? 'text-emerald' : 'text-rose'}">${regrCount} detected</strong></div>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('Experiment comparison error:', err);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Screen 11: Observability
+  // -------------------------------------------------------------
+  async function loadObsData(missionId) {
+    try {
+      const [costRes, bottleRes, optRes] = await Promise.all([
+        fetch(missionId ? `/api/v1/observability/metrics/cost?mission_id=${missionId}` : '/api/v1/observability/metrics/cost'),
+        fetch(missionId ? `/api/v1/observability/bottlenecks?mission_id=${missionId}` : '/api/v1/observability/bottlenecks'),
+        fetch(missionId ? `/api/v1/observability/optimize?mission_id=${missionId}` : '/api/v1/observability/optimize'),
+      ]);
+
+      if (costRes.ok) {
+        const costData = await costRes.json();
+        if (dom.obsPromptTokens) dom.obsPromptTokens.textContent = costData.prompt_tokens || 0;
+        if (dom.obsCompletionTokens) dom.obsCompletionTokens.textContent = costData.completion_tokens || 0;
+        if (dom.obsTotalCost) dom.obsTotalCost.textContent = `$${(costData.total_cost_usd || 0).toFixed(4)}`;
+      }
+
+      if (bottleRes.ok) {
+        const bottleData = await bottleRes.json();
+        if (dom.obsP50Val) dom.obsP50Val.textContent = `${(bottleData.p50_ms || 0).toFixed(1)} ms`;
+        if (dom.obsP90Val) dom.obsP90Val.textContent = `${(bottleData.p90_ms || 0).toFixed(1)} ms`;
+        if (dom.obsP99Val) dom.obsP99Val.textContent = `${(bottleData.p99_ms || 0).toFixed(1)} ms`;
+        renderBottlenecks(bottleData.slowest_spans || []);
+      }
+
+      if (optRes.ok) {
+        const optData = await optRes.json();
+        renderRecommendations(Array.isArray(optData) ? optData : (optData.recommendations || []));
+      }
+
+      if (missionId) {
+        const spansRes = await fetch(`/api/v1/observability/spans/${missionId}`);
+        if (spansRes.ok) {
+          const spansData = await spansRes.json();
+          renderTraceWaterfall(spansData.spans || []);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load observability data:', e);
+    }
+  }
+
+  function renderTraceWaterfall(spans) {
+    if (!dom.obsTraceWaterfall) return;
+    if (dom.obsTotalSpansBadge) dom.obsTotalSpansBadge.textContent = `${spans.length} Spans`;
+    if (spans.length === 0) {
+      dom.obsTraceWaterfall.innerHTML = '<div class="empty-state">No execution trace spans recorded for current mission. Execute pipeline to view waterfall.</div>';
+      return;
+    }
+
+    const maxDuration = Math.max(...spans.map(s => s.duration_ms || 1), 10);
+    dom.obsTraceWaterfall.innerHTML = '';
+    spans.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'waterfall-row';
+      const pct = Math.max(4, Math.min(100, Math.round(((s.duration_ms || 1) / maxDuration) * 100)));
+      const isErr = s.status === 'error';
+      const barClass = isErr ? 'error' : 'ok';
+
+      row.innerHTML = `
+        <div class="waterfall-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
+        <div class="waterfall-track">
+          <div class="waterfall-bar ${barClass}" style="width: ${pct}%;"></div>
+        </div>
+        <div class="waterfall-meta">
+          <span style="font-weight:600;">${(s.duration_ms || 0).toFixed(1)}ms</span>
+          <span class="badge ${isErr ? 'badge-rose' : 'badge-outline'}" style="font-size:8.5px; padding:1px 4px; margin-left:4px;">${escapeHtml(s.kind || 'internal')}</span>
+        </div>
+      `;
+      dom.obsTraceWaterfall.appendChild(row);
+    });
+  }
+
+  function renderBottlenecks(bottlenecks) {
+    if (!dom.obsBottlenecksList) return;
+    if (bottlenecks.length === 0) {
+      dom.obsBottlenecksList.innerHTML = '<div class="empty-state">No execution bottlenecks detected.</div>';
+      return;
+    }
+    dom.obsBottlenecksList.innerHTML = '';
+    bottlenecks.slice(0, 5).forEach(b => {
+      const item = document.createElement('div');
+      item.className = 'bottleneck-item';
+      item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+          <strong class="text-amber">${escapeHtml(b.name || 'Span')}</strong>
+          <span class="code-val">${(b.duration_ms || 0).toFixed(1)}ms</span>
+        </div>
+        <div class="text-dim" style="font-size:11px;">Status: ${escapeHtml(b.status || 'ok')} &bull; Kind: ${escapeHtml(b.kind || 'internal')}</div>
+      `;
+      dom.obsBottlenecksList.appendChild(item);
+    });
+  }
+
+  function renderRecommendations(recs) {
+    if (!dom.obsRecommendationsList) return;
+    if (recs.length === 0) {
+      dom.obsRecommendationsList.innerHTML = '<div class="empty-state">No performance recommendations needed. Pipeline operating at optimal latency.</div>';
+      return;
+    }
+    dom.obsRecommendationsList.innerHTML = '';
+    recs.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'recommendation-item';
+      item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+          <strong class="text-emerald">${escapeHtml(r.title || 'Optimization Insight')}</strong>
+          <span class="badge badge-outline">${escapeHtml(r.category || 'PERF')}</span>
+        </div>
+        <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(r.description || r.rationale || '')}</div>
+      `;
+      dom.obsRecommendationsList.appendChild(item);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);

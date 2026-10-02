@@ -84,6 +84,44 @@ def test_ui_html_structure_and_identifiers():
     assert 'id="btnCancelMission"' in index_html
     assert 'id="connectionLostBanner"' in index_html
 
+    # Screen 1: Quick Interventions
+    assert 'id="btnQuickPause"' in index_html
+    assert 'id="btnQuickResume"' in index_html
+    assert 'id="btnQuickSteer"' in index_html
+    assert 'id="btnQuickForceFail"' in index_html
+
+    # Screen 4: Repository Intelligence
+    assert 'id="tab-repo"' in index_html
+    assert 'id="repoImpactTargetFile"' in index_html
+    assert 'id="btnAnalyzeImpact"' in index_html
+    assert 'id="repoContextTargetFile"' in index_html
+    assert 'id="btnAnalyzeContext"' in index_html
+
+    # Screen 8: Human Oversight (HITL)
+    assert 'id="tab-hitl"' in index_html
+    assert 'id="hitlClarificationsList"' in index_html
+    assert 'id="hitlInterveneForm"' in index_html
+    assert 'id="hitlFeedbackForm"' in index_html
+    assert 'id="hitlHistoryList"' in index_html
+
+    # Screen 9: Policy & Security
+    assert 'id="tab-policy"' in index_html
+    assert 'id="policyRulesList"' in index_html
+    assert 'id="policyDecisionsList"' in index_html
+    assert 'id="policySimForm"' in index_html
+
+    # Screen 10: Evaluation Lab
+    assert 'id="tab-eval"' in index_html
+    assert 'id="evalRunsTable"' in index_html
+    assert 'id="btnRunEvaluation"' in index_html
+    assert 'id="btnCompareExperiments"' in index_html
+
+    # Screen 11: Observability
+    assert 'id="tab-observability"' in index_html
+    assert 'id="obsTraceWaterfall"' in index_html
+    assert 'id="obsBottlenecksList"' in index_html
+    assert 'id="obsRecommendationsList"' in index_html
+
 
 def test_ui_css_visual_system_tokens():
     """Verify app.css implements the Cinematic Obsidian visual design system."""
@@ -115,6 +153,14 @@ def test_ui_css_visual_system_tokens():
     assert ".btn-rose-subtle" in app_css
     assert ".connection-lost-banner" in app_css
 
+    # V10 Observatory styles
+    assert ".repo-tool-card" in app_css
+    assert ".hitl-card" in app_css
+    assert ".policy-rules-table" in app_css
+    assert ".eval-runs-table" in app_css
+    assert ".trace-waterfall-container" in app_css
+    assert ".waterfall-bar" in app_css
+
     # Responsive media queries
     assert "@media (max-width:" in app_css
 
@@ -134,6 +180,20 @@ def test_ui_js_api_bindings_and_event_listeners():
     assert "/verification" in app_js
     assert "/graph" in app_js
     assert "/agents" in app_js
+
+    # V10 Observatories REST endpoints
+    assert "/api/v1/repo/impact" in app_js
+    assert "/api/v1/repo/context" in app_js
+    assert "/api/v1/hitl/intervene" in app_js
+    assert "/api/v1/hitl/clarifications" in app_js
+    assert "/api/v1/hitl/feedback" in app_js
+    assert "/api/v1/policy/rules" in app_js
+    assert "/api/v1/policy/evaluate" in app_js
+    assert "/api/v1/evaluation/run" in app_js
+    assert "/api/v1/evaluation/compare" in app_js
+    assert "/api/v1/observability/spans" in app_js
+    assert "/api/v1/observability/bottlenecks" in app_js
+    assert "/api/v1/observability/optimize" in app_js
 
     # Real-time SSE event handling
     required_events = [

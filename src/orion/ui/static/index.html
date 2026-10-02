@@ -22,7 +22,7 @@
       </div>
       <div class="brand-text">
         <h1 class="brand-title">ORION</h1>
-        <span class="brand-subtitle">AUTONOMOUS AI WORKFORCE // V1</span>
+        <span class="brand-subtitle">AUTONOMOUS AI ENGINEERING PLATFORM // V10 RC</span>
       </div>
     </div>
 
@@ -83,7 +83,7 @@
           <span class="terminal-prompt">&gt;</span>
           <h2 class="command-title">MISSION COMMAND CENTER // ENTER ENGINEERING TASK</h2>
         </div>
-        <span class="badge badge-accent">PHASE 7 PRODUCT INTERFACE</span>
+        <span class="badge badge-accent">V10 FLAGSHIP COCKPIT</span>
       </div>
       <form class="command-form" id="commandCenterForm">
         <div class="command-input-row">
@@ -311,28 +311,32 @@
       <!-- RIGHT COLUMN: TABBED DETAILED OBSERVATORY DECK -->
       <section class="command-column">
         <div class="card glass command-card" id="commandCard">
-          <!-- NAVIGATION TABS -->
+          <!-- NAVIGATION TABS: UNIFIED 12 OBSERVATORIES + CERTIFIED REPORT -->
           <nav class="tab-bar" id="commandTabBar">
-            <button class="tab-btn active" data-tab="tab-overview" id="tabBtnOverview">Overview</button>
+            <button class="tab-btn active" data-tab="tab-overview" id="tabBtnOverview">1. Mission Command</button>
             <button class="tab-btn" data-tab="tab-graph" id="tabBtnGraph">
-              Execution Graph
+              2. Topology
               <span class="tab-counter" id="tabCounterNodes">8</span>
             </button>
             <button class="tab-btn" data-tab="tab-workforce" id="tabBtnWorkforce">
-              Workforce Observatory
+              3. Workforce
               <span class="tab-counter" id="tabCounterAgents">4</span>
             </button>
+            <button class="tab-btn" data-tab="tab-repo" id="tabBtnRepo">4. Repo Intelligence</button>
             <button class="tab-btn" data-tab="tab-changes" id="tabBtnChanges">
-              Code Changes &amp; Diff
+              5. Patch Intel
               <span class="tab-counter" id="tabCounterChanges">0</span>
             </button>
-            <button class="tab-btn" data-tab="tab-tests" id="tabBtnTests">Controlled Tests</button>
+            <button class="tab-btn" data-tab="tab-tests" id="tabBtnTests">6. Tests &amp; Verif</button>
             <button class="tab-btn" data-tab="tab-recovery" id="tabBtnRecovery">
-              Recovery Observatory
+              7. Recovery
               <span class="tab-badge-pulse" id="tabRecoveryPulse" style="display:none;"></span>
             </button>
-            <button class="tab-btn" data-tab="tab-verification" id="tabBtnVerification">Verification Authority</button>
-            <button class="tab-btn" data-tab="tab-evidence" id="tabBtnEvidence">Evidence Ledger</button>
+            <button class="tab-btn" data-tab="tab-hitl" id="tabBtnHitl">8. Human Oversight</button>
+            <button class="tab-btn" data-tab="tab-policy" id="tabBtnPolicy">9. Policy &amp; Security</button>
+            <button class="tab-btn" data-tab="tab-eval" id="tabBtnEval">10. Evaluation Lab</button>
+            <button class="tab-btn" data-tab="tab-observability" id="tabBtnObservability">11. Observability</button>
+            <button class="tab-btn" data-tab="tab-evidence" id="tabBtnEvidence">12. Evidence Ledger</button>
             <button class="tab-btn" data-tab="tab-report" id="tabBtnReport">Certified Report</button>
           </nav>
 
@@ -340,7 +344,15 @@
           <div class="tab-panel active" id="tab-overview">
             <div class="overview-grid">
               <div class="overview-section">
-                <h3 class="panel-subtitle">Mission Execution Parameters</h3>
+                <div class="section-title-row">
+                  <h3 class="panel-subtitle">Mission Execution Parameters</h3>
+                  <div class="quick-intervene-group">
+                    <button class="btn btn-xs btn-outline" id="btnQuickPause" title="Pause active mission execution">Pause</button>
+                    <button class="btn btn-xs btn-outline" id="btnQuickResume" title="Resume paused mission execution">Resume</button>
+                    <button class="btn btn-xs btn-cyan" id="btnQuickSteer" title="Submit guidance directive to active agent">Steer</button>
+                    <button class="btn btn-xs btn-rose" id="btnQuickForceFail" title="Force fail active mission">Force Fail</button>
+                  </div>
+                </div>
                 <table class="detail-table">
                   <tbody>
                     <tr><th>Task ID</th><td class="code-val" id="ovTaskId">None</td></tr>
@@ -350,6 +362,10 @@
                     <tr><th>Current Stage</th><td id="ovCurrentStage"><span class="badge badge-idle">None</span></td></tr>
                     <tr><th>Stages Completed</th><td id="ovStagesCompleted">0 / 7</td></tr>
                     <tr><th>Approval Status</th><td id="ovApprovalStatus"><span class="badge badge-idle">NONE REQUIRED</span></td></tr>
+                    <tr><th>Current Blocker</th><td id="ovBlockerStatus"><span class="badge badge-idle">NONE</span></td></tr>
+                    <tr><th>Recovery State</th><td id="ovRecoveryState"><span class="badge badge-idle">IDLE</span></td></tr>
+                    <tr><th>Verification State</th><td id="ovVerificationState"><span class="badge badge-idle">PENDING</span></td></tr>
+                    <tr><th>Evidence Status</th><td id="ovEvidenceTier"><span class="badge badge-cyan">0 RECORDS</span></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -436,6 +452,89 @@
 
             <div class="workforce-cards-grid" id="workforceCardsGrid">
               <!-- Dynamically rendered agent cards -->
+            </div>
+          </div>
+
+          <!-- TAB: REPOSITORY INTELLIGENCE (SCREEN 4) -->
+          <div class="tab-panel" id="tab-repo">
+            <div class="repo-header-bar">
+              <div class="repo-title-group">
+                <span class="sub-label">REPOSITORY GRAPH &amp; AST INTELLIGENCE:</span>
+                <span class="badge badge-cyan" id="repoIndexStatusBadge">GRAPH: INDEXED</span>
+                <span class="badge badge-purple" id="repoTotalFilesBadge">FILES: --</span>
+                <span class="badge badge-emerald" id="repoTotalSymbolsBadge">SYMBOLS: --</span>
+              </div>
+              <p class="repo-subtext">Deterministic static analysis of repository topology, cross-file symbol call-graphs, change blast radius, and token-bounded context.</p>
+            </div>
+
+            <div class="repo-intel-grid">
+              <!-- BLAST RADIUS ANALYZER -->
+              <div class="card glass repo-tool-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                    <span>Change Blast Radius &amp; Impact</span>
+                  </div>
+                  <span class="badge badge-outline">TRANSITIVE DEPENDENCIES</span>
+                </div>
+                <div class="repo-tool-body">
+                  <div class="form-group-inline">
+                    <input type="text" id="repoImpactTargetFile" class="input-field" placeholder="Target file path (e.g. src/orion/api/service.py)" value="src/orion/api/service.py">
+                    <button class="btn btn-cyan btn-xs" id="btnAnalyzeImpact">Analyze Impact</button>
+                  </div>
+                  <div class="repo-results-box" id="repoImpactResults">
+                    <div class="impact-metrics-row">
+                      <div class="impact-stat">
+                        <span class="impact-label">DIRECT DEPENDENTS:</span>
+                        <strong class="impact-val text-cyan" id="repoDirectDependentsCount">0</strong>
+                      </div>
+                      <div class="impact-stat">
+                        <span class="impact-label">TRANSITIVE RADIUS:</span>
+                        <strong class="impact-val text-amber" id="repoTransitiveDependentsCount">0</strong>
+                      </div>
+                      <div class="impact-stat">
+                        <span class="impact-label">BLAST SCORE:</span>
+                        <strong class="impact-val text-purple" id="repoBlastRadiusScore">0.0</strong>
+                      </div>
+                    </div>
+                    <div class="impact-paths-list" id="repoImpactedPathsList">
+                      <span class="text-dim">Enter target file above to compute blast radius.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CONTEXT NEIGHBORHOOD OPTIMIZER -->
+              <div class="card glass repo-tool-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Context Neighborhood &amp; Budget</span>
+                  </div>
+                  <span class="badge badge-emerald">TOKEN-EFFICIENT</span>
+                </div>
+                <div class="repo-tool-body">
+                  <div class="form-group-inline">
+                    <input type="text" id="repoContextTargetFile" class="input-field" placeholder="Target file path (e.g. src/orion/core/tools/executor.py)" value="src/orion/core/tools/executor.py">
+                    <button class="btn btn-emerald btn-xs" id="btnAnalyzeContext">Build Context</button>
+                  </div>
+                  <div class="repo-results-box" id="repoContextResults">
+                    <div class="impact-metrics-row">
+                      <div class="impact-stat">
+                        <span class="impact-label">INCLUDED FILES:</span>
+                        <strong class="impact-val text-emerald" id="repoContextFilesCount">0</strong>
+                      </div>
+                      <div class="impact-stat">
+                        <span class="impact-label">ESTIMATED TOKENS:</span>
+                        <strong class="impact-val text-cyan" id="repoContextTokensCount">0</strong>
+                      </div>
+                    </div>
+                    <div class="context-snippets-list" id="repoContextSnippets">
+                      <span class="text-dim">Enter target file above to assemble bounded context neighborhood.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -560,6 +659,432 @@
               </div>
               <div class="recovery-events-list" id="recoveryEventsList">
                 <div class="empty-state">No recovery events occurred. Clean pipeline execution.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: HUMAN OVERSIGHT & HITL COCKPIT (SCREEN 8) -->
+          <div class="tab-panel" id="tab-hitl">
+            <div class="hitl-header-bar">
+              <div class="hitl-title-group">
+                <span class="sub-label">HUMAN-IN-THE-LOOP &amp; COLLABORATIVE OVERSIGHT:</span>
+                <span class="badge badge-purple" id="hitlPendingCountBadge">0 Pending Clarifications</span>
+                <span class="badge badge-emerald">AUTHORITY: DUAL-KEY GOVERNED</span>
+              </div>
+              <p class="hitl-subtext">Real-time collaborative steering, clarification resolution, manual interventions (Pause, Resume, Steer, Force Fail), and post-mission operator feedback.</p>
+            </div>
+
+            <div class="hitl-cockpit-grid">
+              <!-- ACTIVE CLARIFICATIONS -->
+              <div class="card glass hitl-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Ambiguity &amp; Clarification Requests</span>
+                  </div>
+                  <span class="badge badge-amber" id="hitlClarificationsBadge">AWAITING OPERATOR</span>
+                </div>
+                <div class="hitl-card-body">
+                  <div class="clarifications-list" id="hitlClarificationsList">
+                    <div class="empty-state">No pending clarification requests. Autonomous execution unblocked.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- OPERATOR INTERVENTION CONSOLE -->
+              <div class="card glass hitl-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                    <span>Operator Intervention Console</span>
+                  </div>
+                  <span class="badge badge-cyan">LIFECYCLE STEERING</span>
+                </div>
+                <div class="hitl-card-body">
+                  <form class="hitl-intervene-form" id="hitlInterveneForm">
+                    <div class="form-group-row">
+                      <div class="form-group">
+                        <label for="hitlInterveneAction">Intervention Directive</label>
+                        <select id="hitlInterveneAction" class="input-field select-field">
+                          <option value="pause">Pause Active Execution</option>
+                          <option value="resume">Resume Paused Execution</option>
+                          <option value="steer">Steer / Inject Guidance</option>
+                          <option value="force_fail">Force Fail / Terminate</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="hitlInterveneOperator">Operator Identity</label>
+                        <input type="text" id="hitlInterveneOperator" class="input-field" value="LeadDevSecOps" required>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="hitlInterveneReason">Decision Rationale</label>
+                      <input type="text" id="hitlInterveneReason" class="input-field" placeholder="Operational rationale for intervention" value="Manual architectural alignment directive" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="hitlIntervenePayload">Steering Directive / Instructions (Optional)</label>
+                      <input type="text" id="hitlIntervenePayload" class="input-field" placeholder="e.g. Focus repair strictly on permission checks in auth middleware">
+                    </div>
+                    <div class="form-actions-right">
+                      <button type="submit" class="btn btn-cyan btn-glow" id="btnSubmitHitlIntervention">Dispatch Intervention</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- POST-MISSION FEEDBACK DECK -->
+              <div class="card glass hitl-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Operator Mission Evaluation &amp; Feedback</span>
+                  </div>
+                  <span class="badge badge-emerald">QUALITY SCORING</span>
+                </div>
+                <div class="hitl-card-body">
+                  <form class="hitl-feedback-form" id="hitlFeedbackForm">
+                    <div class="form-group-row">
+                      <div class="form-group">
+                        <label for="hitlFeedbackRating">Overall System Rating</label>
+                        <select id="hitlFeedbackRating" class="input-field select-field">
+                          <option value="5">5 Stars — Flawless Autonomous Resolution</option>
+                          <option value="4">4 Stars — Verified Patch with Minor Guidance</option>
+                          <option value="3">3 Stars — Acceptable but Required Steering</option>
+                          <option value="2">2 Stars — Partial Resolution / Retry Needed</option>
+                          <option value="1">1 Star — Mission Failure / Ineffective Patch</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="hitlFeedbackCorrections">Corrections / Caveats</label>
+                        <input type="text" id="hitlFeedbackCorrections" class="input-field" placeholder="Optional comma-separated corrections">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="hitlFeedbackComments">Engineering Comments &amp; Observations</label>
+                      <textarea id="hitlFeedbackComments" class="input-field textarea-field" rows="2" placeholder="Qualitative evaluation notes on patch synthesis, verification accuracy, and self-healing performance."></textarea>
+                    </div>
+                    <div class="form-actions-right">
+                      <button type="submit" class="btn btn-emerald btn-glow" id="btnSubmitFeedback">Submit Verified Review</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- INTERVENTIONS & FEEDBACK AUDIT LOG -->
+              <div class="card glass hitl-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>Oversight Audit Trail</span>
+                  </div>
+                  <span class="badge badge-outline">IMMUTABLE</span>
+                </div>
+                <div class="hitl-card-body">
+                  <div class="hitl-history-stream" id="hitlHistoryList">
+                    <div class="empty-state">No manual interventions recorded for active mission.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: POLICY & SECURITY GUARDRAILS (SCREEN 9) -->
+          <div class="tab-panel" id="tab-policy">
+            <div class="policy-header-bar">
+              <div class="policy-title-group">
+                <span class="sub-label">POLICY ENGINE &amp; AUTONOMOUS SECURITY HARDENING:</span>
+                <span class="badge badge-emerald" id="policyRulesCountBadge">Active Guardrails</span>
+                <span class="badge badge-purple">FAIL-SAFE // DETERMINISTIC</span>
+              </div>
+              <p class="policy-subtext">Centralized zero-trust policy engine enforcing workspace containment, credential redaction, high-risk approval gates, recovery budgets, and verification integrity.</p>
+            </div>
+
+            <div class="policy-dashboard-grid">
+              <!-- ACTIVE POLICY RULES -->
+              <div class="card glass policy-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span>Authoritative Guardrail Rules</span>
+                  </div>
+                  <span class="badge badge-emerald">CENTRAL POLICY</span>
+                </div>
+                <div class="policy-card-body">
+                  <div class="rules-table-container">
+                    <table class="policy-rules-table" id="policyRulesTable">
+                      <thead>
+                        <tr>
+                          <th>Rule ID</th>
+                          <th>Name</th>
+                          <th>Effect</th>
+                          <th>Priority</th>
+                          <th>Actions &amp; Patterns</th>
+                        </tr>
+                      </thead>
+                      <tbody id="policyRulesList">
+                        <!-- Rendered dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LIVE POLICY DECISIONS STREAM -->
+              <div class="card glass policy-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Policy Evaluation Audit Stream</span>
+                  </div>
+                  <span class="badge badge-cyan" id="policyDecisionsCountBadge">Audit Log</span>
+                </div>
+                <div class="policy-card-body">
+                  <div class="policy-decisions-feed" id="policyDecisionsList">
+                    <div class="empty-state">Awaiting policy evaluation events...</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- INTERACTIVE POLICY SIMULATOR -->
+              <div class="card glass policy-card full-width">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Policy Evaluation Simulator</span>
+                  </div>
+                  <span class="badge badge-purple">WHAT-IF AUDIT</span>
+                </div>
+                <div class="policy-card-body">
+                  <form class="policy-sim-form" id="policySimForm">
+                    <div class="form-group-row-4">
+                      <div class="form-group">
+                        <label for="policySimSubject">Subject / Actor</label>
+                        <input type="text" id="policySimSubject" class="input-field" value="Orion-SWE-Engineer" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="policySimAction">Action</label>
+                        <input type="text" id="policySimAction" class="input-field" value="modify_file" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="policySimResource">Target Resource</label>
+                        <input type="text" id="policySimResource" class="input-field" value="src/orion/core/swe/coordinator.py" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="policySimRisk">Risk Tier</label>
+                        <select id="policySimRisk" class="input-field select-field">
+                          <option value="low">LOW</option>
+                          <option value="medium">MEDIUM</option>
+                          <option value="high" selected>HIGH</option>
+                          <option value="critical">CRITICAL</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-actions-right">
+                      <button type="submit" class="btn btn-purple btn-glow" id="btnSimulatePolicy">Evaluate Policy Context</button>
+                    </div>
+                  </form>
+                  <div class="policy-sim-result-box" id="policySimResult" style="display: none;">
+                    <!-- Evaluated decision rendered here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: EVALUATION & BENCHMARKING LAB (SCREEN 10) -->
+          <div class="tab-panel" id="tab-eval">
+            <div class="eval-header-bar">
+              <div class="eval-title-group">
+                <span class="sub-label">EVALUATION LAB &amp; BENCHMARK AUTHORITY:</span>
+                <span class="badge badge-cyan" id="evalSuitesCountBadge">3 Benchmark Suites</span>
+                <span class="badge badge-emerald">AUTHORITY: FORMAL V6</span>
+              </div>
+              <p class="eval-subtext">Ground-truth benchmarking platform tracking Pass@1, Verification Success Rate, Recovery Rate, Safe Termination Rate, P90 Latency, and Cost Regression across versions.</p>
+            </div>
+
+            <div class="eval-cockpit-grid">
+              <!-- RUN BENCHMARK CARD -->
+              <div class="card glass eval-card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Execute Benchmark Experiment</span>
+                  </div>
+                  <span class="badge badge-cyan">AUTOMATED RUNNER</span>
+                </div>
+                <div class="eval-card-body">
+                  <form class="eval-run-form" id="evalRunForm">
+                    <div class="form-group-row">
+                      <div class="form-group">
+                        <label for="evalSuiteSelect">Benchmark Corpus</label>
+                        <select id="evalSuiteSelect" class="input-field select-field">
+                          <option value="standard">standard // Core SWE Pipeline Suite</option>
+                          <option value="regression_guard">regression_guard // Anti-Regression Hardening</option>
+                          <option value="recovery_hardening">recovery_hardening // Fault Recovery Stress</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="evalVersionTag">Version Tag</label>
+                        <input type="text" id="evalVersionTag" class="input-field" value="10.0.0-rc1" required>
+                      </div>
+                    </div>
+                    <div class="form-actions-right">
+                      <button type="submit" class="btn btn-cyan btn-glow" id="btnRunEvaluation">Execute Benchmark Suite</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <!-- EXPERIMENT RUNS HISTORY -->
+              <div class="card glass eval-card full-width">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <span>Recorded Benchmark Experiments</span>
+                  </div>
+                  <button class="btn btn-xs btn-secondary" id="btnRefreshEvalRuns">Refresh Experiments</button>
+                </div>
+                <div class="eval-card-body">
+                  <div class="eval-table-container">
+                    <table class="eval-runs-table" id="evalRunsTable">
+                      <thead>
+                        <tr>
+                          <th>Experiment ID</th>
+                          <th>Suite</th>
+                          <th>Version</th>
+                          <th>Success Rate</th>
+                          <th>Recovery Rate</th>
+                          <th>Safe Term.</th>
+                          <th>P90 Latency</th>
+                          <th>Cost ($)</th>
+                        </tr>
+                      </thead>
+                      <tbody id="evalRunsList">
+                        <!-- Populated dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EXPERIMENT COMPARISON TOOL -->
+              <div class="card glass eval-card full-width">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                    <span>Differential Experiment Comparison</span>
+                  </div>
+                  <span class="badge badge-purple">REGRESSION DETECTOR</span>
+                </div>
+                <div class="eval-card-body">
+                  <div class="compare-selectors-row">
+                    <div class="form-group">
+                      <label for="evalCompareBaseSelect">Baseline Experiment</label>
+                      <select id="evalCompareBaseSelect" class="input-field select-field"></select>
+                    </div>
+                    <div class="form-group">
+                      <label for="evalCompareTargetSelect">Candidate Experiment</label>
+                      <select id="evalCompareTargetSelect" class="input-field select-field"></select>
+                    </div>
+                    <div class="form-group form-btn-align">
+                      <button class="btn btn-purple btn-glow" id="btnCompareExperiments">Compare Metrics</button>
+                    </div>
+                  </div>
+                  <div class="compare-results-box" id="evalCompareResults" style="display: none;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: OBSERVABILITY & DISTRIBUTED TRACING (SCREEN 11) -->
+          <div class="tab-panel" id="tab-observability">
+            <div class="obs-header-bar">
+              <div class="obs-title-group">
+                <span class="sub-label">ADVANCED OBSERVABILITY &amp; TRACING:</span>
+                <span class="badge badge-cyan" id="obsTotalSpansBadge">0 Spans</span>
+                <span class="badge badge-purple">HIERARCHY: CORRELATED</span>
+              </div>
+              <p class="obs-subtext">Distributed trace waterfall correlating Mission &rarr; Task &rarr; Agent &rarr; Tool/Model &rarr; Verification with latency quantiles, token telemetry, bottleneck analysis, and proactive optimization.</p>
+            </div>
+
+            <div class="obs-cockpit-grid">
+              <!-- LATENCY & TOKEN TELEMETRY CARDS -->
+              <div class="obs-metrics-bar">
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">P50 LATENCY:</span>
+                  <strong class="obs-metric-val text-cyan" id="obsP50Val">-- ms</strong>
+                </div>
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">P90 LATENCY:</span>
+                  <strong class="obs-metric-val text-amber" id="obsP90Val">-- ms</strong>
+                </div>
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">P99 LATENCY:</span>
+                  <strong class="obs-metric-val text-rose" id="obsP99Val">-- ms</strong>
+                </div>
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">PROMPT TOKENS:</span>
+                  <strong class="obs-metric-val text-purple" id="obsPromptTokens">0</strong>
+                </div>
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">COMPLETION TOKENS:</span>
+                  <strong class="obs-metric-val text-cyan" id="obsCompletionTokens">0</strong>
+                </div>
+                <div class="obs-metric-card">
+                  <span class="obs-metric-label">ESTIMATED COST:</span>
+                  <strong class="obs-metric-val text-emerald" id="obsTotalCost">$0.000</strong>
+                </div>
+              </div>
+
+              <!-- TRACE WATERFALL -->
+              <div class="card glass obs-card full-width">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Distributed Trace Waterfall</span>
+                  </div>
+                  <button class="btn btn-xs btn-secondary" id="btnRefreshSpans">Refresh Waterfall</button>
+                </div>
+                <div class="obs-card-body">
+                  <div class="trace-waterfall-container" id="obsTraceWaterfall">
+                    <div class="empty-state">No execution trace spans recorded for current mission. Execute pipeline to view waterfall.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BOTTLENECKS & RECOMMENDATIONS -->
+              <div class="obs-insights-grid">
+                <!-- SYSTEM BOTTLENECKS -->
+                <div class="card glass obs-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <svg class="card-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                      <span>System Bottleneck Analysis</span>
+                    </div>
+                    <span class="badge badge-amber">CRITICAL PATH</span>
+                  </div>
+                  <div class="obs-card-body">
+                    <div class="bottlenecks-list" id="obsBottlenecksList">
+                      <div class="empty-state">No execution bottlenecks detected.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AUTONOMOUS OPTIMIZATION RECOMMENDATIONS -->
+                <div class="card glass obs-card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <svg class="card-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                      <span>Autonomous Optimization Insights</span>
+                    </div>
+                    <span class="badge badge-emerald">HEURISTIC AI</span>
+                  </div>
+                  <div class="obs-card-body">
+                    <div class="recommendations-list" id="obsRecommendationsList">
+                      <div class="empty-state">No performance recommendations needed. Pipeline operating at optimal latency.</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

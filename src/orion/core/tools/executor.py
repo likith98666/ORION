@@ -3,6 +3,12 @@ from typing import Any
 from uuid import UUID
 
 from orion.core.agents.models import Agent
+from orion.core.policy import (
+    PolicyAction,
+    PolicyContext,
+    PolicyEngine,
+    PolicyRiskTier,
+)
 from orion.core.security import (
     ApprovalRequiredError,
     ApprovalService,
@@ -45,6 +51,7 @@ class ToolExecutor:
         secret_provider: SecretProvider | None = None,
         approval_service: ApprovalService | None = None,
         audit_service: AuditService | None = None,
+        policy_engine: PolicyEngine | None = None,
     ) -> None:
         self._registry = registry
         self._execution_repository = execution_repository
@@ -55,6 +62,7 @@ class ToolExecutor:
         self._secret_provider = secret_provider
         self._approval_service = approval_service
         self._audit_service = audit_service
+        self._policy_engine = policy_engine
 
     @property
     def approval_service(self) -> ApprovalService | None:
@@ -108,6 +116,40 @@ class ToolExecutor:
             )
         elif not authorization.allowed:
             raise PermissionError(authorization.reason)
+
+        if self._policy_engine is not None:
+            risk_tier_map = {
+                ToolRiskLevel.LOW: PolicyRiskTier.LOW,
+                ToolRiskLevel.MEDIUM: PolicyRiskTier.MEDIUM,
+                ToolRiskLevel.HIGH: PolicyRiskTier.HIGH,
+                ToolRiskLevel.CRITICAL: PolicyRiskTier.CRITICAL,
+            }
+            rt = risk_tier_map.get(tool.risk_level, PolicyRiskTier.LOW)
+            pol_ctx = PolicyContext(
+                subject=agent.name,
+                action="execute_tool",
+                resource=tool.name,
+                risk_tier=rt,
+                parameters=arguments,
+            )
+            policy_decision = self._policy_engine.evaluate(pol_ctx)
+            if policy_decision.decision == PolicyAction.DENY:
+                raise PermissionError(
+                    f"Policy Engine denied execution: {policy_decision.reason}"
+                )
+            elif policy_decision.decision == PolicyAction.REQUIRE_APPROVAL:
+                self._handle_required_approval(
+                    agent=agent,
+                    tool_name=tool.name,
+                    execution_id=execution_id,
+                    risk_level=tool.risk_level,
+                    approval_id=approval_id,
+                )
+            elif (
+                policy_decision.decision == PolicyAction.MODIFY
+                and policy_decision.modified_parameters is not None
+            ):
+                arguments = policy_decision.modified_parameters
 
         lifecycle = None
 
