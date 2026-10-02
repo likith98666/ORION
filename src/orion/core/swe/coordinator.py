@@ -22,6 +22,15 @@ from orion.core.swe.cognitive import (
     refresh_patch_approval,
     request_patch_approval,
 )
+from orion.core.swe.execution import (
+    ControlledExecutionAuthority,
+    ControlledTestResult,
+    PatchApplicationAuthority,
+    PatchApplicationResult,
+    PatchVerificationAuthority,
+    Phase5ExecutionOutcome,
+    UnapprovedPatchError,
+)
 from orion.core.swe.errors import (
     DisallowedFileModificationError,
     DisallowedStageToolError,
@@ -121,6 +130,12 @@ class SWEWorkflowCoordinator:
         self._formulated_plan: ProposedFixPlan | None = None
         self._last_test_output: str | None = None
         self._last_verification_result: VerificationResult | None = None
+        self._last_application_result: PatchApplicationResult | None = None
+        self._last_controlled_test_result: ControlledTestResult | None = None
+        self._last_phase5_outcome: Phase5ExecutionOutcome | None = None
+        self._patch_applier: PatchApplicationAuthority | None = None
+        self._controlled_runner: ControlledExecutionAuthority | None = None
+        self._patch_verifier: PatchVerificationAuthority | None = None
 
     @property
     def workspace(self) -> Workspace:
@@ -176,6 +191,61 @@ class SWEWorkflowCoordinator:
     def last_patch_approval(self) -> PatchApprovalPackage | None:
         """Return the most recent patch approval package."""
         return self._last_patch_approval
+
+    @property
+    def last_application_result(self) -> PatchApplicationResult | None:
+        """Return the most recent patch application result."""
+        return self._last_application_result
+
+    @property
+    def last_controlled_test_result(self) -> ControlledTestResult | None:
+        """Return the most recent controlled test execution result."""
+        return self._last_controlled_test_result
+
+    @property
+    def last_phase5_outcome(self) -> Phase5ExecutionOutcome | None:
+        """Return the most recent Phase 5 execution and verification outcome."""
+        return self._last_phase5_outcome
+
+    @property
+    def patch_application_authority(self) -> PatchApplicationAuthority:
+        """Return or lazily construct the PatchApplicationAuthority."""
+        if self._patch_applier is None:
+            approval_service = getattr(self._tool_executor, "approval_service", None)
+            if approval_service is None:
+                raise PatchApprovalRequiredError(
+                    "ToolExecutor has no configured ApprovalService."
+                )
+            self._patch_applier = PatchApplicationAuthority(
+                workspace=self._workspace,
+                approval_service=approval_service,
+                ledger=self._ledger,
+                telemetry_context=self._telemetry_context,
+            )
+        return self._patch_applier
+
+    @property
+    def controlled_execution_authority(self) -> ControlledExecutionAuthority:
+        """Return or lazily construct the ControlledExecutionAuthority."""
+        if self._controlled_runner is None:
+            self._controlled_runner = ControlledExecutionAuthority(
+                workspace=self._workspace,
+                ledger=self._ledger,
+                telemetry_context=self._telemetry_context,
+            )
+        return self._controlled_runner
+
+    @property
+    def patch_verification_authority(self) -> PatchVerificationAuthority:
+        """Return or lazily construct the PatchVerificationAuthority."""
+        if self._patch_verifier is None:
+            self._patch_verifier = PatchVerificationAuthority(
+                verification_engine=self._verification_engine,
+                recovery_coordinator=self._recovery_coordinator,
+                ledger=self._ledger,
+                telemetry_context=self._telemetry_context,
+            )
+        return self._patch_verifier
 
     def advance_stage(self, stage: SWETaskStage) -> None:
         """Advance the workflow state machine to the specified stage."""
@@ -697,6 +767,94 @@ class SWEWorkflowCoordinator:
         pkg = refresh_patch_approval(self._last_patch_approval, approval_service)
         self._last_patch_approval = pkg
         return pkg
+
+    def apply_approved_patch(
+        self,
+        package: PatchApprovalPackage | None = None,
+        execution_id: UUID | None = None,
+    ) -> PatchApplicationResult:
+        """Apply an approved patch during IMPLEMENT_CHANGE stage under strict controls."""
+        if self._current_stage != SWETaskStage.IMPLEMENT_CHANGE:
+            raise WorkflowSequenceError(
+                f"Cannot apply patch during stage '{getattr(self._current_stage, 'value', None)}'."
+            )
+
+        target_pkg = package or self._last_patch_approval
+        if target_pkg is None:
+            raise UnapprovedPatchError("No patch approval package available to apply.")
+
+        effective_execution_id = (
+            execution_id
+            or (target_pkg.execution_id if target_pkg else None)
+            or uuid4()
+        )
+        result = self.patch_application_authority.apply_patch(
+            approval_package=target_pkg,
+            execution_id=effective_execution_id,
+        )
+        self._last_application_result = result
+        return result
+
+    def run_controlled_tests(
+        self,
+        target: str = "",
+        timeout_seconds: int = 60,
+        fail_fast: bool = False,
+        verbose: bool = False,
+        execution_id: UUID | None = None,
+    ) -> ControlledTestResult:
+        """Run policy-controlled allowlisted tests during RUN_TESTS stage."""
+        if self._current_stage != SWETaskStage.RUN_TESTS:
+            raise WorkflowSequenceError(
+                f"Cannot run tests during stage '{getattr(self._current_stage, 'value', None)}'."
+            )
+
+        effective_execution_id = (
+            execution_id
+            or (self._last_application_result.execution_id if self._last_application_result else None)
+            or uuid4()
+        )
+        result = self.controlled_execution_authority.run_tests(
+            target=target,
+            timeout_seconds=timeout_seconds,
+            fail_fast=fail_fast,
+            verbose=verbose,
+            execution_id=effective_execution_id,
+            task_id=self._task_id,
+        )
+        self._last_test_output = f"{result.stdout}\n{result.stderr}".strip()
+        self._last_controlled_test_result = result
+        return result
+
+    def verify_patch_execution(
+        self,
+        expected_requirements: list[str] | None = None,
+        execution_id: UUID | None = None,
+    ) -> Phase5ExecutionOutcome:
+        """Verify patch application and test outcomes using VerificationEngine during VERIFY."""
+        if self._current_stage != SWETaskStage.VERIFY:
+            raise WorkflowSequenceError(
+                f"Cannot execute verification during stage "
+                f"'{getattr(self._current_stage, 'value', None)}'."
+            )
+
+        if self._last_application_result is None:
+            raise WorkflowSequenceError("Cannot verify without prior patch application result.")
+
+        effective_execution_id = (
+            execution_id
+            or (self._last_application_result.execution_id if self._last_application_result else None)
+            or uuid4()
+        )
+        outcome = self.patch_verification_authority.verify_execution(
+            application_result=self._last_application_result,
+            test_result=self._last_controlled_test_result,
+            expected_requirements=expected_requirements,
+            execution_id=effective_execution_id,
+        )
+        self._last_phase5_outcome = outcome
+        self._last_verification_result = outcome.verification_result
+        return outcome
 
     def record_formulation(
         self,
