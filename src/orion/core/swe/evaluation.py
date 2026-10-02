@@ -171,20 +171,29 @@ class SWEEvaluator:
         )
         tests_failed_count = sum(
             1 for item in test_items
-            if item.metadata.get("exit_code") not in (0, None) or item.metadata.get("status") == "failed"
+            if (
+                item.metadata.get("exit_code") not in (0, None)
+                or item.metadata.get("status") == "failed"
+            )
         )
 
         test_passed = False
         if validation_tests:
             latest_val_test = validation_tests[-1]
-            if latest_val_test.metadata.get("exit_code") == 0 or latest_val_test.metadata.get("status") == "passed":
+            if (
+                latest_val_test.metadata.get("exit_code") == 0
+                or latest_val_test.metadata.get("status") == "passed"
+            ):
                 test_passed = True
                 details.append("Test outcome: validation test execution succeeded.")
             else:
                 details.append("Test outcome: validation test execution failed.")
         elif test_items:
             latest_test = test_items[-1]
-            if latest_test.metadata.get("exit_code") == 0 or latest_test.metadata.get("status") == "passed":
+            if (
+                latest_test.metadata.get("exit_code") == 0
+                or latest_test.metadata.get("status") == "passed"
+            ):
                 test_passed = True
                 details.append("Test outcome: latest test execution succeeded.")
             else:
@@ -234,9 +243,14 @@ class SWEEvaluator:
 
         if change_items:
             if changes_traceable:
-                details.append(f"Change traceability: {len(unique_files)} file(s) modified with traceable paths.")
+                details.append(
+                    f"Change traceability: {len(unique_files)} file(s) modified with "
+                    "traceable paths."
+                )
             else:
-                details.append("Change traceability: untraceable file change detected (missing path metadata).")
+                details.append(
+                    "Change traceability: untraceable file change detected (missing path metadata)."
+                )
         else:
             details.append("Change traceability: no file changes recorded.")
 
@@ -251,11 +265,20 @@ class SWEEvaluator:
         if verification_failed_count > 0 and verification_passed:
             if recovery_attempts_count == 0:
                 recovery_transparent = False
-                details.append("Recovery transparency: verification failed previously but no recovery event was logged.")
+                details.append(
+                    "Recovery transparency: verification failed previously but no recovery event "
+                    "was logged."
+                )
             else:
-                details.append(f"Recovery transparency: {recovery_attempts_count} recovery attempt(s) preserved in audit.")
+                details.append(
+                    f"Recovery transparency: {recovery_attempts_count} recovery attempt(s) "
+                    "preserved in audit."
+                )
         elif recovery_attempts_count > 0:
-            details.append(f"Recovery transparency: {recovery_attempts_count} recovery attempt(s) preserved in audit.")
+            details.append(
+                f"Recovery transparency: {recovery_attempts_count} recovery attempt(s) "
+                "preserved in audit."
+            )
         else:
             details.append("Recovery transparency: no recovery events required or logged.")
 
@@ -270,7 +293,8 @@ class SWEEvaluator:
 
         categories_satisfied = len(missing_categories) == 0
 
-        # Evidence completeness requires verified evidence, traceable changes, transparent recovery, and any specified required categories
+        # Evidence completeness requires verified evidence, traceable changes,
+        # transparent recovery, and any specified required categories
         evidence_complete = (
             has_verified_verif
             and changes_traceable
@@ -278,13 +302,16 @@ class SWEEvaluator:
             and categories_satisfied
         )
         if evidence_complete:
-            details.append("Evidence completeness: verified outcome and required supporting evidence present.")
+            details.append(
+                "Evidence completeness: verified outcome and required supporting evidence present."
+            )
         else:
             if not has_verified_verif:
                 details.append("Evidence completeness: missing authoritative VERIFIED evidence.")
             if missing_categories:
+                cats_str = ", ".join(missing_categories)
                 details.append(
-                    f"Evidence completeness: missing required evidence categories [{', '.join(missing_categories)}]."
+                    f"Evidence completeness: missing required evidence categories [{cats_str}]."
                 )
             if not changes_traceable:
                 details.append("Evidence completeness: changes are not traceable.")
@@ -322,7 +349,9 @@ class SWEEvaluator:
             and recovery_transparent
         ):
             status = EvaluationStatus.PASS
-            summary = "Mission evaluation passed: workflow completed, tests passed, and outcome verified."
+            summary = (
+                "Mission evaluation passed: workflow completed, tests passed, and outcome verified."
+            )
         elif (
             (verification_failed_count > 0 and not verification_passed)
             or (test_items and not test_passed)
@@ -331,7 +360,9 @@ class SWEEvaluator:
             summary = "Mission evaluation failed: unrecovered test or verification failure."
         else:
             status = EvaluationStatus.INCONCLUSIVE
-            summary = "Mission evaluation inconclusive: incomplete workflow or missing verification."
+            summary = (
+                "Mission evaluation inconclusive: incomplete workflow or missing verification."
+            )
 
         return MissionEvaluation(
             status=status,

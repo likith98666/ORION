@@ -401,7 +401,7 @@ def test_swe_workflow_failure_recovery_loop(test_repo: Path):
 
 
 def test_swe_workflow_recovery_retry_success(test_repo: Path):
-    """Scenario C: Integration scenario demonstrating failure -> recovery event -> retry -> verified success.
+    """Scenario C: Integration demonstrating failure -> recovery event -> retry -> verified success.
 
     Preserves full recovery transparency and audit trail in the evidence ledger.
     """

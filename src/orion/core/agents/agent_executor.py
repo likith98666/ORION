@@ -2,6 +2,7 @@ from typing import Any
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.execution_service import AgentExecutionService
+from orion.core.agents.executions import AgentExecution
 from orion.core.agents.repository import AgentRepository
 from orion.core.agents.tasks import AgentTask
 from orion.core.memory.context_formatter import MemoryContextFormatter
@@ -36,7 +37,7 @@ class AgentExecutor:
         task: AgentTask,
         model_config: ModelConfig,
         memory_context: ExecutionMemoryContext | None = None,
-    ):
+    ) -> AgentExecution:
         """Execute an assigned agent task."""
 
         if task.assigned_agent_id is None:
@@ -52,7 +53,7 @@ class AgentExecutor:
             agent_id=agent.id,
         )
 
-        metadata = {
+        metadata: dict[str, Any] = {
             "agent_id": str(agent.id),
             "agent_name": agent.name,
             "agent_task_id": str(task.id),

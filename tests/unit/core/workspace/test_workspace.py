@@ -324,7 +324,7 @@ class TestWorkspaceBoundaryCases:
 
 
 class TestWorkspaceSymlinkAndJunctionEscape:
-    """Tests ensuring resolved paths cannot escape the permitted workspace via symlinks/junctions."""
+    """Tests ensuring resolved paths cannot escape the permitted workspace via symlinks."""
 
     def test_junction_escape_rejected_on_windows(self, tmp_path: Path) -> None:
         if sys.platform != "win32":

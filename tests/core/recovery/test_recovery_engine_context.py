@@ -154,7 +154,7 @@ def test_verification_failure_retries_when_retries_remain() -> None:
     assert decision.requires_human is False
 
 
-def test_verification_failure_changes_model_when_retries_exhausted_and_alternative_models_available() -> None:
+def test_verification_failure_changes_model_when_retries_exhausted() -> None:
     engine = RecoveryEngine()
 
     decision = engine.decide(

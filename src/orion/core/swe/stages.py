@@ -75,8 +75,8 @@ DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
         order=2,
         name="Analyze Failure",
         description=(
-            "Understand the reported problem, reproduce via test execution, and identify root cause. "
-            "Produce structured diagnostic reasoning and evidence."
+            "Understand the reported problem, reproduce via test execution, and identify "
+            "root cause. Produce structured diagnostic reasoning and evidence."
         ),
         required_capability=AgentCapability.SOFTWARE_DEBUGGING,
         required_permissions=frozenset({
@@ -92,8 +92,9 @@ DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
         order=3,
         name="Formulate Fix",
         description=(
-            "Produce a concrete proposed change plan identifying target files, intended modifications, "
-            "expected behavior, validation strategy, and constraints. Must not modify files."
+            "Produce a concrete proposed change plan identifying target files, intended "
+            "modifications, expected behavior, validation strategy, and constraints. "
+            "Must not modify files."
         ),
         required_capability=AgentCapability.REASONING,
         required_permissions=frozenset({AgentPermission.READ_FILES}),
@@ -156,8 +157,8 @@ DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
         order=7,
         name="Generate Report",
         description=(
-            "Produce structured mission result distinguishing CLAIMED, OBSERVED, and VERIFIED evidence. "
-            "Final success requires VERIFIED evidence."
+            "Produce structured mission result distinguishing CLAIMED, OBSERVED, and "
+            "VERIFIED evidence. Final success requires VERIFIED evidence."
         ),
         required_capability=AgentCapability.WRITING,
         required_permissions=frozenset(),

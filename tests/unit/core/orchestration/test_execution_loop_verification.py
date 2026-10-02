@@ -28,7 +28,9 @@ class VerificationExecutionCoordinator:
         self.output = output
         self.calls: list[AgentTask] = []
 
-    def execute_task(self, task: AgentTask, model_config: ModelConfig, memory_context=None) -> AgentExecution:
+    def execute_task(
+        self, task: AgentTask, model_config: ModelConfig, memory_context=None
+    ) -> AgentExecution:
         self.calls.append(task)
         execution = AgentExecution.create(
             agent_task_id=task.id,
@@ -45,7 +47,9 @@ class SequenceExecutionCoordinator:
         self.calls: list[AgentTask] = []
         self.index = 0
 
-    def execute_task(self, task: AgentTask, model_config: ModelConfig, memory_context=None) -> AgentExecution:
+    def execute_task(
+        self, task: AgentTask, model_config: ModelConfig, memory_context=None
+    ) -> AgentExecution:
         self.calls.append(task)
         output = self.outputs[self.index] if self.index < len(self.outputs) else "Exhausted"
         self.index += 1
@@ -576,7 +580,9 @@ class ParallelVerificationCoordinator:
     def __init__(self) -> None:
         pass
 
-    def execute_task(self, task: AgentTask, model_config: ModelConfig, memory_context=None) -> AgentExecution:
+    def execute_task(
+        self, task: AgentTask, model_config: ModelConfig, memory_context=None
+    ) -> AgentExecution:
         execution = AgentExecution.create(
             agent_task_id=task.id,
             agent_id=task.assigned_agent_id,

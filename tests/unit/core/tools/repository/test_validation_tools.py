@@ -109,7 +109,10 @@ class TestValidationTools:
 
         assert result["exit_code"] != 0
         assert result["status"] == "failed"
-        assert "Incompatible return value" in result["stdout"] or "Incompatible return value" in result["stderr"]
+        assert (
+            "Incompatible return value" in result["stdout"]
+            or "Incompatible return value" in result["stderr"]
+        )
 
     def test_run_typecheck_target_outside_workspace_rejected(self, tmp_path: Path) -> None:
         ws = Workspace(repository_root=tmp_path)
@@ -131,3 +134,19 @@ class TestValidationTools:
             _, kwargs = mock_run.call_args
             assert kwargs["shell"] is False
             assert kwargs["cwd"] == str(ws.repository_root)
+
+    def test_validation_command_timeout_with_bytes_output(self, tmp_path: Path) -> None:
+        import subprocess
+
+        ws = Workspace(repository_root=tmp_path)
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = subprocess.TimeoutExpired(
+                cmd=["pytest"],
+                timeout=10,
+                output=b"partial bytes stdout",
+                stderr=b"partial bytes stderr",
+            )
+            result = execute_validation_command("test", ["pytest"], ws)
+            assert result.status == "timeout"
+            assert "partial bytes stdout" in result.stdout
+            assert "partial bytes stderr" in result.stderr

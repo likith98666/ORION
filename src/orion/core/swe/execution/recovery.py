@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -18,17 +19,24 @@ class PatchRecoveryManager:
     def create_recovery_point(
         self,
         workspace: Workspace,
-        patch_proposal: PatchProposal,
-        execution_id: UUID,
+        patch_proposal: PatchProposal | None = None,
+        execution_id: UUID | None = None,
+        affected_files: Sequence[str] | None = None,
     ) -> PatchRecoveryPoint:
-        """Capture pre-apply snapshots of all files affected by the proposal.
+        """Capture pre-apply snapshots of all files affected by the proposal or file list.
 
         Records contents, hashes, and existence status before any disk mutation occurs.
         """
         snapshots: dict[str, FileSnapshot] = {}
 
-        for op in patch_proposal.operations:
-            target_path = workspace.validate_path(op.path)
+        paths: list[str] = []
+        if patch_proposal is not None:
+            paths.extend(op.path for op in patch_proposal.operations)
+        if affected_files is not None:
+            paths.extend(affected_files)
+
+        for rel_path in paths:
+            target_path = workspace.validate_path(rel_path)
             existed = target_path.exists() and target_path.is_file()
 
             if existed:
@@ -37,27 +45,30 @@ class PatchRecoveryManager:
                     sha256_hash = hashlib.sha256(content.encode("utf-8")).hexdigest().lower()
                 except Exception as exc:
                     raise PatchRecoveryError(
-                        f"Failed reading pre-apply state for '{op.path}': {exc}"
+                        f"Failed reading pre-apply state for '{rel_path}': {exc}"
                     ) from exc
-                snapshots[op.path] = FileSnapshot(
-                    path=op.path,
+                snapshots[rel_path] = FileSnapshot(
+                    path=rel_path,
                     existed=True,
                     content=content,
                     sha256_hash=sha256_hash,
                 )
             else:
-                snapshots[op.path] = FileSnapshot(
-                    path=op.path,
+                snapshots[rel_path] = FileSnapshot(
+                    path=rel_path,
                     existed=False,
                     content=None,
                     sha256_hash=None,
                 )
 
+        eff_exec_id = execution_id or uuid4()
+        eff_task_id = patch_proposal.task_id if patch_proposal is not None else uuid4()
+
         return PatchRecoveryPoint(
             recovery_id=uuid4(),
-            patch_id=patch_proposal.task_id,
-            task_id=patch_proposal.task_id,
-            execution_id=execution_id,
+            patch_id=eff_task_id,
+            task_id=eff_task_id,
+            execution_id=eff_exec_id,
             workspace_id=workspace.workspace_id,
             created_at=datetime.now(UTC),
             snapshots=snapshots,

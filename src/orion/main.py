@@ -11,6 +11,7 @@ import signal
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from orion import __version__
 from orion.api.server import create_server
@@ -76,7 +77,7 @@ def run_server(host: str, port: int, workspace: Path) -> int:
     print("======================================================================")
     print("  Press Ctrl+C to terminate cleanly.\n")
 
-    def _shutdown_handler(signum, frame):
+    def _shutdown_handler(signum: int, frame: Any) -> None:
         print("\n[ORION] Received termination signal. Shutting down gracefully...")
         server.shutdown()
         server.server_close()

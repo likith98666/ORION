@@ -66,7 +66,8 @@ def build_write_file_tool(workspace: Workspace | None = None) -> ToolDefinition:
         encoded = content.encode("utf-8")
         if len(encoded) > MAX_WRITE_CONTENT_SIZE:
             raise ValueError(
-                f"Content size ({len(encoded)} bytes) exceeds maximum limit ({MAX_WRITE_CONTENT_SIZE} bytes)."
+                f"Content size ({len(encoded)} bytes) exceeds maximum limit "
+                f"({MAX_WRITE_CONTENT_SIZE} bytes)."
             )
 
         target_file = ws.validate_path(path_str)
@@ -82,7 +83,8 @@ def build_write_file_tool(workspace: Workspace | None = None) -> ToolDefinition:
         if not parent.exists():
             if not create_parents:
                 raise FileNotFoundError(
-                    f"Parent directory does not exist: '{parent}'. Set create_parents=True to create it."
+                    f"Parent directory does not exist: '{parent}'. "
+                    "Set create_parents=True to create it."
                 )
             parent.mkdir(parents=True, exist_ok=True)
 
@@ -99,7 +101,10 @@ def build_write_file_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="write_file",
-        description="Write text content to a repository file within the workspace boundary with strict size limits and parent validation.",
+        description=(
+            "Write text content to a repository file within the workspace boundary with strict "
+            "size limits and parent validation."
+        ),
         permission=AgentPermission.WRITE_FILES,
         risk_level=ToolRiskLevel.HIGH,
         input_schema=schema,
@@ -157,7 +162,8 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
         encoded_new = new_content.encode("utf-8")
         if len(encoded_new) > MAX_WRITE_CONTENT_SIZE:
             raise ValueError(
-                f"New content size ({len(encoded_new)} bytes) exceeds maximum limit ({MAX_WRITE_CONTENT_SIZE} bytes)."
+                f"New content size ({len(encoded_new)} bytes) exceeds maximum limit "
+                f"({MAX_WRITE_CONTENT_SIZE} bytes)."
             )
 
         target_file = ws.validate_path(path_str)
@@ -180,8 +186,8 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
             target_hash = expected_hash.strip().lower()
             if target_hash != raw_hash.lower() and target_hash != text_hash.lower():
                 raise StaleStateError(
-                    f"Expected hash '{expected_hash}' does not match actual current hash '{raw_hash}'. "
-                    "File has been modified concurrently."
+                    f"Expected hash '{expected_hash}' does not match actual current hash "
+                    f"'{raw_hash}'. File has been modified concurrently."
                 )
 
         if expected_content is not None:
@@ -189,7 +195,8 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
             norm_exp = expected_content.replace("\r\n", "\n")
             if norm_curr != norm_exp:
                 raise StaleStateError(
-                    "Expected content does not match current file content. File has been modified concurrently."
+                    "Expected content does not match current file content. "
+                    "File has been modified concurrently."
                 )
 
         # Compute diff summary
@@ -204,8 +211,12 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
                 lineterm="",
             )
         )
-        lines_added = sum(1 for line in diff if line.startswith("+") and not line.startswith("+++"))
-        lines_removed = sum(1 for line in diff if line.startswith("-") and not line.startswith("---"))
+        lines_added = sum(
+            1 for line in diff if line.startswith("+") and not line.startswith("+++")
+        )
+        lines_removed = sum(
+            1 for line in diff if line.startswith("-") and not line.startswith("---")
+        )
         diff_summary = "\n".join(diff[:100])
 
         target_file.write_text(new_content, encoding="utf-8", newline="\n")
@@ -223,7 +234,10 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
 
     return ToolDefinition(
         name="apply_change",
-        description="Structured SWE modification primitive with optimistic concurrency verification and evidence tracking.",
+        description=(
+            "Structured SWE modification primitive with optimistic concurrency verification "
+            "and evidence tracking."
+        ),
         permission=AgentPermission.WRITE_FILES,
         risk_level=ToolRiskLevel.HIGH,
         input_schema=schema,
@@ -289,7 +303,9 @@ def build_diff_tool(workspace: Workspace | None = None) -> ToolDefinition:
             raise IsADirectoryError(f"Target path is a directory: '{path_str}'")
 
         target_text = target_file.read_text(encoding="utf-8")
-        max_diff_lines = min(int(arguments.get("max_diff_lines", DEFAULT_MAX_DIFF_LINES)), MAX_DIFF_LINES_LIMIT)
+        max_diff_lines = min(
+            int(arguments.get("max_diff_lines", DEFAULT_MAX_DIFF_LINES)), MAX_DIFF_LINES_LIMIT
+        )
 
         if comparison_path is not None:
             comp_file = ws.validate_path(comparison_path)
@@ -316,8 +332,12 @@ def build_diff_tool(workspace: Workspace | None = None) -> ToolDefinition:
             )
         )
 
-        lines_added = sum(1 for line in diff_lines if line.startswith("+") and not line.startswith("+++"))
-        lines_removed = sum(1 for line in diff_lines if line.startswith("-") and not line.startswith("---"))
+        lines_added = sum(
+            1 for line in diff_lines if line.startswith("+") and not line.startswith("+++")
+        )
+        lines_removed = sum(
+            1 for line in diff_lines if line.startswith("-") and not line.startswith("---")
+        )
         identical = len(diff_lines) == 0
 
         truncated = False
@@ -336,7 +356,10 @@ def build_diff_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="diff",
-        description="Inspect deterministic text diffs between workspace files or contents without git or shell execution.",
+        description=(
+            "Inspect deterministic text diffs between workspace files or contents without git "
+            "or shell execution."
+        ),
         permission=AgentPermission.READ_FILES,
         risk_level=ToolRiskLevel.LOW,
         input_schema=schema,

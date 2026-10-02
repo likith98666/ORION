@@ -47,9 +47,9 @@ class ToolInputValidator:
                 )
 
         for name, value in arguments.items():
-            field = fields.get(name)
+            input_field = fields.get(name)
 
-            if field is None:
+            if input_field is None:
                 self._validate_value(
                     value=value,
                     path=name,
@@ -63,7 +63,7 @@ class ToolInputValidator:
                 continue
 
             if value is None:
-                if field.nullable:
+                if input_field.nullable:
                     continue
 
                 raise ToolInputValidationError(
@@ -73,16 +73,16 @@ class ToolInputValidator:
             self._validate_value(
                 value=value,
                 path=name,
-                input_type=field.input_type,
-                nullable=field.nullable,
+                input_type=input_field.input_type,
+                nullable=input_field.nullable,
                 max_length=(
-                    field.max_length
-                    if field.max_length is not None
+                    input_field.max_length
+                    if input_field.max_length is not None
                     else schema.max_string_length
                 ),
                 max_items=(
-                    field.max_items
-                    if field.max_items is not None
+                    input_field.max_items
+                    if input_field.max_items is not None
                     else schema.max_collection_items
                 ),
                 depth=0,

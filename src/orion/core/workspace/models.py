@@ -383,7 +383,8 @@ class Workspace:
             TypeError: If path is not a str or Path.
             InvalidPathError: If path is empty, blank, or malformed.
             PathOutsideWorkspaceError: If path escapes or lies outside the workspace root.
-            PathNotAllowedError: If path is within workspace root but not permitted by allowed_paths.
+            PathNotAllowedError: If path is within workspace root but not permitted
+                by allowed_paths.
         """
         resolved = self.resolve_path(path)
 

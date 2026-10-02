@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
@@ -51,6 +52,7 @@ class ParallelExecutor:
                 "memory_contexts must contain exactly one context per task."
             )
 
+        contexts: Sequence[ExecutionMemoryContext | None]
         if memory_contexts is None:
             contexts = [None] * len(tasks)
         else:

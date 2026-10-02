@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from orion.core.verification.models import (
@@ -21,7 +22,7 @@ class VerificationService:
         verification_type: VerificationType,
         status: VerificationStatus,
         reason: str,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> VerificationResult:
         result = VerificationResult.create(
             execution_id=execution_id,

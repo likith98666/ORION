@@ -32,6 +32,7 @@ from orion.core.swe.cognitive.patch_approval import (
 )
 from orion.core.swe.cognitive.patch_config import PatchConfig
 from orion.core.swe.cognitive.patch_contracts import (
+    PatchOperation,
     PatchOperationType,
     PatchProposal,
 )
@@ -973,3 +974,28 @@ def test_coordinator_request_approval_requires_approval_service(tmp_path: Path) 
     )
     with pytest.raises(PatchApprovalRequiredError, match="ApprovalService is not configured"):
         coordinator.request_patch_approval(agent=agent, patch_proposal=patch)
+
+
+def test_patch_proposal_is_valid() -> None:
+    """Verify PatchProposal.is_valid returns correct boolean based on files and operations."""
+    valid_patch = PatchProposal(
+        affected_files=("src/math_lib.py",),
+        operations=(
+            PatchOperation(
+                operation_type=PatchOperationType.MODIFY_FILE,
+                path="src/math_lib.py",
+                new_content="def add(a, b): return a + b",
+            ),
+        ),
+        rationale="Fix calculation",
+        confidence=0.9,
+    )
+    assert valid_patch.is_valid is True
+
+    empty_patch = PatchProposal(
+        affected_files=(),
+        operations=(),
+        rationale="No files",
+        confidence=0.0,
+    )
+    assert empty_patch.is_valid is False

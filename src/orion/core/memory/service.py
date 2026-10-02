@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from orion.core.agents.executions import AgentExecution
@@ -35,7 +36,7 @@ class MemoryService:
         task_id: UUID | None = None,
         agent_id: UUID | None = None,
         source_execution_id: UUID | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> MemoryRecord:
         """Create and persist a memory record."""
 

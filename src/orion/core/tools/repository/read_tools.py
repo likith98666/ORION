@@ -204,7 +204,10 @@ def build_list_files_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="list_files",
-        description="List files and directories within the workspace boundary with deterministic ordering and bounded output.",
+        description=(
+            "List files and directories within the workspace boundary with deterministic ordering "
+            "and bounded output."
+        ),
         permission=AgentPermission.READ_FILES,
         risk_level=ToolRiskLevel.LOW,
         input_schema=schema,
@@ -263,7 +266,8 @@ def build_read_file_tool(workspace: Workspace | None = None) -> ToolDefinition:
         file_size = target_file.stat().st_size
         if file_size > MAX_READ_FILE_SIZE:
             raise ValueError(
-                f"File size ({file_size} bytes) exceeds maximum allowable limit ({MAX_READ_FILE_SIZE} bytes)."
+                f"File size ({file_size} bytes) exceeds maximum allowable limit "
+                f"({MAX_READ_FILE_SIZE} bytes)."
             )
 
         if _is_binary_file(target_file):
@@ -302,7 +306,10 @@ def build_read_file_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="read_file",
-        description="Read UTF-8 text content from a repository file within the workspace boundary with size limits and binary protection.",
+        description=(
+            "Read UTF-8 text content from a repository file within the workspace boundary with "
+            "size limits and binary protection."
+        ),
         permission=AgentPermission.READ_FILES,
         risk_level=ToolRiskLevel.LOW,
         input_schema=schema,
@@ -367,7 +374,9 @@ def build_search_files_tool(workspace: Workspace | None = None) -> ToolDefinitio
 
         max_results = min(int(arguments.get("max_results", 50)), MAX_SEARCH_RESULTS_LIMIT)
         case_sensitive = bool(arguments.get("case_sensitive", False))
-        max_file_size = min(int(arguments.get("max_file_size", DEFAULT_MAX_BYTES)), MAX_READ_FILE_SIZE)
+        max_file_size = min(
+            int(arguments.get("max_file_size", DEFAULT_MAX_BYTES)), MAX_READ_FILE_SIZE
+        )
 
         matches: list[dict[str, Any]] = []
         truncated = False
@@ -438,7 +447,10 @@ def build_search_files_tool(workspace: Workspace | None = None) -> ToolDefinitio
 
     return ToolDefinition(
         name="search_files",
-        description="Search for text matches within workspace files bounded by size, allowed paths, and result limits.",
+        description=(
+            "Search for text matches within workspace files bounded by size, allowed paths, and "
+            "result limits."
+        ),
         permission=AgentPermission.READ_FILES,
         risk_level=ToolRiskLevel.LOW,
         input_schema=schema,

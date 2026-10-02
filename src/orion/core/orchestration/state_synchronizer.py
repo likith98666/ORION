@@ -1,5 +1,4 @@
-from orion.core.agents.execution_manager import AgentExecutionStatus
-from orion.core.agents.executions import AgentExecution
+from orion.core.agents.executions import AgentExecution, AgentExecutionStatus
 from orion.core.agents.task_service import AgentTaskService
 from orion.core.agents.tasks import AgentTaskStatus
 from orion.core.planning.steps import PlanStep, PlanStepStatus

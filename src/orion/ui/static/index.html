@@ -3,20 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ORION — Autonomous AI Execution Platform for Software Engineering Operations">
-  <title>ORION — Mission Command Center</title>
+  <meta name="description" content="ORION — Autonomous AI Workforce Command Center for Software Engineering Operations">
+  <title>ORION // Mission Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body class="orion-app">
+
   <!-- TOP TELEMETRY NAVBAR -->
   <header class="navbar" id="mainNavbar">
     <div class="nav-brand">
       <div class="brand-glyph">
         <span class="glyph-core"></span>
         <span class="glyph-ring"></span>
+        <span class="glyph-orbital"></span>
       </div>
       <div class="brand-text">
         <h1 class="brand-title">ORION</h1>
@@ -26,51 +28,117 @@
 
     <div class="telemetry-bar" id="telemetryBar">
       <div class="telemetry-item">
-        <span class="status-dot pulsing" id="engineStatusDot"></span>
+        <span class="status-dot pulsing-cyan" id="sseStatusDot"></span>
+        <span class="telemetry-label">STREAM:</span>
+        <span class="telemetry-val text-cyan" id="sseStatusText">CONNECTING...</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="status-dot online" id="coreStatusDot"></span>
         <span class="telemetry-label">CORE:</span>
-        <span class="telemetry-val" id="engineStatusText">DETERMINISTIC // ONLINE</span>
+        <span class="telemetry-val" id="coreStatusText">DETERMINISTIC // ONLINE</span>
       </div>
       <div class="telemetry-item">
         <span class="telemetry-label">UPTIME:</span>
         <span class="telemetry-val" id="engineUptime">0.0s</span>
       </div>
       <div class="telemetry-item">
-        <span class="telemetry-label">ACTIVE MISSIONS:</span>
+        <span class="telemetry-label">MISSIONS:</span>
         <span class="telemetry-val" id="activeMissionsCount">0</span>
       </div>
       <div class="telemetry-item">
         <span class="telemetry-label">VERIFICATION:</span>
-        <span class="telemetry-val text-cyan">AUTHORITATIVE</span>
+        <span class="telemetry-val text-emerald">AUTHORITATIVE</span>
       </div>
     </div>
 
     <div class="nav-actions">
-      <button class="btn btn-secondary" id="btnRefresh" title="Refresh state from server">
+      <button class="btn btn-secondary" id="btnRefresh" title="Sync latest state from server">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Sync
       </button>
-      <button class="btn btn-primary" id="btnNewMission">
+      <button class="btn btn-primary btn-glow" id="btnNewMission">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        New Mission
+        New Task
       </button>
     </div>
   </header>
 
-  <!-- MAIN VIEW CONTAINER -->
+  <!-- MAIN VIEWPORT -->
   <main class="dashboard-container" id="dashboardContainer">
-    <!-- ACTIVE MISSION BANNER -->
+
+    <!-- COMMAND CENTER ENTRY BAR -->
+    <section class="command-input-section card glass" id="commandInputSection">
+      <div class="command-input-header">
+        <div class="command-title-row">
+          <span class="terminal-prompt">&gt;</span>
+          <h2 class="command-title">MISSION COMMAND CENTER // ENTER ENGINEERING TASK</h2>
+        </div>
+        <span class="badge badge-accent">PHASE 7 PRODUCT INTERFACE</span>
+      </div>
+      <form class="command-form" id="commandCenterForm">
+        <div class="command-input-row">
+          <div class="input-col-task">
+            <label for="taskInputPrompt" class="input-label">Natural-Language Task Directive</label>
+            <input type="text" id="taskInputPrompt" class="input-field input-task-glow" placeholder="e.g., Analyze failing tests, synthesize bounded patch, run controlled tests, and verify fix." required value="Analyze repository, synthesize repair patch, run tests, and verify authoritative fix.">
+          </div>
+          <div class="input-col-workspace">
+            <label for="workspaceInputPath" class="input-label">Permitted Workspace Root</label>
+            <input type="text" id="workspaceInputPath" class="input-field" placeholder="C:/Projects/workspace" required value="C:/Users/LIKITH/ORION">
+          </div>
+          <div class="input-col-mode">
+            <label for="executionModeSelect" class="input-label">Execution Mode</label>
+            <select id="executionModeSelect" class="input-field select-field">
+              <option value="controlled">Controlled (Phase 5/6 Guarded)</option>
+              <option value="autonomous">Autonomous (Auto-Approve)</option>
+            </select>
+          </div>
+          <div class="input-col-btn">
+            <button type="submit" class="btn btn-cyan btn-launch" id="btnSubmitTask">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Launch Mission
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- LIVE APPROVAL REQUIRED ALERT BANNER -->
+    <section class="approval-alert-banner card glass" id="approvalAlertBanner" style="display: none;">
+      <div class="alert-content">
+        <div class="alert-icon-ring pulsing-amber">
+          <svg class="alert-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div class="alert-text">
+          <div class="alert-headline-row">
+            <span class="badge badge-amber">OPERATOR AUTHORIZATION REQUIRED</span>
+            <span class="badge badge-outline" id="approvalToolBadge">TOOL: apply_change</span>
+            <span class="badge badge-rose" id="approvalRiskBadge">RISK: HIGH</span>
+          </div>
+          <h3 class="alert-title">Code Modification Patch Awaiting Operator Approval</h3>
+          <p class="alert-sub" id="approvalRationaleText">A synthesized patch affecting repository files requires explicit authorization before applying to workspace.</p>
+        </div>
+      </div>
+      <div class="alert-actions">
+        <button class="btn btn-secondary" id="btnInspectApprovalDiff">Review Diff</button>
+        <button class="btn btn-emerald btn-glow" id="btnQuickApprove">Authorize &amp; Apply</button>
+        <button class="btn btn-rose" id="btnQuickDeny">Deny &amp; Terminate</button>
+      </div>
+    </section>
+
+    <!-- ACTIVE MISSION HERO & WORKFLOW STEPPER -->
     <section class="mission-hero card glass" id="missionHeroSection">
       <div class="mission-hero-header">
         <div class="mission-meta">
           <div class="badge-row">
             <span class="badge badge-accent" id="missionIdBadge">MISSION: INITIALIZING</span>
             <span class="badge badge-status" id="missionStatusBadge">STANDBY</span>
+            <span class="badge badge-lifecycle" id="missionLifecycleBadge">STATE: RECEIVED</span>
             <span class="badge badge-workspace" id="missionWorkspaceBadge">WORKSPACE: LOCALHOST</span>
           </div>
-          <h2 class="mission-objective" id="missionObjective">Autonomous Software Engineering Mission</h2>
+          <h2 class="mission-objective" id="missionObjective">Awaiting Engineering Task Submission...</h2>
         </div>
         <div class="mission-hero-controls">
-          <button class="btn btn-emerald" id="btnRunDemo">
+          <button class="btn btn-cyan btn-glow" id="btnRunPipeline">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Execute Pipeline
           </button>
@@ -78,7 +146,7 @@
         </div>
       </div>
 
-      <!-- WORKFLOW STEPPER -->
+      <!-- WORKFLOW STEPPER (7 STAGES + APPROVAL GATE) -->
       <div class="stepper-wrapper">
         <div class="stepper-track">
           <div class="stepper-progress-fill" id="stepperFill" style="width: 14%;"></div>
@@ -92,27 +160,32 @@
           <div class="step-node" data-stage="analyze_failure" id="step-analyze_failure">
             <div class="node-circle">2</div>
             <div class="node-label">Analyze</div>
-            <div class="node-sub">Diagnose</div>
+            <div class="node-sub">Diagnosis</div>
           </div>
           <div class="step-node" data-stage="formulate_fix" id="step-formulate_fix">
             <div class="node-circle">3</div>
             <div class="node-label">Formulate</div>
-            <div class="node-sub">Plan fix</div>
+            <div class="node-sub">Patch Plan</div>
+          </div>
+          <div class="step-node step-gate" data-stage="approval_gate" id="step-approval_gate">
+            <div class="node-circle">!</div>
+            <div class="node-label">Approval</div>
+            <div class="node-sub">Gate</div>
           </div>
           <div class="step-node" data-stage="implement_change" id="step-implement_change">
             <div class="node-circle">4</div>
             <div class="node-label">Implement</div>
-            <div class="node-sub">Write files</div>
+            <div class="node-sub">Apply Patch</div>
           </div>
           <div class="step-node" data-stage="run_tests" id="step-run_tests">
             <div class="node-circle">5</div>
             <div class="node-label">Run Tests</div>
-            <div class="node-sub">Validate</div>
+            <div class="node-sub">Controlled</div>
           </div>
           <div class="step-node" data-stage="verify" id="step-verify">
             <div class="node-circle">6</div>
             <div class="node-label">Verify</div>
-            <div class="node-sub">Engine check</div>
+            <div class="node-sub">Authoritative</div>
           </div>
           <div class="step-node" data-stage="generate_report" id="step-generate_report">
             <div class="node-circle">7</div>
@@ -123,16 +196,16 @@
       </div>
     </section>
 
-    <!-- TWO-COLUMN WORKFORCE & CONTROL CENTER -->
+    <!-- TWO-COLUMN WORKFORCE & OBSERVATORY DECK -->
     <div class="workspace-grid">
-      <!-- LEFT COLUMN: WORKFORCE & LIVE TELEMETRY -->
+      <!-- LEFT COLUMN: WORKFORCE & TELEMETRY -->
       <aside class="workforce-column">
         <!-- AGENT WORKFORCE CARD -->
         <div class="card glass workforce-card" id="workforceCard">
           <div class="card-header">
             <div class="card-title">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Controlled Workforce</span>
+              <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Autonomous Workforce</span>
             </div>
             <span class="badge badge-purple">4 SPECIALISTS</span>
           </div>
@@ -142,36 +215,36 @@
               <div class="agent-avatar avatar-cyan">SWE</div>
               <div class="agent-details">
                 <div class="agent-name">Orion-SWE-Engineer</div>
-                <div class="agent-caps">Debugging &bull; Code Mod &bull; Tests</div>
+                <div class="agent-caps">Code Modification &bull; Bounded Patch &bull; Execution</div>
               </div>
-              <span class="agent-state-badge badge-active">ACTIVE</span>
+              <span class="agent-state-badge badge-active" id="badgeAgentSWE">ACTIVE</span>
             </div>
 
             <div class="agent-item" id="agentDiagnostics">
               <div class="agent-avatar avatar-purple">DX</div>
               <div class="agent-details">
                 <div class="agent-name">Diagnostic-Agent</div>
-                <div class="agent-caps">Failure Reproduction &bull; Root Cause</div>
+                <div class="agent-caps">Failure Reproduction &bull; Root Cause Classification</div>
               </div>
-              <span class="agent-state-badge badge-idle">STANDBY</span>
+              <span class="agent-state-badge badge-idle" id="badgeAgentDiagnostics">STANDBY</span>
             </div>
 
             <div class="agent-item" id="agentVerifier">
               <div class="agent-avatar avatar-emerald">VF</div>
               <div class="agent-details">
                 <div class="agent-name">Authoritative-Verifier</div>
-                <div class="agent-caps">VerificationEngine &bull; Factual Audit</div>
+                <div class="agent-caps">VerificationEngine &bull; Factual Audit &bull; Ground Truth</div>
               </div>
-              <span class="agent-state-badge badge-idle">STANDBY</span>
+              <span class="agent-state-badge badge-idle" id="badgeAgentVerifier">STANDBY</span>
             </div>
 
             <div class="agent-item" id="agentRecovery">
               <div class="agent-avatar avatar-amber">RC</div>
               <div class="agent-details">
                 <div class="agent-name">Recovery-Coordinator</div>
-                <div class="agent-caps">Strategy Analysis &bull; Transparent Retry</div>
+                <div class="agent-caps">Bounded Self-Healing &bull; Budget Enforcer &bull; Rollback</div>
               </div>
-              <span class="agent-state-badge badge-idle">STANDBY</span>
+              <span class="agent-state-badge badge-idle" id="badgeAgentRecovery">STANDBY</span>
             </div>
           </div>
         </div>
@@ -180,8 +253,8 @@
         <div class="card glass metrics-overview-card" id="metricsOverviewCard">
           <div class="card-header">
             <div class="card-title">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-              <span>Execution Metrics</span>
+              <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+              <span>Subsystem Telemetry</span>
             </div>
             <span class="badge badge-cyan" id="metricEvidenceCount">0 Evidence</span>
           </div>
@@ -210,75 +283,84 @@
         <div class="card glass live-timeline-card" id="liveTimelineCard">
           <div class="card-header">
             <div class="card-title">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Live Timeline</span>
+              <svg class="card-icon text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span>Live Telemetry Stream</span>
             </div>
-            <span class="live-pulse-badge"><span class="pulse-point"></span> LIVE</span>
+            <span class="live-pulse-badge"><span class="pulse-point"></span> SSE LIVE</span>
           </div>
           <div class="timeline-stream" id="timelineStream">
-            <div class="timeline-empty">Waiting for execution stream...</div>
+            <div class="timeline-empty">Awaiting real-time execution stream...</div>
           </div>
         </div>
       </aside>
 
-      <!-- RIGHT COLUMN: TABBED DETAILED EXPLORER -->
+      <!-- RIGHT COLUMN: TABBED DETAILED OBSERVATORY DECK -->
       <section class="command-column">
         <div class="card glass command-card" id="commandCard">
           <!-- NAVIGATION TABS -->
           <nav class="tab-bar" id="commandTabBar">
             <button class="tab-btn active" data-tab="tab-overview" id="tabBtnOverview">Overview</button>
-            <button class="tab-btn" data-tab="tab-evidence" id="tabBtnEvidence">Evidence Explorer</button>
-            <button class="tab-btn" data-tab="tab-verification" id="tabBtnVerification">Verification Center</button>
-            <button class="tab-btn" data-tab="tab-recovery" id="tabBtnRecovery">Recovery Center</button>
-            <button class="tab-btn" data-tab="tab-changes" id="tabBtnChanges">Repository Changes</button>
-            <button class="tab-btn" data-tab="tab-report" id="tabBtnReport">Final Report</button>
+            <button class="tab-btn" data-tab="tab-changes" id="tabBtnChanges">
+              Code Changes &amp; Diff
+              <span class="tab-counter" id="tabCounterChanges">0</span>
+            </button>
+            <button class="tab-btn" data-tab="tab-tests" id="tabBtnTests">Controlled Tests</button>
+            <button class="tab-btn" data-tab="tab-recovery" id="tabBtnRecovery">
+              Recovery Observatory
+              <span class="tab-badge-pulse" id="tabRecoveryPulse" style="display:none;"></span>
+            </button>
+            <button class="tab-btn" data-tab="tab-verification" id="tabBtnVerification">Verification Authority</button>
+            <button class="tab-btn" data-tab="tab-evidence" id="tabBtnEvidence">Evidence Ledger</button>
+            <button class="tab-btn" data-tab="tab-report" id="tabBtnReport">Certified Report</button>
           </nav>
 
           <!-- TAB 1: OVERVIEW -->
           <div class="tab-panel active" id="tab-overview">
             <div class="overview-grid">
               <div class="overview-section">
-                <h3 class="panel-subtitle">Mission Parameters</h3>
+                <h3 class="panel-subtitle">Mission Execution Parameters</h3>
                 <table class="detail-table">
                   <tbody>
-                    <tr><th>Mission ID</th><td class="code-val" id="ovMissionId">None</td></tr>
                     <tr><th>Task ID</th><td class="code-val" id="ovTaskId">None</td></tr>
+                    <tr><th>Execution ID</th><td class="code-val" id="ovExecutionId">None</td></tr>
                     <tr><th>Workspace Root</th><td class="code-val" id="ovWorkspaceRoot">None</td></tr>
+                    <tr><th>Lifecycle State</th><td id="ovLifecycleState"><span class="badge badge-idle">RECEIVED</span></td></tr>
                     <tr><th>Current Stage</th><td id="ovCurrentStage"><span class="badge badge-idle">None</span></td></tr>
                     <tr><th>Stages Completed</th><td id="ovStagesCompleted">0 / 7</td></tr>
+                    <tr><th>Approval Status</th><td id="ovApprovalStatus"><span class="badge badge-idle">NONE REQUIRED</span></td></tr>
                   </tbody>
                 </table>
               </div>
 
               <div class="overview-section">
-                <h3 class="panel-subtitle">Stage Invariant Guarantees</h3>
+                <h3 class="panel-subtitle">Authoritative Subsystem Guarantees</h3>
                 <ul class="invariants-list">
                   <li class="inv-item">
-                    <span class="inv-check">&check;</span>
+                    <span class="inv-check text-emerald">&check;</span>
                     <div>
-                      <strong>Workspace Isolation</strong>
+                      <strong>Workspace Isolation &amp; Containment</strong>
                       <p>Path traversal blocked, absolute escapes prevented, protected files secured.</p>
                     </div>
                   </li>
                   <li class="inv-item">
-                    <span class="inv-check">&check;</span>
+                    <span class="inv-check text-emerald">&check;</span>
                     <div>
-                      <strong>Strict Evidence Hierarchy</strong>
-                      <p>Claimed assertions never promoted silently to Verified status.</p>
+                      <strong>Dual-Key Approval Authority</strong>
+                      <p>High-risk patch applications require ApprovalService authorization. Client cannot self-approve.</p>
                     </div>
                   </li>
                   <li class="inv-item">
-                    <span class="inv-check">&check;</span>
+                    <span class="inv-check text-emerald">&check;</span>
                     <div>
-                      <strong>Authoritative Verification</strong>
-                      <p>Task success requires VerificationEngine confirmation. Test pass alone is insufficient.</p>
+                      <strong>Authoritative VerificationEngine</strong>
+                      <p>Task success requires VerificationEngine ground-truth confirmation. Test pass alone is insufficient.</p>
                     </div>
                   </li>
                   <li class="inv-item">
-                    <span class="inv-check">&check;</span>
+                    <span class="inv-check text-emerald">&check;</span>
                     <div>
-                      <strong>Recovery Transparency</strong>
-                      <p>Failed attempts and recovery actions are preserved in audit trail; never overwritten.</p>
+                      <strong>Bounded Self-Healing &amp; Full Transparency</strong>
+                      <p>Strict budget limits on recovery attempts and execution time. Failed attempts recorded; never erased.</p>
                     </div>
                   </li>
                 </ul>
@@ -286,7 +368,163 @@
             </div>
           </div>
 
-          <!-- TAB 2: EVIDENCE EXPLORER -->
+          <!-- TAB 2: CODE CHANGES & UNIFIED DIFF VIEWER -->
+          <div class="tab-panel" id="tab-changes">
+            <div class="changes-header-bar">
+              <div class="changes-title-group">
+                <span class="sub-label">AFFECTED REPOSITORY FILES:</span>
+                <span class="badge badge-cyan" id="modifiedFilesCount">0 Files</span>
+                <span class="badge badge-emerald" id="diffLinesAdded">+0 lines</span>
+                <span class="badge badge-rose" id="diffLinesRemoved">-0 lines</span>
+              </div>
+              <div class="changes-status-group">
+                <span class="badge badge-outline" id="diffValidationBadge">VALIDATION: PENDING</span>
+                <span class="badge badge-outline" id="diffApprovalBadge">APPROVAL: NONE</span>
+                <span class="badge badge-outline" id="diffApplicationBadge">APPLICATION: PENDING</span>
+              </div>
+            </div>
+
+            <div class="operations-list" id="operationsList" style="display: none;"></div>
+
+            <div class="diff-viewer-container">
+              <div class="diff-toolbar">
+                <span class="diff-file-label" id="diffFileLabel">Unified Diff</span>
+                <button class="btn btn-xs btn-secondary" id="btnCopyDiff">Copy Diff</button>
+              </div>
+              <pre class="diff-code-block" id="diffCodeBlock"><code>No code changes or patch proposals generated yet.</code></pre>
+            </div>
+          </div>
+
+          <!-- TAB 3: CONTROLLED TESTS -->
+          <div class="tab-panel" id="tab-tests">
+            <div class="test-results-header">
+              <div class="test-target-info">
+                <span class="sub-label">TEST TARGET:</span>
+                <span class="code-val" id="testTargetVal">allowlisted_tests</span>
+              </div>
+              <div class="test-outcome-badges">
+                <span class="badge badge-outline" id="testExitCodeBadge">EXIT CODE: --</span>
+                <span class="badge badge-idle" id="testOutcomeBadge">STATUS: NOT RUN</span>
+                <span class="badge badge-outline" id="testDurationBadge">DURATION: 0.0s</span>
+              </div>
+            </div>
+
+            <div class="test-terminal-box">
+              <div class="terminal-bar-top">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Controlled Execution Authority Output</span>
+              </div>
+              <pre class="terminal-content" id="testOutputContent">Controlled tests have not been executed yet.</pre>
+            </div>
+          </div>
+
+          <!-- TAB 4: RECOVERY OBSERVATORY (PHASE 6 SIGNATURE PANEL) -->
+          <div class="tab-panel" id="tab-recovery">
+            <div class="recovery-hero-banner">
+              <div class="rec-hero-stat">
+                <span class="rec-hero-label">FAILURE CLASSIFICATION:</span>
+                <span class="rec-hero-val text-amber" id="recFailureCatVal">NONE DETECTED</span>
+              </div>
+              <div class="rec-hero-stat">
+                <span class="rec-hero-label">ACTIVE RECOVERY STRATEGY:</span>
+                <span class="rec-hero-val text-cyan" id="recStrategyVal">NONE</span>
+              </div>
+              <div class="rec-hero-stat">
+                <span class="rec-hero-label">ATTEMPT COUNTER:</span>
+                <span class="rec-hero-val" id="recAttemptVal">0 / 3</span>
+              </div>
+              <div class="rec-hero-stat">
+                <span class="rec-hero-label">RECOVERY STATE:</span>
+                <span class="rec-hero-val" id="recLifecycleStateVal">IDLE</span>
+              </div>
+            </div>
+
+            <!-- RECOVERY BUDGET PROGRESS BARS -->
+            <div class="recovery-budget-grid">
+              <div class="budget-card">
+                <div class="budget-card-header">
+                  <span>Remaining Attempts</span>
+                  <strong id="budgetValAttempts">3 / 3</strong>
+                </div>
+                <div class="budget-track">
+                  <div class="budget-fill cyan" id="budgetBarAttempts" style="width: 100%;"></div>
+                </div>
+              </div>
+              <div class="budget-card">
+                <div class="budget-card-header">
+                  <span>Execution Time Budget</span>
+                  <strong id="budgetValTime">120.0s</strong>
+                </div>
+                <div class="budget-track">
+                  <div class="budget-fill purple" id="budgetBarTime" style="width: 100%;"></div>
+                </div>
+              </div>
+              <div class="budget-card">
+                <div class="budget-card-header">
+                  <span>Patch Regenerations</span>
+                  <strong id="budgetValPatch">2 / 2</strong>
+                </div>
+                <div class="budget-track">
+                  <div class="budget-fill emerald" id="budgetBarPatch" style="width: 100%;"></div>
+                </div>
+              </div>
+              <div class="budget-card">
+                <div class="budget-card-header">
+                  <span>Test Retries</span>
+                  <strong id="budgetValTests">3 / 3</strong>
+                </div>
+                <div class="budget-track">
+                  <div class="budget-fill amber" id="budgetBarTests" style="width: 100%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ROLLBACK AUDIT AND RECOVERY HISTORY -->
+            <div class="recovery-history-section">
+              <div class="history-header">
+                <h4 class="block-title">Recovery Attempt History &amp; Rollback Audit</h4>
+                <span class="badge badge-emerald" id="rollbackAuditBadge">ROLLBACK: CLEAN // NO UNVERIFIED MUTATIONS</span>
+              </div>
+              <div class="recovery-events-list" id="recoveryEventsList">
+                <div class="empty-state">No recovery events occurred. Clean pipeline execution.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: VERIFICATION AUTHORITY -->
+          <div class="tab-panel" id="tab-verification">
+            <div class="verification-hero" id="verificationHero">
+              <div class="verif-status-box" id="verifStatusBox">
+                <span class="verif-icon" id="verifIcon">?</span>
+                <div>
+                  <h3 class="verif-heading" id="verifHeading">Authoritative Verification Pending</h3>
+                  <p class="verif-sub" id="verifReason">Authoritative verification executes during stage 6 (VERIFY).</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="verif-content-block">
+              <h4 class="block-title">Formal Ground-Truth Acceptance Criteria</h4>
+              <div class="criteria-list" id="verifCriteriaList">
+                <div class="criterion-item pending" id="critExitCode">
+                  <span class="crit-icon">&bull;</span>
+                  <span>Allowlisted controlled test runner exit code 0</span>
+                </div>
+                <div class="criterion-item pending" id="critRequirements">
+                  <span class="crit-icon">&bull;</span>
+                  <span>All expected formal requirements satisfied</span>
+                </div>
+                <div class="criterion-item pending" id="critEvidenceLedger">
+                  <span class="crit-icon">&bull;</span>
+                  <span>Authoritative VerificationResult registered in evidence ledger</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 6: EVIDENCE & PROVENANCE EXPLORER -->
           <div class="tab-panel" id="tab-evidence">
             <div class="panel-toolbar">
               <div class="filter-group" id="evidenceFilterGroup">
@@ -303,109 +541,109 @@
             </div>
           </div>
 
-          <!-- TAB 3: VERIFICATION CENTER -->
-          <div class="tab-panel" id="tab-verification">
-            <div class="verification-hero" id="verificationHero">
-              <div class="verif-status-box" id="verifStatusBox">
-                <span class="verif-icon" id="verifIcon">?</span>
-                <div>
-                  <h3 class="verif-heading" id="verifHeading">Verification Pending</h3>
-                  <p class="verif-sub" id="verifReason">Authoritative verification runs during stage 6 (VERIFY).</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="verif-content-block">
-              <h4 class="block-title">Formal Acceptance Criteria</h4>
-              <div class="criteria-list" id="verifCriteriaList">
-                <div class="criterion-item pending">
-                  <span class="crit-icon">&bull;</span>
-                  <span>Exit code 0 from allowlisted pytest runner</span>
-                </div>
-                <div class="criterion-item pending">
-                  <span class="crit-icon">&bull;</span>
-                  <span>Output satisfies all expected content requirements</span>
-                </div>
-                <div class="criterion-item pending">
-                  <span class="crit-icon">&bull;</span>
-                  <span>Authoritative VerificationResult registered in evidence ledger</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB 4: RECOVERY CENTER -->
-          <div class="tab-panel" id="tab-recovery">
-            <div class="recovery-summary-banner">
-              <div class="rec-stat">
-                <span class="rec-label">RECOVERY EVENTS:</span>
-                <span class="rec-val" id="recCountVal">0</span>
-              </div>
-              <div class="rec-stat">
-                <span class="rec-label">TRANSPARENCY AUDIT:</span>
-                <span class="rec-val text-emerald">PRESERVED</span>
-              </div>
-            </div>
-
-            <div class="recovery-events-list" id="recoveryEventsList">
-              <div class="empty-state">No failure events occurred. Clean progression.</div>
-            </div>
-          </div>
-
-          <!-- TAB 5: REPOSITORY CHANGES -->
-          <div class="tab-panel" id="tab-changes">
-            <div class="changes-header">
-              <span class="sub-label">MODIFIED FILES:</span>
-              <span class="badge badge-cyan" id="modifiedFilesCount">0 Files</span>
-            </div>
-            <div class="diff-viewer" id="diffViewer">
-              <div class="empty-state">No file modification operations recorded in this workflow yet.</div>
-            </div>
-          </div>
-
-          <!-- TAB 6: FINAL REPORT -->
+          <!-- TAB 7: CERTIFIED FINAL REPORT -->
           <div class="tab-panel" id="tab-report">
             <div class="report-container" id="reportContainer">
               <div class="report-empty-state" id="reportEmptyState">
                 <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <h3>Mission Report Pending</h3>
-                <p>Execute all 7 workflow stages to generate the certified, evidence-backed SWE mission report.</p>
-                <button class="btn btn-primary" id="btnGenReportNow">Generate Report Now</button>
+                <h3>Certified SWE Mission Report Pending</h3>
+                <p>Execute all workflow stages to generate the certified, evidence-backed SWE mission report.</p>
+                <button class="btn btn-primary btn-glow" id="btnGenReportNow">Generate Certified Report</button>
               </div>
 
               <div class="report-content" id="reportContent" style="display: none;">
-                <!-- Dynamically populated report -->
+                <!-- Populated dynamically -->
               </div>
             </div>
           </div>
+
         </div>
       </section>
     </div>
   </main>
 
-  <!-- CREATE MISSION MODAL -->
+  <!-- INTERACTIVE APPROVAL MODAL -->
+  <div class="modal-backdrop" id="approvalModalBackdrop">
+    <div class="modal-window card glass modal-approval" id="approvalModal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="badge badge-rose">HIGH RISK OPERATION</span>
+          <h3 class="modal-title">Authorize Code Modification Patch</h3>
+        </div>
+        <button class="modal-close-btn" id="modalApprovalCloseBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="approval-meta-grid">
+          <div class="approval-meta-item">
+            <span class="meta-label">REQUEST ID:</span>
+            <span class="code-val" id="modalApprovalReqId">--</span>
+          </div>
+          <div class="approval-meta-item">
+            <span class="meta-label">TOOL &amp; ACTION:</span>
+            <span class="code-val" id="modalApprovalAction">apply_change // apply_patch</span>
+          </div>
+          <div class="approval-meta-item">
+            <span class="meta-label">AFFECTED FILES:</span>
+            <span class="text-cyan" id="modalApprovalFiles">--</span>
+          </div>
+          <div class="approval-meta-item">
+            <span class="meta-label">RATIONALE:</span>
+            <span id="modalApprovalRationale">--</span>
+          </div>
+        </div>
+
+        <div class="modal-diff-box">
+          <div class="diff-header-mini">Unified Diff Preview</div>
+          <pre class="diff-pre-modal" id="modalApprovalDiff"><code>Diff preview loading...</code></pre>
+        </div>
+
+        <form class="approval-decision-form" id="approvalDecisionForm">
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="inputApproverName">Approver Identity</label>
+              <input type="text" id="inputApproverName" class="input-field" value="LeadSecurityOfficer" required>
+            </div>
+            <div class="form-group">
+              <label for="inputApprovalReason">Decision Rationale</label>
+              <input type="text" id="inputApprovalReason" class="input-field" value="Verified patch matches authorized test scope" required>
+            </div>
+          </div>
+          <div class="modal-footer modal-footer-approval">
+            <button type="button" class="btn btn-rose" id="btnModalDeny">Deny Authorization</button>
+            <button type="submit" class="btn btn-emerald btn-glow" id="btnModalApprove">Authorize &amp; Apply Patch</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW MISSION MODAL -->
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal-window card glass" id="newMissionModal">
       <div class="modal-header">
-        <h3 class="modal-title">Initialize SWE Mission</h3>
+        <h3 class="modal-title">Initialize Autonomous SWE Task</h3>
         <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
       </div>
       <form class="modal-form" id="createMissionForm">
         <div class="form-group">
-          <label for="inputObjective">Mission Objective</label>
-          <input type="text" id="inputObjective" class="input-field" placeholder="e.g., Repair failing test in math_lib" required value="Repair calculation defect and verify test addition">
+          <label for="inputObjective">Engineering Task Directive</label>
+          <input type="text" id="inputObjective" class="input-field" placeholder="e.g., Analyze failing test in authentication module and verify repair" required value="Analyze repository, synthesize repair patch, run tests, and verify authoritative fix.">
         </div>
         <div class="form-group">
           <label for="inputWorkspace">Workspace Root Path</label>
-          <input type="text" id="inputWorkspace" class="input-field" placeholder="e.g., C:/workspaces/repo" required value="C:/Users/LIKITH/ORION">
+          <input type="text" id="inputWorkspace" class="input-field" placeholder="e.g., C:/Projects/repo" required value="C:/Users/LIKITH/ORION">
         </div>
         <div class="form-group">
-          <label for="inputTargetFiles">Target Files (comma-separated)</label>
-          <input type="text" id="inputTargetFiles" class="input-field" placeholder="src/math_lib.py">
+          <label for="inputExecutionMode">Execution Mode</label>
+          <select id="inputExecutionMode" class="input-field select-field">
+            <option value="controlled">Controlled (Approval Guarded)</option>
+            <option value="autonomous">Autonomous (Auto-Approve)</option>
+          </select>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btnSubmitModal">Launch Mission</button>
+          <button type="submit" class="btn btn-cyan btn-glow" id="btnSubmitModal">Launch Mission</button>
         </div>
       </form>
     </div>

@@ -146,7 +146,7 @@ class ToolExecutor:
         except Exception as exc:
             error = str(exc)
 
-            if lifecycle is not None:
+            if lifecycle is not None and self._execution_repository is not None:
                 lifecycle.status = ToolExecutionStatus.FAILED
                 lifecycle.error = self._redact(error)
                 self._execution_repository.save(lifecycle)
@@ -168,7 +168,7 @@ class ToolExecutor:
                 execution_id=lifecycle.id if lifecycle else None,
             )
 
-        if lifecycle is not None:
+        if lifecycle is not None and self._execution_repository is not None:
             lifecycle.status = ToolExecutionStatus.COMPLETED
             lifecycle.output = self._redact(output)
             self._execution_repository.save(lifecycle)

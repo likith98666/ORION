@@ -114,6 +114,11 @@ class PatchProposal:
     raw_response: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def is_valid(self) -> bool:
+        """Return True if patch operations exist and all syntax validations pass."""
+        return len(self.operations) > 0 and all(r.valid for r in self.syntax_results)
+
     def summary(self) -> str:
         """Return a human-readable one-line summary of the patch proposal."""
         return (

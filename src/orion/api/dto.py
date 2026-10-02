@@ -22,6 +22,200 @@ class CreateMissionRequest:
 
 
 @dataclass(frozen=True)
+class TaskSubmissionRequest:
+    """Product-facing typed task submission request."""
+
+    task: str
+    workspace: str
+    execution_mode: str = "controlled"
+    target_files: tuple[str, ...] = ()
+    expected_requirements: tuple[str, ...] = ()
+    parameters: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not self.task or len(self.task.strip()) < 3:
+            raise ValueError("task must contain at least 3 non-whitespace characters.")
+        if not self.workspace or not self.workspace.strip():
+            raise ValueError("workspace path cannot be empty.")
+        if self.execution_mode not in ("controlled", "autonomous"):
+            raise ValueError(
+                f"Unsupported execution_mode: '{self.execution_mode}'. "
+                "Must be 'controlled' or 'autonomous'."
+            )
+
+    def to_create_mission_request(self) -> CreateMissionRequest:
+        return CreateMissionRequest(
+            objective=self.task.strip(),
+            workspace_path=self.workspace.strip(),
+            target_files=self.target_files,
+            expected_requirements=self.expected_requirements,
+            parameters=self.parameters,
+        )
+
+
+@dataclass(frozen=True)
+class TaskApprovalRequest:
+    """Interactive approval decision submission."""
+
+    decision: str = "approve"  # "approve" or "deny"
+    approver: str = "Operator"
+    reason: str | None = None
+    request_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.decision.lower() not in ("approve", "deny"):
+            raise ValueError(f"Invalid decision: '{self.decision}'. Must be 'approve' or 'deny'.")
+        if not self.approver or not self.approver.strip():
+            raise ValueError("approver name cannot be empty.")
+
+
+@dataclass(frozen=True)
+class TaskApprovalResponse:
+    """Interactive approval response acknowledgment."""
+
+    task_id: str
+    request_id: str
+    decision: str
+    approver: str
+    decided_at: str
+    status: str
+    reason: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "request_id": self.request_id,
+            "decision": self.decision,
+            "approver": self.approver,
+            "decided_at": self.decided_at,
+            "status": self.status,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True)
+class TaskExecutionResponse:
+    """Execution lifecycle and active agent telemetry."""
+
+    task_id: str
+    execution_id: str
+    lifecycle_state: str
+    current_stage: str | None
+    completed_stages: tuple[str, ...]
+    stages_total: int
+    stages_completed_count: int
+    active_agent: str | None
+    active_tool: str | None
+    approval_required: bool
+    pending_approval: dict[str, Any] | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "execution_id": self.execution_id,
+            "lifecycle_state": self.lifecycle_state,
+            "current_stage": self.current_stage,
+            "completed_stages": list(self.completed_stages),
+            "stages_total": self.stages_total,
+            "stages_completed_count": self.stages_completed_count,
+            "active_agent": self.active_agent,
+            "active_tool": self.active_tool,
+            "approval_required": self.approval_required,
+            "pending_approval": self.pending_approval,
+        }
+
+
+@dataclass(frozen=True)
+class TaskChangesResponse:
+    """Structured code changes and unified diff response."""
+
+    task_id: str
+    affected_files: tuple[str, ...]
+    operations: tuple[dict[str, Any], ...]
+    unified_diff: str
+    total_lines_added: int
+    total_lines_removed: int
+    validation_status: str
+    approval_status: str
+    application_status: str
+    rollback_status: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "affected_files": list(self.affected_files),
+            "operations": list(self.operations),
+            "unified_diff": self.unified_diff,
+            "total_lines_added": self.total_lines_added,
+            "total_lines_removed": self.total_lines_removed,
+            "validation_status": self.validation_status,
+            "approval_status": self.approval_status,
+            "application_status": self.application_status,
+            "rollback_status": self.rollback_status,
+        }
+
+
+@dataclass(frozen=True)
+class TaskTestsResponse:
+    """Controlled test execution results response."""
+
+    task_id: str
+    target: str
+    exit_code: int | None
+    passed: bool
+    duration: float
+    stdout: str
+    stderr: str
+    output_summary: str
+    executed: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "target": self.target,
+            "exit_code": self.exit_code,
+            "passed": self.passed,
+            "duration": self.duration,
+            "stdout": self.stdout,
+            "stderr": self.stderr,
+            "output_summary": self.output_summary,
+            "executed": self.executed,
+        }
+
+
+@dataclass(frozen=True)
+class RecoveryObservabilityResponse:
+    """Phase 6 Bounded Self-Healing Recovery telemetry response."""
+
+    task_id: str
+    failure_category: str | None
+    recovery_strategy: str | None
+    attempt_number: int
+    recovery_state: str
+    remaining_attempts: int
+    remaining_budget: dict[str, Any]
+    recovery_depth: int
+    termination_reason: str | None
+    rollback_performed: bool
+    history: tuple[dict[str, Any], ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "failure_category": self.failure_category,
+            "recovery_strategy": self.recovery_strategy,
+            "attempt_number": self.attempt_number,
+            "recovery_state": self.recovery_state,
+            "remaining_attempts": self.remaining_attempts,
+            "remaining_budget": self.remaining_budget,
+            "recovery_depth": self.recovery_depth,
+            "termination_reason": self.termination_reason,
+            "rollback_performed": self.rollback_performed,
+            "history": list(self.history),
+        }
+
+
+@dataclass(frozen=True)
 class EvidenceItemDTO:
     """DTO representing an evidence item with full provenance."""
 
@@ -59,7 +253,11 @@ class EvidenceItemDTO:
             trace_id=str(item.trace_id) if item.trace_id else None,
             workspace_root=str(item.workspace_root) if item.workspace_root else None,
             metadata=dict(item.metadata),
-            timestamp=item.timestamp.isoformat() if hasattr(item.timestamp, "isoformat") else str(item.timestamp),
+            timestamp=(
+                item.timestamp.isoformat()
+                if hasattr(item.timestamp, "isoformat")
+                else str(item.timestamp)
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -126,15 +324,21 @@ class MissionResponse:
     evaluation_status: str | None = None
     files_modified: tuple[str, ...] = ()
     evidence_counts: dict[str, int] = field(default_factory=dict)
+    execution_id: str = ""
+    lifecycle_state: str = "RECEIVED"
+    approval_required: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Convert DTO to dictionary."""
         return {
             "mission_id": self.mission_id,
             "task_id": self.task_id,
+            "execution_id": self.execution_id,
             "objective": self.objective,
             "workspace_root": self.workspace_root,
             "status": self.status,
+            "lifecycle_state": self.lifecycle_state,
+            "approval_required": self.approval_required,
             "current_stage": self.current_stage,
             "completed_stages": list(self.completed_stages),
             "stages_total": self.stages_total,

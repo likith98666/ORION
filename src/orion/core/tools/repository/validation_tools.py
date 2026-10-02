@@ -81,9 +81,19 @@ def execute_validation_command(
         timed_out = True
         exit_code = -1
         status = "timeout"
-        stdout = exc.stdout[:MAX_OUTPUT_CHARS] if exc.stdout else ""
+        raw_out = (
+            exc.stdout.decode("utf-8", errors="replace")
+            if isinstance(exc.stdout, bytes)
+            else (exc.stdout or "")
+        )
+        stdout = raw_out[:MAX_OUTPUT_CHARS]
+        raw_err = (
+            exc.stderr.decode("utf-8", errors="replace")
+            if isinstance(exc.stderr, bytes)
+            else (exc.stderr or "")
+        )
         timeout_msg = f"\nValidation execution timed out after {bounded_timeout} seconds."
-        stderr = (exc.stderr[:MAX_OUTPUT_CHARS] if exc.stderr else "") + timeout_msg
+        stderr = raw_err[:MAX_OUTPUT_CHARS] + timeout_msg
 
     except Exception as exc:
         duration = time.monotonic() - start_time
@@ -166,7 +176,10 @@ def build_run_tests_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="run_tests",
-        description="Execute automated tests within the workspace repository root using allowlisted pytest invocation.",
+        description=(
+            "Execute automated tests within the workspace repository root "
+            "using allowlisted pytest invocation."
+        ),
         permission=AgentPermission.CODE_EXECUTION,
         risk_level=ToolRiskLevel.MEDIUM,
         input_schema=schema,
@@ -224,7 +237,10 @@ def build_run_lint_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
     return ToolDefinition(
         name="run_lint",
-        description="Execute lint analysis within the workspace repository root using allowlisted linting tool.",
+        description=(
+            "Execute lint analysis within the workspace repository root "
+            "using allowlisted linting tool."
+        ),
         permission=AgentPermission.CODE_EXECUTION,
         risk_level=ToolRiskLevel.MEDIUM,
         input_schema=schema,
@@ -277,7 +293,10 @@ def build_run_typecheck_tool(workspace: Workspace | None = None) -> ToolDefiniti
 
     return ToolDefinition(
         name="run_typecheck",
-        description="Execute type check analysis within the workspace repository root using allowlisted mypy invocation.",
+        description=(
+            "Execute type check analysis within the workspace repository root "
+            "using allowlisted mypy invocation."
+        ),
         permission=AgentPermission.CODE_EXECUTION,
         risk_level=ToolRiskLevel.MEDIUM,
         input_schema=schema,

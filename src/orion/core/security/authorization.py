@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from orion.core.agents.models import Agent
 from orion.core.agents.permissions import AgentPermission
 from orion.core.security.audit import AuditEventType
@@ -139,8 +141,8 @@ class AuthorizationService:
         self,
         *,
         event_type: AuditEventType,
-        agent_id,
-        execution_id,
+        agent_id: UUID,
+        execution_id: UUID | None,
         resource: str,
         action: str,
         risk_level: ToolRiskLevel,

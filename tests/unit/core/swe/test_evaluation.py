@@ -229,9 +229,10 @@ def test_recovery_transparency_preserves_attempts():
 
 
 def test_swe_report_rejects_incompatible_evaluation_status():
-    """Verify SWEReport raises UnverifiedSuccessError if status is verified_success but evaluation failed."""
+    """Verify SWEReport raises UnverifiedSuccessError if status is verified_success
+    but evaluation failed.
+    """
     ledger = _build_passing_ledger()
-    evaluator = SWEEvaluator()
 
     # Create failed evaluation
     failed_evaluation = MissionEvaluation(
@@ -265,11 +266,16 @@ def test_swe_report_rejects_incompatible_evaluation_status():
             status="verified_success",
             evaluation=failed_evaluation,
         )
-    assert "Cannot mark SWE report as 'verified_success' when evaluation status is 'fail'" in str(exc_info.value)
+    assert (
+        "Cannot mark SWE report as 'verified_success' when evaluation status is 'fail'"
+        in str(exc_info.value)
+    )
 
 
 def test_missing_required_evidence_prevents_verified_success():
-    """Verify missing required evidence categories prevents EvaluationStatus.PASS and verified_success."""
+    """Verify missing required evidence categories prevents EvaluationStatus.PASS and
+    verified_success.
+    """
     ledger = EvidenceLedger()
     # Record inspection, test, and verification, but OMIT PROPOSED_CHANGE and FILE_CHANGE
     ledger.record_observed(
@@ -302,7 +308,9 @@ def test_missing_required_evidence_prevents_verified_success():
 
     assert evaluation.criteria.evidence_complete is False
     assert evaluation.status == EvaluationStatus.INCONCLUSIVE
-    assert "missing required evidence categories [proposed_change]" in " ".join(evaluation.criteria.details)
+    assert "missing required evidence categories [proposed_change]" in " ".join(
+        evaluation.criteria.details
+    )
 
     with pytest.raises(UnverifiedSuccessError) as exc_info:
         SWEReport.create(
@@ -391,7 +399,9 @@ def test_no_fabricated_metrics_and_metrics_validation():
 
 
 def test_test_results_not_treated_as_verification():
-    """Verify passing test results alone are not treated as verification and cannot pass evaluation."""
+    """Verify passing test results alone are not treated as verification and cannot
+    pass evaluation.
+    """
     ledger = EvidenceLedger()
     ledger.record_observed(
         stage=SWETaskStage.RUN_TESTS,

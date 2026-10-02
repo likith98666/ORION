@@ -22,15 +22,6 @@ from orion.core.swe.cognitive import (
     refresh_patch_approval,
     request_patch_approval,
 )
-from orion.core.swe.execution import (
-    ControlledExecutionAuthority,
-    ControlledTestResult,
-    PatchApplicationAuthority,
-    PatchApplicationResult,
-    PatchVerificationAuthority,
-    Phase5ExecutionOutcome,
-    UnapprovedPatchError,
-)
 from orion.core.swe.errors import (
     DisallowedFileModificationError,
     DisallowedStageToolError,
@@ -48,8 +39,25 @@ from orion.core.swe.evidence import (
     EvidenceLedger,
     SWEReport,
 )
+from orion.core.swe.execution import (
+    ControlledExecutionAuthority,
+    ControlledTestResult,
+    PatchApplicationAuthority,
+    PatchApplicationResult,
+    PatchVerificationAuthority,
+    Phase5ExecutionOutcome,
+    UnapprovedPatchError,
+)
 from orion.core.swe.formulation import ProposedFixPlan
 from orion.core.swe.graph import SWETaskGraph
+from orion.core.swe.recovery import (
+    FailureCategory,
+    RecoveryAuditReport,
+    RecoveryBudget,
+    RecoveryPolicy,
+    RecoveryStrategy,
+    SWERecoveryCoordinator,
+)
 from orion.core.swe.stages import (
     FILE_MODIFICATION_TOOLS,
     SWETaskStage,
@@ -136,6 +144,8 @@ class SWEWorkflowCoordinator:
         self._patch_applier: PatchApplicationAuthority | None = None
         self._controlled_runner: ControlledExecutionAuthority | None = None
         self._patch_verifier: PatchVerificationAuthority | None = None
+        self._last_recovery_report: RecoveryAuditReport | None = None
+        self._swe_recovery_coordinator: SWERecoveryCoordinator | None = None
 
     @property
     def workspace(self) -> Workspace:
@@ -247,6 +257,31 @@ class SWEWorkflowCoordinator:
             )
         return self._patch_verifier
 
+    @property
+    def last_recovery_report(self) -> RecoveryAuditReport | None:
+        """Return the most recent Phase 6 bounded recovery report."""
+        return self._last_recovery_report
+
+    @property
+    def swe_recovery_coordinator(self) -> SWERecoveryCoordinator:
+        """Return or lazily construct the SWERecoveryCoordinator."""
+        if self._swe_recovery_coordinator is None:
+            approval_svc = getattr(self._tool_executor, "_approval_service", None)
+            if approval_svc is None:
+                raise ValueError("ApprovalService is required for SWERecoveryCoordinator.")
+            self._swe_recovery_coordinator = SWERecoveryCoordinator(
+                workspace=self._workspace,
+                patch_applier=self.patch_application_authority,
+                execution_runner=self.controlled_execution_authority,
+                verification_authority=self.patch_verification_authority,
+                recovery_manager=self.patch_application_authority.recovery_manager,
+                approval_service=approval_svc,
+                cognitive_service=self._cognitive_service,
+                ledger=self._ledger,
+                telemetry_context=self._telemetry_context,
+            )
+        return self._swe_recovery_coordinator
+
     def advance_stage(self, stage: SWETaskStage) -> None:
         """Advance the workflow state machine to the specified stage."""
         if not isinstance(stage, SWETaskStage):
@@ -259,7 +294,8 @@ class SWEWorkflowCoordinator:
             prior_stage = STAGE_ORDER[prior_idx]
             if prior_stage not in self._completed_stages:
                 raise WorkflowSequenceError(
-                    f"Cannot advance to '{stage.value}' before completing prior stage '{prior_stage.value}'."
+                    f"Cannot advance to '{stage.value}' before "
+                    f"completing prior stage '{prior_stage.value}'."
                 )
 
         if self._current_stage is not None and self._current_stage not in self._completed_stages:
@@ -270,8 +306,10 @@ class SWEWorkflowCoordinator:
     def complete_stage(self, stage: SWETaskStage) -> None:
         """Explicitly mark a stage as completed."""
         if stage != self._current_stage:
+            curr_val = getattr(self._current_stage, "value", None)
             raise WorkflowSequenceError(
-                f"Cannot complete stage '{stage.value}' because current active stage is '{getattr(self._current_stage, 'value', None)}'."
+                f"Cannot complete stage '{stage.value}' because "
+                f"current active stage is '{curr_val}'."
             )
         if stage not in self._completed_stages:
             self._completed_stages.append(stage)
@@ -324,7 +362,12 @@ class SWEWorkflowCoordinator:
             added = out.get("lines_added", 0)
             removed = out.get("lines_removed", 0)
             summary = f"Diff on '{path}': {'identical' if identical else f'+{added} -{removed}'}"
-            meta = {"path": path, "identical": identical, "lines_added": added, "lines_removed": removed}
+            meta = {
+                "path": path,
+                "identical": identical,
+                "lines_added": added,
+                "lines_removed": removed,
+            }
         elif tool_name in ("write_file", "apply_change"):
             cat = EvidenceCategory.FILE_CHANGE
             path = arguments.get("path", "")
@@ -353,7 +396,11 @@ class SWEWorkflowCoordinator:
             status_str = out.get("status", "unknown")
             stdout_sample = str(out.get("stdout", ""))[:500].strip()
             stderr_sample = str(out.get("stderr", ""))[:500].strip()
-            out_summary = f"{stdout_sample}\n{stderr_sample}".strip() if (stdout_sample or stderr_sample) else ""
+            out_summary = (
+                f"{stdout_sample}\n{stderr_sample}".strip()
+                if (stdout_sample or stderr_sample)
+                else ""
+            )
             summary = f"Ran tests target='{target}' exit_code={exit_code} status={status_str}"
             meta = {
                 "target": target,
@@ -383,7 +430,8 @@ class SWEWorkflowCoordinator:
             self.advance_stage(stage)
         elif self._current_stage != stage:
             raise WorkflowSequenceError(
-                f"Attempted to execute tool in stage '{stage.value}', but workflow is currently at '{self._current_stage.value}'."
+                f"Attempted to execute tool in stage '{stage.value}', "
+                f"but workflow is currently at '{self._current_stage.value}'."
             )
 
         self.validate_tool_for_stage(stage, tool_name)
@@ -415,7 +463,10 @@ class SWEWorkflowCoordinator:
                     stderr = str(getattr(result.output, "stderr", ""))
                 combined = f"{stdout}\n{stderr}".strip()
                 self._last_test_output = combined[:65536]
-                content = f"Ran tests target='{arguments.get('target', '')}' (exit_code={safe_meta.get('exit_code')}, status={safe_meta.get('status')})."
+                target_str = arguments.get('target', '')
+                ec_val = safe_meta.get('exit_code')
+                st_val = safe_meta.get('status')
+                content = f"Ran tests target='{target_str}' (exit_code={ec_val}, status={st_val})."
             else:
                 content = f"Executed {tool_name} successfully."
 
@@ -809,11 +860,12 @@ class SWEWorkflowCoordinator:
                 f"Cannot run tests during stage '{getattr(self._current_stage, 'value', None)}'."
             )
 
-        effective_execution_id = (
-            execution_id
-            or (self._last_application_result.execution_id if self._last_application_result else None)
-            or uuid4()
+        last_app_exec_id = (
+            self._last_application_result.execution_id
+            if self._last_application_result
+            else None
         )
+        effective_execution_id = execution_id or last_app_exec_id or uuid4()
         result = self.controlled_execution_authority.run_tests(
             target=target,
             timeout_seconds=timeout_seconds,
@@ -841,11 +893,12 @@ class SWEWorkflowCoordinator:
         if self._last_application_result is None:
             raise WorkflowSequenceError("Cannot verify without prior patch application result.")
 
-        effective_execution_id = (
-            execution_id
-            or (self._last_application_result.execution_id if self._last_application_result else None)
-            or uuid4()
+        last_app_exec_id = (
+            self._last_application_result.execution_id
+            if self._last_application_result
+            else None
         )
+        effective_execution_id = execution_id or last_app_exec_id or uuid4()
         outcome = self.patch_verification_authority.verify_execution(
             application_result=self._last_application_result,
             test_result=self._last_controlled_test_result,
@@ -856,6 +909,57 @@ class SWEWorkflowCoordinator:
         self._last_verification_result = outcome.verification_result
         return outcome
 
+    def initiate_bounded_recovery(
+        self,
+        agent: Agent,
+        failure: Any = None,
+        test_target: str = "",
+        expected_requirements: list[str] | None = None,
+        budget: RecoveryBudget | None = None,
+        policy: RecoveryPolicy | None = None,
+        claimed_category: FailureCategory | None = None,
+        claimed_strategy: RecoveryStrategy | None = None,
+        execution_id: UUID | None = None,
+    ) -> RecoveryAuditReport:
+        """Execute bounded self-healing recovery loop using SWERecoveryCoordinator."""
+        effective_execution_id = execution_id or uuid4()
+        outcome_vr = (
+            self._last_phase5_outcome.verification_result
+            if self._last_phase5_outcome
+            else None
+        )
+        test_fail = (
+            self._last_controlled_test_result
+            if self._last_controlled_test_result and not self._last_controlled_test_result.passed
+            else None
+        )
+        app_fail = (
+            self._last_application_result
+            if self._last_application_result and not self._last_application_result.is_applied
+            else None
+        )
+        effective_failure = (
+            failure or outcome_vr or test_fail or app_fail or self._last_verification_result
+        )
+
+        coord = self.swe_recovery_coordinator
+        report = coord.run_bounded_recovery(
+            agent=agent,
+            initial_failure=effective_failure,
+            current_patch=self._last_patch_proposal,
+            current_fix=self._last_fix_proposal,
+            task_id=self._task_id,
+            execution_id=effective_execution_id,
+            test_target=test_target,
+            expected_requirements=expected_requirements,
+            claimed_category=claimed_category,
+            claimed_strategy=claimed_strategy,
+            budget=budget,
+            policy=policy,
+        )
+        self._last_recovery_report = report
+        return report
+
     def record_formulation(
         self,
         plan: ProposedFixPlan,
@@ -863,8 +967,9 @@ class SWEWorkflowCoordinator:
     ) -> EvidenceItem:
         """Record the proposed change plan formulated during FORMULATE_FIX."""
         if self._current_stage != SWETaskStage.FORMULATE_FIX:
+            curr_val = getattr(self._current_stage, "value", None)
             raise WorkflowSequenceError(
-                f"Cannot record formulation plan during stage '{getattr(self._current_stage, 'value', None)}'."
+                f"Cannot record formulation plan during stage '{curr_val}'."
             )
 
         if not isinstance(plan, ProposedFixPlan):
@@ -918,8 +1023,9 @@ class SWEWorkflowCoordinator:
     ) -> VerificationResult:
         """Formally verify the execution outcome using ORION VerificationEngine."""
         if self._current_stage != SWETaskStage.VERIFY:
+            curr_val = getattr(self._current_stage, "value", None)
             raise WorkflowSequenceError(
-                f"Cannot execute verify_fix during stage '{getattr(self._current_stage, 'value', None)}'."
+                f"Cannot execute verify_fix during stage '{curr_val}'."
             )
 
         output_to_verify = custom_output if custom_output is not None else self._last_test_output
@@ -1036,10 +1142,11 @@ class SWEWorkflowCoordinator:
         summary: str = "",
         required_categories: Sequence[EvidenceCategory] | None = None,
     ) -> SWEReport:
-        """Generate structured mission report with evidence categorization and deterministic evaluation."""
+        """Generate structured mission report with evidence categorization and evaluation."""
         if self._current_stage != SWETaskStage.GENERATE_REPORT:
+            curr_val = getattr(self._current_stage, "value", None)
             raise WorkflowSequenceError(
-                f"Cannot generate report during stage '{getattr(self._current_stage, 'value', None)}'."
+                f"Cannot generate report during stage '{curr_val}'."
             )
 
         evaluation = self.evaluate_mission(required_categories=required_categories)

@@ -91,14 +91,18 @@ def test_path_traversal_rejection(secure_workspace: Workspace, full_swe_agent: A
     executor = ToolExecutor(registry=registry)
 
     # Absolute path escape outside workspace
-    outside_path = "C:/Windows/System32/drivers/etc/hosts" if Path("C:/").exists() else "/etc/passwd"
+    outside_path = (
+        "C:/Windows/System32/drivers/etc/hosts" if Path("C:/").exists() else "/etc/passwd"
+    )
     res = executor.execute(
         agent=full_swe_agent,
         tool_name="read_file",
         arguments={"path": outside_path},
     )
     assert res.success is False
-    assert any(term in str(res.error).lower() for term in ("outside", "boundary", "security", "path"))
+    assert any(
+        term in str(res.error).lower() for term in ("outside", "boundary", "security", "path")
+    )
 
     # Relative path traversal escape
     res_rel = executor.execute(
@@ -123,7 +127,10 @@ def test_protected_files_rejection(secure_workspace: Workspace, full_swe_agent: 
         arguments={"path": ".env"},
     )
     assert res_read.success is False
-    assert any(term in str(res_read.error).lower() for term in ("protect", "secret", "denied", "permission"))
+    assert any(
+        term in str(res_read.error).lower()
+        for term in ("protect", "secret", "denied", "permission")
+    )
 
     # Attempt to write .env -> approval requested, then rejected by handler
     exec_id = uuid4()
@@ -144,7 +151,10 @@ def test_protected_files_rejection(secure_workspace: Workspace, full_swe_agent: 
         approval_id=exc_info.value.request_id,
     )
     assert res_write.success is False
-    assert any(term in str(res_write.error).lower() for term in ("protect", "secret", "denied", "permission"))
+    assert any(
+        term in str(res_write.error).lower()
+        for term in ("protect", "secret", "denied", "permission")
+    )
 
 
 def test_secret_redaction_in_metadata():
@@ -171,7 +181,9 @@ def test_secret_redaction_in_metadata():
     assert sanitized["nested"]["count"] == 42
 
 
-def test_stage_level_tool_permission_enforcement(secure_workspace: Workspace, full_swe_agent: Agent):
+def test_stage_level_tool_permission_enforcement(
+    secure_workspace: Workspace, full_swe_agent: Agent
+):
     """Verify coordinator prohibits file modification tools during read-only stages."""
     registry = InMemoryToolRegistry()
     register_repository_tools(registry, secure_workspace)

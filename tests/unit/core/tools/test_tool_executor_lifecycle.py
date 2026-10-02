@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 from orion.core.agents.capabilities import AgentCapability
 from orion.core.agents.models import Agent
@@ -133,4 +133,23 @@ def test_tool_executor_preserves_existing_behavior_without_repository():
 
     assert result.success is True
     assert result.output == "hello"
+    assert result.execution_id is None
+
+
+def test_tool_executor_failure_without_repository_does_not_crash():
+    agent = create_agent()
+
+    def failing_tool(arguments):
+        raise ValueError("failing without repository")
+
+    executor = ToolExecutor(create_registry(failing_tool))
+
+    result = executor.execute(
+        agent=agent,
+        tool_name="echo",
+        arguments={},
+    )
+
+    assert result.success is False
+    assert result.error == "failing without repository"
     assert result.execution_id is None

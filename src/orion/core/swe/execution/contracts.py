@@ -159,6 +159,15 @@ class ControlledTestResult:
     def passed(self) -> bool:
         return self.exit_code == 0 and self.status == "passed" and not self.timed_out
 
+    @property
+    def output_summary(self) -> str:
+        """Return human-readable summary of test execution outcome."""
+        if self.passed:
+            return f"Tests passed ({self.duration_seconds:.2f}s)"
+        if self.timed_out:
+            return f"Tests timed out after {self.duration_seconds:.2f}s"
+        return f"Tests failed with exit code {self.exit_code} ({self.duration_seconds:.2f}s)"
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "execution_id": str(self.execution_id),

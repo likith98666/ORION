@@ -82,7 +82,8 @@ def test_swe_report_rejects_verified_success_without_verified_evidence():
         content="Test command completed with exit code 0",
     )
 
-    # Attempting to build a report with status 'verified_success' without verified evidence must fail
+    # Attempting to build a report with status 'verified_success' without verified
+    # evidence must fail
     with pytest.raises(UnverifiedSuccessError) as exc_info:
         SWEReport.create(
             mission_id=mission_id,
@@ -95,7 +96,7 @@ def test_swe_report_rejects_verified_success_without_verified_evidence():
 
 
 def test_swe_report_allows_verified_success_when_verified_evidence_exists():
-    """Verify SWEReport successfully validates verified_success when VERIFIED evidence is recorded."""
+    """Verify SWEReport allows verified_success when VERIFIED evidence is recorded."""
     mission_id = uuid4()
     task_id = uuid4()
     workspace_root = "/workspace/repo"

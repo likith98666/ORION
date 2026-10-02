@@ -16,7 +16,7 @@ from pathlib import Path
 def check_python_version() -> tuple[bool, str]:
     major, minor, micro = sys.version_info[:3]
     version_str = f"{major}.{minor}.{micro}"
-    if sys.version_info >= (3, 12):
+    if sys.version_info >= (3, 12):  # noqa: UP036
         return True, f"Python {version_str} (>= 3.12 requirement satisfied)"
     return False, f"Python {version_str} is below required 3.12"
 

@@ -309,7 +309,10 @@ def test_benchmark_test_repair(tmp_path: Path):
     coordinator.record_claimed(
         stage=SWETaskStage.ANALYZE_FAILURE,
         source="agent",
-        content="Diagnosed: test_status has outdated expected status 'INITIALIZING' instead of 'ONLINE'.",
+        content=(
+            "Diagnosed: test_status has outdated expected status 'INITIALIZING' "
+            "instead of 'ONLINE'."
+        ),
     )
     coordinator.complete_stage(SWETaskStage.ANALYZE_FAILURE)
 
@@ -369,7 +372,9 @@ def test_benchmark_test_repair(tmp_path: Path):
     coordinator.complete_stage(SWETaskStage.VERIFY)
 
     coordinator.advance_stage(SWETaskStage.GENERATE_REPORT)
-    report = coordinator.generate_report(summary="Repaired stale test assertion in test_service.py.")
+    report = coordinator.generate_report(
+        summary="Repaired stale test assertion in test_service.py."
+    )
 
     assert report.status == "verified_success"
     assert report.evaluation.status == EvaluationStatus.PASS
@@ -411,7 +416,10 @@ def test_benchmark_security_boundary_enforcement(tmp_path: Path):
         arguments={"path": "../secret.env"},
     )
     assert tool_res.success is False
-    assert any(term in str(tool_res.error).lower() for term in ("outside", "boundary", "security", "path"))
+    assert any(
+        term in str(tool_res.error).lower()
+        for term in ("outside", "boundary", "security", "path")
+    )
 
     # 2. Direct workspace containment validation raises PathOutsideWorkspaceError
     with pytest.raises(PathOutsideWorkspaceError):

@@ -48,6 +48,11 @@ select = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
-warn_unused_configs = true
+warn_unused_configs = false
 mypy_path = ["src"]
 explicit_package_bases = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true

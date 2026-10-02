@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
-from orion.core.agents.execution_manager import AgentExecutionStatus
-from orion.core.agents.executions import AgentExecution
+from orion.core.agents.executions import AgentExecution, AgentExecutionStatus
 from orion.core.recovery.failures import Failure
 from orion.core.recovery.recovery_action import RecoveryAction
 from orion.core.recovery.recovery_context import RecoveryContext

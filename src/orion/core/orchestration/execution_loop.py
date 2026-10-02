@@ -1,9 +1,9 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from orion.config.model_config import ModelConfig
-from orion.core.agents.execution_manager import AgentExecutionStatus
 from orion.core.agents.execution_service import AgentExecutionService
-from orion.core.agents.executions import AgentExecution
+from orion.core.agents.executions import AgentExecution, AgentExecutionStatus
 from orion.core.agents.tasks import AgentTask, AgentTaskStatus
 from orion.core.memory.context_provider import MemoryContextProvider
 from orion.core.memory.execution_context import ExecutionMemoryContext
@@ -455,7 +455,7 @@ class ExecutionLoop:
     @staticmethod
     def _find_task(
         tasks: list[AgentTask],
-        task_id,
+        task_id: UUID,
     ) -> AgentTask:
         """Find the task associated with an execution."""
 

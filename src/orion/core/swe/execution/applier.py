@@ -19,6 +19,7 @@ from orion.core.swe.evidence import EvidenceCategory, EvidenceLedger
 from orion.core.swe.execution.contracts import (
     AppliedOperationRecord,
     PatchApplicationResult,
+    PatchRecoveryPoint,
     PostApplyIntegrityResult,
 )
 from orion.core.swe.execution.errors import (
@@ -60,6 +61,7 @@ class PatchApplicationAuthority:
         self._recovery_manager = recovery_manager or PatchRecoveryManager()
         self._ledger = ledger
         self._telemetry_context = telemetry_context or TelemetryContext()
+        self._last_recovery_point: PatchRecoveryPoint | None = None
 
     @property
     def workspace(self) -> Workspace:
@@ -76,6 +78,11 @@ class PatchApplicationAuthority:
     @property
     def recovery_manager(self) -> PatchRecoveryManager:
         return self._recovery_manager
+
+    @property
+    def last_recovery_point(self) -> PatchRecoveryPoint | None:
+        """Return the most recently captured pre-apply recovery point."""
+        return self._last_recovery_point
 
     def compute_patch_fingerprint(self, proposal: PatchProposal) -> str:
         """Compute deterministic SHA-256 fingerprint of patch proposal contents."""
@@ -282,6 +289,7 @@ class PatchApplicationAuthority:
                 patch_proposal=proposal,
                 execution_id=effective_execution_id,
             )
+            self._last_recovery_point = recovery_point
 
             completed_records: list[AppliedOperationRecord] = []
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from orion.core.security.approval import (
@@ -263,7 +264,7 @@ class ApprovalService:
         event_type: AuditEventType,
         request: ApprovalRequest,
         outcome: str,
-        details: dict,
+        details: dict[str, Any],
     ) -> None:
         if self._audit_service is None:
             return

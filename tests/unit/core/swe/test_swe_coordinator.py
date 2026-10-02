@@ -59,13 +59,25 @@ def _setup_coordinator(tmp_path: Path, with_approval=False):
     registry = InMemoryToolRegistry()
 
     # Register mock versions of the canonical tools
-    registry.register(_create_mock_tool("list_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW))
-    registry.register(_create_mock_tool("read_file", AgentPermission.READ_FILES, ToolRiskLevel.LOW))
-    registry.register(_create_mock_tool("search_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW))
+    registry.register(
+        _create_mock_tool("list_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
+    )
+    registry.register(
+        _create_mock_tool("read_file", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
+    )
+    registry.register(
+        _create_mock_tool("search_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
+    )
     registry.register(_create_mock_tool("diff", AgentPermission.READ_FILES, ToolRiskLevel.LOW))
-    registry.register(_create_mock_tool("write_file", AgentPermission.WRITE_FILES, ToolRiskLevel.HIGH))
-    registry.register(_create_mock_tool("apply_change", AgentPermission.WRITE_FILES, ToolRiskLevel.HIGH))
-    registry.register(_create_mock_tool("run_tests", AgentPermission.CODE_EXECUTION, ToolRiskLevel.MEDIUM))
+    registry.register(
+        _create_mock_tool("write_file", AgentPermission.WRITE_FILES, ToolRiskLevel.HIGH)
+    )
+    registry.register(
+        _create_mock_tool("apply_change", AgentPermission.WRITE_FILES, ToolRiskLevel.HIGH)
+    )
+    registry.register(
+        _create_mock_tool("run_tests", AgentPermission.CODE_EXECUTION, ToolRiskLevel.MEDIUM)
+    )
 
     approval_service = None
     if with_approval:
@@ -121,7 +133,10 @@ def test_coordinator_enforces_stage_progression(tmp_path: Path):
     # Attempting to jump directly to IMPLEMENT_CHANGE must fail
     with pytest.raises(WorkflowSequenceError) as exc_info:
         coordinator.advance_stage(SWETaskStage.IMPLEMENT_CHANGE)
-    assert "Cannot advance to 'implement_change' before completing prior stage 'inspect_repository'" in str(exc_info.value)
+    assert (
+        "Cannot advance to 'implement_change' before completing prior stage 'inspect_repository'"
+        in str(exc_info.value)
+    )
 
     # Advance properly step by step
     coordinator.advance_stage(SWETaskStage.INSPECT_REPOSITORY)
@@ -147,7 +162,11 @@ def test_coordinator_tool_gating_inspect_repository(tmp_path: Path):
         description="Inspector agent",
         capabilities=frozenset({AgentCapability.REPOSITORY_ANALYSIS}),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({AgentPermission.READ_FILES, AgentPermission.WRITE_FILES, AgentPermission.CODE_EXECUTION})
+            frozenset({
+                AgentPermission.READ_FILES,
+                AgentPermission.WRITE_FILES,
+                AgentPermission.CODE_EXECUTION,
+            })
         ),
     )
 
@@ -191,7 +210,11 @@ def test_coordinator_tool_gating_analyze_failure(tmp_path: Path):
         description="Debugging agent",
         capabilities=frozenset({AgentCapability.SOFTWARE_DEBUGGING}),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({AgentPermission.READ_FILES, AgentPermission.CODE_EXECUTION, AgentPermission.WRITE_FILES})
+            frozenset({
+                AgentPermission.READ_FILES,
+                AgentPermission.CODE_EXECUTION,
+                AgentPermission.WRITE_FILES,
+            })
         ),
     )
 
@@ -238,7 +261,7 @@ def test_coordinator_formulate_fix_recording(tmp_path: Path):
 
 
 def test_coordinator_implement_change_approval_enforcement(tmp_path: Path):
-    """Verify write tools require approval during IMPLEMENT_CHANGE when approval service is active."""
+    """Verify write tools require approval during IMPLEMENT_CHANGE when approval active."""
     coordinator, approval_service = _setup_coordinator(tmp_path, with_approval=True)
 
     coordinator.advance_stage(SWETaskStage.INSPECT_REPOSITORY)
@@ -292,7 +315,7 @@ def test_coordinator_implement_change_approval_enforcement(tmp_path: Path):
 
 
 def test_coordinator_verification_and_recovery(tmp_path: Path):
-    """Verify verification records VERIFIED on pass, and failure delegates to RecoveryCoordinator."""
+    """Verify verification records VERIFIED on pass, and failure delegates to recovery."""
     coordinator, _ = _setup_coordinator(tmp_path)
 
     # Fast-forward through stages to RUN_TESTS
