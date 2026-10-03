@@ -1053,7 +1053,27 @@ class MissionAPIService:
             if lifecycle == "CANCELLED":
                 state = "CANCELLED"
             elif stage_enum and stage_enum in completed:
-                state = "VERIFIED" if name == "verify" else "COMPLETED"
+                if name == "verify":
+                    verif_items = record.coordinator.ledger.get_items(
+                        category=EvidenceCategory.VERIFICATION_RESULT
+                    )
+                    has_verified = any(
+                        item.level == EvidenceLevel.VERIFIED for item in verif_items
+                    )
+                    state = "VERIFIED" if has_verified else "FAILED"
+                elif name == "run_tests":
+                    test_items = record.coordinator.ledger.get_items(
+                        category=EvidenceCategory.TEST_RESULT
+                    )
+                    last_test = test_items[-1] if test_items else None
+                    test_passed = (
+                        last_test.metadata.get("passed", False)
+                        if last_test
+                        else False
+                    )
+                    state = "COMPLETED" if test_passed else "FAILED"
+                else:
+                    state = "COMPLETED"
             elif name == "approval_gate":
                 if SWETaskStage.IMPLEMENT_CHANGE in completed:
                     state = "COMPLETED"

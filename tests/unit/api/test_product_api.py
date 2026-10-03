@@ -517,3 +517,29 @@ def test_api_cancel_mission(product_server):
         assert mission_data["status"] == "cancelled"
         assert mission_data["lifecycle_state"] == "CANCELLED"
 
+
+def test_execution_graph_node_states_reflect_ledger_truth(tmp_path: Path):
+    """Verify get_execution_graph node states reflect actual verification and test evidence."""
+    repo = tmp_path / "valid_workspace"
+    repo.mkdir(parents=True, exist_ok=True)
+    (repo / "sample.py").write_text("def hello():\n    return 'world'\n", encoding="utf-8")
+
+    service = MissionAPIService()
+    resp = service.submit_task(TaskSubmissionRequest(task="Test task", workspace=str(repo)))
+    mission_id = resp.task_id
+
+    record = service._get_record(UUID(mission_id))
+    assert record is not None
+    from orion.core.swe.stages import SWETaskStage
+
+    record.coordinator._completed_stages.append(SWETaskStage.RUN_TESTS)
+    record.coordinator._completed_stages.append(SWETaskStage.VERIFY)
+
+    graph = service.get_execution_graph(UUID(mission_id))
+    assert graph is not None
+    node_map = {n.id: n.state for n in graph.nodes}
+
+    # Since no tests passed and no verified evidence was emitted in ledger, states must be FAILED
+    assert node_map["run_tests"] == "FAILED"
+    assert node_map["verify"] == "FAILED"
+

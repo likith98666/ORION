@@ -212,3 +212,85 @@ def test_ui_js_api_bindings_and_event_listeners():
     ]
     for ev in required_events:
         assert ev in app_js
+
+
+def test_interactive_product_experience_contracts():
+    """Verify contracts for interactive Demo Center, Architecture Explorer,
+    Product Tour, and Presentation Mode.
+    """
+    index_html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    app_css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+    app_js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+
+    # 1. Landing Screen Actions
+    assert 'id="btnEnterOrion"' in index_html
+    assert 'id="btnIntroDemo"' in index_html
+    assert 'id="btnIntroArch"' in index_html
+    assert 'id="btnIntroMission"' in index_html
+
+    # 2. Mission Templates Quick-Launch
+    assert 'id="missionTemplatesBar"' in index_html
+    assert 'data-task="Fix Calculator Addition Offset"' in index_html
+    assert 'data-task="Resolve Validator Syntax AST Error"' in index_html
+    assert 'data-task="Repair Cache Expiration Check"' in index_html
+    assert 'data-task="Enforce Path Traversal Boundary"' in index_html
+    assert 'data-task="Autonomous Self-Healing Recovery"' in index_html
+
+    # 3. Timeline Replay Bar
+    assert 'id="timelineReplayBar"' in index_html
+    assert 'id="timelineReplayScrubber"' in index_html
+    assert 'id="btnReplayPrev"' in index_html
+    assert 'id="btnReplayNext"' in index_html
+    assert 'id="btnReplayLive"' in index_html
+    assert 'id="replayStepCounter"' in index_html
+
+    # 4. Demo Center & Player
+    assert 'id="tab-demo"' in index_html
+    assert 'id="demoScenariosGrid"' in index_html
+    assert 'id="btnDemoPlay"' in index_html
+    assert 'id="btnDemoRestart"' in index_html
+    assert 'id="btnDemoPrevStage"' in index_html
+    assert 'id="btnDemoNextStage"' in index_html
+    assert 'id="demoScrubber"' in index_html
+    assert 'id="demoSpeedSelect"' in index_html
+    assert 'id="demoTimelineTrack"' in index_html
+    assert 'id="demoStageViewport"' in index_html
+    assert 'id="btnDemoRunReal"' in index_html
+    assert "FROZEN DEMO" in index_html or "DEMONSTRATION SCENARIO" in index_html
+
+    # 5. Architecture Explorer Modal
+    assert 'id="architectureModal"' in index_html
+    assert 'id="archPipelineFlow"' in index_html
+    assert 'id="archDetailPanel"' in index_html
+    assert 'id="btnOpenArchitecture"' in index_html
+    assert 'id="btnArchClose"' in index_html
+
+    # 6. Guided Product Tour
+    assert 'id="productTourCard"' in index_html
+    assert 'id="tourStepBadge"' in index_html
+    assert 'id="tourTitle"' in index_html
+    assert 'id="tourDescription"' in index_html
+    assert 'id="btnTourPrev"' in index_html
+    assert 'id="btnTourNext"' in index_html
+    assert 'id="btnTourClose"' in index_html
+    assert 'id="btnTourSkip"' in index_html
+    assert 'id="btnHelpTour"' in index_html
+
+    # 7. Presentation Mode & Toasts
+    assert 'id="btnPresentationMode"' in index_html
+    assert 'id="presentationBanner"' in index_html
+    assert 'id="toastContainer"' in index_html
+    assert ".presentation-mode" in app_css
+    assert ".toast-container" in app_css
+    assert ".toast-item" in app_css
+
+    # 8. JS Demo Scenarios Ground Truth Integrity
+    assert "DEMO_SCENARIOS" in app_js
+    assert "SWE-BUG-001" in app_js
+    assert "SWE-SYN-001" in app_js
+    assert "SWE-REG-001" in app_js
+    assert "SWE-SEC-001" in app_js
+    assert "SWE-REC-001" in app_js
+    assert "SUBSYSTEM_SPECS" in app_js
+    assert "TOUR_STEPS" in app_js
+    assert "showToast" in app_js
