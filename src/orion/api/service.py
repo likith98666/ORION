@@ -1062,9 +1062,13 @@ class MissionAPIService:
                     )
                     state = "VERIFIED" if has_verified else "FAILED"
                 elif name == "run_tests":
-                    test_items = record.coordinator.ledger.get_items(
-                        category=EvidenceCategory.TEST_RESULT
-                    )
+                    test_items = [
+                        item
+                        for item in record.coordinator.ledger.get_items(
+                            category=EvidenceCategory.TEST_RESULT
+                        )
+                        if item.source == "ControlledExecutionAuthority"
+                    ]
                     last_test = test_items[-1] if test_items else None
                     test_passed = (
                         last_test.metadata.get("passed", False)
@@ -1508,6 +1512,7 @@ class MissionAPIService:
                     {"target": "", "summary": "Starting controlled test execution"},
                 )
                 test_res = coord.run_controlled_tests(target="", timeout_seconds=30)
+                sel = coord.last_test_selection
                 self.emit_event(
                     mission_id,
                     "TEST_COMPLETED",
@@ -1516,9 +1521,12 @@ class MissionAPIService:
                         "passed": test_res.passed,
                         "exit_code": test_res.exit_code,
                         "duration": test_res.duration_seconds,
+                        "strategy": sel.strategy.value if sel else None,
+                        "selection_reason": sel.reason if sel else "",
+                        "selected_tests": list(sel.selected_tests) if sel else [],
                         "summary": (
                             f"Tests finished: passed={test_res.passed} "
-                            f"(exit_code={test_res.exit_code})"
+                            f"(exit_code={test_res.exit_code}, target='{test_res.target}')"
                         ),
                     },
                     level="success" if test_res.passed else "warning",

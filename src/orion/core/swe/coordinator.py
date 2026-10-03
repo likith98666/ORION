@@ -46,6 +46,8 @@ from orion.core.swe.execution import (
     PatchApplicationResult,
     PatchVerificationAuthority,
     Phase5ExecutionOutcome,
+    TestSelectionResult,
+    TestTargetSelector,
     UnapprovedPatchError,
 )
 from orion.core.swe.formulation import ProposedFixPlan
@@ -146,6 +148,8 @@ class SWEWorkflowCoordinator:
         self._patch_verifier: PatchVerificationAuthority | None = None
         self._last_recovery_report: RecoveryAuditReport | None = None
         self._swe_recovery_coordinator: SWERecoveryCoordinator | None = None
+        self._test_selector: TestTargetSelector = TestTargetSelector(workspace=self._workspace)
+        self._last_test_selection: TestSelectionResult | None = None
 
     @property
     def workspace(self) -> Workspace:
@@ -281,6 +285,16 @@ class SWEWorkflowCoordinator:
                 telemetry_context=self._telemetry_context,
             )
         return self._swe_recovery_coordinator
+
+    @property
+    def test_selector(self) -> TestTargetSelector:
+        """Return the bound test target selector."""
+        return self._test_selector
+
+    @property
+    def last_test_selection(self) -> TestSelectionResult | None:
+        """Return the most recent test selection result."""
+        return self._last_test_selection
 
     def advance_stage(self, stage: SWETaskStage) -> None:
         """Advance the workflow state machine to the specified stage."""
@@ -848,7 +862,7 @@ class SWEWorkflowCoordinator:
 
     def run_controlled_tests(
         self,
-        target: str = "",
+        target: str | Sequence[str] = "",
         timeout_seconds: int = 60,
         fail_fast: bool = False,
         verbose: bool = False,
@@ -866,8 +880,69 @@ class SWEWorkflowCoordinator:
             else None
         )
         effective_execution_id = execution_id or last_app_exec_id or uuid4()
+
+        # Deterministic Bounded Test Selection
+        affected_files: list[str] = []
+        if self._last_application_result and self._last_application_result.affected_files:
+            affected_files.extend(self._last_application_result.affected_files)
+        if self._last_patch_proposal and self._last_patch_proposal.affected_files:
+            affected_files.extend(self._last_patch_proposal.affected_files)
+        if self._last_fix_proposal and self._last_fix_proposal.affected_files:
+            affected_files.extend(self._last_fix_proposal.affected_files)
+        if self._formulated_plan and getattr(self._formulated_plan, "target_files", None):
+            affected_files.extend(self._formulated_plan.target_files)
+
+        failure_locations: list[str] = []
+        if self._last_failure_analysis and self._last_failure_analysis.relevant_files:
+            failure_locations.extend(self._last_failure_analysis.relevant_files)
+
+        tg = getattr(self, "_task_graph", None)
+        objective = str(getattr(tg, "objective", None) or "")
+
+        has_explicit = bool(
+            target and (not isinstance(target, str) or target.strip())
+        )
+
+        selection = self._test_selector.select_test_targets(
+            explicit_target=target if has_explicit else None,
+            affected_files=affected_files,
+            failure_locations=failure_locations,
+            task_directive=objective,
+        )
+        self._last_test_selection = selection
+
+        # Record test selection evidence in EvidenceLedger
+        if self._ledger is not None:
+            summary = (
+                f"Test target selection: strategy={selection.strategy.value} "
+                f"targets={list(selection.selected_tests)} "
+                f"(is_explicit={selection.is_explicit}, is_fallback={selection.is_fallback})"
+            )
+            content = (
+                f"Strategy: {selection.strategy.value}\n"
+                f"Reason: {selection.reason}\n"
+                f"Selected Tests: {list(selection.selected_tests)}\n"
+                f"Is Explicit: {selection.is_explicit}\n"
+                f"Is Fallback: {selection.is_fallback}\n"
+                f"Target Spec: {selection.target_spec}\n"
+            )
+            self._ledger.record_observed(
+                stage=SWETaskStage.RUN_TESTS,
+                source="TestTargetSelector",
+                content=content,
+                category=EvidenceCategory.TEST_RESULT,
+                summary=summary,
+                task_id=self._task_id,
+                execution_id=effective_execution_id,
+                request_id=self._telemetry_context.request_id,
+                trace_id=self._telemetry_context.trace_id,
+                workspace_root=str(self._workspace.repository_root),
+                metadata=selection.to_dict(),
+            )
+
+        # Delegate execution to ControlledExecutionAuthority
         result = self.controlled_execution_authority.run_tests(
-            target=target,
+            target=selection.selected_tests,
             timeout_seconds=timeout_seconds,
             fail_fast=fail_fast,
             verbose=verbose,

@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -63,7 +64,7 @@ class ControlledExecutionAuthority:
 
     def run_tests(
         self,
-        target: str = "",
+        target: str | Sequence[str] = "",
         timeout_seconds: int = DEFAULT_TEST_TIMEOUT,
         fail_fast: bool = False,
         verbose: bool = False,
@@ -83,22 +84,48 @@ class ControlledExecutionAuthority:
         if fail_fast:
             cmd.append("-x")
 
-        # Validate target path strictly within workspace
-        if target and target.strip():
+        # Collect target strings
+        target_list: list[str] = []
+        if isinstance(target, str):
             target_str = target.strip()
-            # Prohibit traversal and absolute paths outside workspace
-            if "\0" in target_str or ".." in target_str.split("/"):
+            if target_str:
+                has_space = " " in target_str
+                exists_with_space = (self._workspace.repository_root / target_str).exists()
+                if has_space and not exists_with_space:
+                    target_list.extend(target_str.split())
+                else:
+                    target_list.append(target_str)
+        elif isinstance(target, (list, tuple, set)):
+            for item in target:
+                if isinstance(item, str) and item.strip():
+                    target_list.append(item.strip())
+
+        # Validate target path(s) strictly within workspace
+        validated_targets: list[str] = []
+        for t in target_list:
+            norm_slashes = t.replace("\\", "/")
+            if "\0" in t or ".." in norm_slashes.split("/"):
                 raise ControlledExecutionError(
-                    f"Target path '{target_str}' contains forbidden sequences."
+                    f"Target path '{t}' contains forbidden sequences or directory traversal."
                 )
+            base_part = norm_slashes.split("::")[0] if "::" in norm_slashes else norm_slashes
+            sub_part = f"::{norm_slashes.split('::', 1)[1]}" if "::" in norm_slashes else ""
             try:
-                resolved_target = self._workspace.validate_path(target_str)
-                rel_target = str(self._workspace.relative_path(resolved_target))
-                cmd.append(rel_target)
+                resolved_target = self._workspace.validate_path(base_part)
+                rel_target = str(self._workspace.relative_path(resolved_target)).replace("\\", "/")
+                effective_target = f"{rel_target}{sub_part}"
+                validated_targets.append(effective_target)
+                cmd.append(effective_target)
             except (PathOutsideWorkspaceError, PathSecurityError, ValueError) as exc:
                 raise ControlledExecutionError(
-                    f"Test target '{target_str}' escapes workspace boundary: {exc}"
+                    f"Test target '{t}' escapes workspace boundary: {exc}"
                 ) from exc
+
+        effective_target_display = (
+            " ".join(validated_targets)
+            if validated_targets
+            else (target if isinstance(target, str) else "")
+        )
 
         timed_out = False
         stdout = ""
@@ -149,7 +176,7 @@ class ControlledExecutionAuthority:
 
         result = ControlledTestResult(
             execution_id=effective_execution_id,
-            target=target,
+            target=effective_target_display,
             exit_code=exit_code,
             status=status,
             stdout=stdout,
@@ -163,8 +190,8 @@ class ControlledExecutionAuthority:
         # Record OBSERVED test evidence into EvidenceLedger
         if self._ledger is not None:
             summary = (
-                f"Controlled tests target='{target}' status={status} exit_code={exit_code} "
-                f"({duration_seconds}s)"
+                f"Controlled tests target='{effective_target_display}' status={status} "
+                f"exit_code={exit_code} ({duration_seconds}s)"
             )
             content = f"{stdout}\n{stderr}".strip()[:MAX_OUTPUT_CHARS]
             self._ledger.record_observed(
@@ -179,11 +206,12 @@ class ControlledExecutionAuthority:
                 trace_id=self._telemetry_context.trace_id,
                 workspace_root=str(self._workspace.repository_root),
                 metadata={
-                    "target": target,
+                    "target": effective_target_display,
                     "exit_code": exit_code,
                     "status": status,
                     "duration_seconds": duration_seconds,
                     "timed_out": timed_out,
+                    "passed": result.passed,
                 },
             )
 

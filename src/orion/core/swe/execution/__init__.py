@@ -28,6 +28,11 @@ from orion.core.swe.execution.errors import (
 from orion.core.swe.execution.lock import WorkspaceLockManager
 from orion.core.swe.execution.recovery import PatchRecoveryManager
 from orion.core.swe.execution.runner import ControlledExecutionAuthority
+from orion.core.swe.execution.selector import (
+    TestSelectionResult,
+    TestSelectionStrategy,
+    TestTargetSelector,
+)
 from orion.core.swe.execution.states import (
     PatchExecutionLifecycle,
     PatchExecutionState,
@@ -59,6 +64,9 @@ __all__ = [
     "RevokedApprovalError",
     "StaleApprovalError",
     "StateTransitionRecord",
+    "TestSelectionResult",
+    "TestSelectionStrategy",
+    "TestTargetSelector",
     "UnapprovedPatchError",
     "WorkspaceLockManager",
     "WorkspaceLockedError",
