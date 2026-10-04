@@ -1799,53 +1799,71 @@ Verification: VERIFIED_SUCCESS`,
 
   function bindEvents() {
     // Navigation Tabs
-    dom.commandTabBar.addEventListener('click', (e) => {
-      const btn = e.target.closest('.tab-btn');
-      if (btn && btn.dataset.tab) {
-        switchTab(btn.dataset.tab);
-      }
-    });
+    if (dom.commandTabBar) {
+      dom.commandTabBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tab-btn');
+        if (btn && btn.dataset.tab) {
+          switchTab(btn.dataset.tab);
+        }
+      });
+    }
 
     // Evidence Filters
-    dom.evidenceFilterGroup.addEventListener('click', (e) => {
-      if (e.target.classList.contains('filter-btn')) {
-        dom.evidenceFilterGroup.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        currentEvidenceFilter = e.target.dataset.filter;
-        renderEvidenceList();
-      }
-    });
+    if (dom.evidenceFilterGroup) {
+      dom.evidenceFilterGroup.addEventListener('click', (e) => {
+        if (e.target.classList.contains('filter-btn')) {
+          dom.evidenceFilterGroup.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentEvidenceFilter = e.target.dataset.filter;
+          renderEvidenceList();
+        }
+      });
+    }
 
     // Primary Command Center Task Submission
-    dom.commandCenterForm.addEventListener('submit', handleTaskDirectiveSubmit);
+    if (dom.commandCenterForm) {
+      dom.commandCenterForm.addEventListener('submit', handleTaskDirectiveSubmit);
+    }
 
     // New Task Modal
-    dom.btnNewMission.addEventListener('click', () => dom.modalBackdrop.classList.add('open'));
-    dom.modalCloseBtn.addEventListener('click', () => dom.modalBackdrop.classList.remove('open'));
-    dom.btnCancelModal.addEventListener('click', () => dom.modalBackdrop.classList.remove('open'));
-    dom.createMissionForm.addEventListener('submit', handleCreateMissionSubmit);
+    if (dom.btnNewMission && dom.modalBackdrop) {
+      dom.btnNewMission.addEventListener('click', () => dom.modalBackdrop.classList.add('open'));
+    }
+    if (dom.modalCloseBtn && dom.modalBackdrop) {
+      dom.modalCloseBtn.addEventListener('click', () => dom.modalBackdrop.classList.remove('open'));
+    }
+    if (dom.btnCancelModal && dom.modalBackdrop) {
+      dom.btnCancelModal.addEventListener('click', () => dom.modalBackdrop.classList.remove('open'));
+    }
+    if (dom.createMissionForm) {
+      dom.createMissionForm.addEventListener('submit', handleCreateMissionSubmit);
+    }
 
     // Approval Modal Controls
-    dom.btnInspectApprovalDiff.addEventListener('click', openApprovalModal);
-    dom.modalApprovalCloseBtn.addEventListener('click', closeApprovalModal);
-    dom.btnQuickApprove.addEventListener('click', () => submitApprovalDecision('approve'));
-    dom.btnQuickDeny.addEventListener('click', () => submitApprovalDecision('deny'));
-    dom.btnModalDeny.addEventListener('click', () => submitApprovalDecision('deny'));
-    dom.approvalDecisionForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      submitApprovalDecision('approve');
-    });
+    if (dom.btnInspectApprovalDiff) dom.btnInspectApprovalDiff.addEventListener('click', openApprovalModal);
+    if (dom.modalApprovalCloseBtn) dom.modalApprovalCloseBtn.addEventListener('click', closeApprovalModal);
+    if (dom.btnQuickApprove) dom.btnQuickApprove.addEventListener('click', () => submitApprovalDecision('approve'));
+    if (dom.btnQuickDeny) dom.btnQuickDeny.addEventListener('click', () => submitApprovalDecision('deny'));
+    if (dom.btnModalDeny) dom.btnModalDeny.addEventListener('click', () => submitApprovalDecision('deny'));
+    if (dom.approvalDecisionForm) {
+      dom.approvalDecisionForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitApprovalDecision('approve');
+      });
+    }
 
     // Mission Controls
-    dom.btnRefresh.addEventListener('click', async () => {
-      await syncHealth();
-      if (currentTaskId) await refreshTaskData(currentTaskId);
-      await loadPolicyData();
-      await loadEvalData();
-    });
+    if (dom.btnRefresh) {
+      dom.btnRefresh.addEventListener('click', async () => {
+        await syncHealth();
+        if (currentTaskId) await refreshTaskData(currentTaskId);
+        await loadPolicyData();
+        await loadEvalData();
+      });
+    }
 
-    dom.btnRunPipeline.addEventListener('click', handleRunPipelineClick);
-    dom.btnAdvanceStage.addEventListener('click', handleAdvanceStageClick);
+    if (dom.btnRunPipeline) dom.btnRunPipeline.addEventListener('click', handleRunPipelineClick);
+    if (dom.btnAdvanceStage) dom.btnAdvanceStage.addEventListener('click', handleAdvanceStageClick);
     if (dom.btnCancelMission) {
       dom.btnCancelMission.addEventListener('click', handleCancelMissionClick);
     }
@@ -1854,8 +1872,8 @@ Verification: VERIFIED_SUCCESS`,
         if (currentTaskId) connectEventStream(currentTaskId);
       });
     }
-    dom.btnGenReportNow.addEventListener('click', handleGenerateReportClick);
-    dom.btnCopyDiff.addEventListener('click', handleCopyDiffClick);
+    if (dom.btnGenReportNow) dom.btnGenReportNow.addEventListener('click', handleGenerateReportClick);
+    if (dom.btnCopyDiff) dom.btnCopyDiff.addEventListener('click', handleCopyDiffClick);
     if (dom.btnCopyTestTargets) {
       dom.btnCopyTestTargets.addEventListener('click', handleCopyTestTargetsClick);
     }
@@ -1957,7 +1975,7 @@ Verification: VERIFIED_SUCCESS`,
     document.querySelectorAll('.subtab-panel, .tab-panel').forEach(p => p.classList.remove('active'));
 
     const btn = document.querySelector(`.subtab-btn[data-tab="${tabId}"], .tab-btn[data-tab="${tabId}"]`);
-    const panel = document.getElementById(tabId);
+    const panel = document.getElementById(tabId) || document.getElementById(`tab-${tabId}`);
     if (btn) btn.classList.add('active');
     if (panel) panel.classList.add('active');
 
@@ -2262,17 +2280,25 @@ Verification: VERIFIED_SUCCESS`,
   function getStatusBadge(status) {
     const s = String(status || '').toUpperCase();
     if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'COMPLETED') return 'badge-emerald';
-    if (s === 'RUNNING') return 'badge-cyan pulsing';
+    if (s === 'RUNNING') return 'badge-cyan';
     if (s === 'FAILED' || s === 'CANCELLED') return 'badge-rose';
     if (s === 'APPROVAL_REQUIRED' || s === 'PAUSED') return 'badge-amber';
     return 'badge-outline';
+  }
+
+  function getStatusDotClass(status) {
+    const s = String(status || '').toUpperCase();
+    if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'COMPLETED') return 'online';
+    if (s === 'RUNNING') return 'running';
+    if (s === 'FAILED' || s === 'CANCELLED') return 'failed';
+    return 'pending';
   }
 
   function renderRecentMissions(list) {
     const tbody = document.getElementById('recentMissionsTbody');
     if (!tbody) return;
     if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No recent missions recorded.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No recent missions recorded.</td></tr>';
       return;
     }
     const recent = list.slice(0, 5);
@@ -2281,14 +2307,16 @@ Verification: VERIFIED_SUCCESS`,
       const shortId = tid.slice(0, 8);
       const obj = t.objective || t.prompt || 'Autonomous SWE task';
       const stat = (t.status || 'PENDING').toUpperCase();
+      const stage = (t.current_stage || 'INSPECT_REPOSITORY').toUpperCase();
       const dur = formatDuration(t);
       const created = t.created_at ? formatTime(t.created_at) : 'Recently';
 
       return `
         <tr class="clickable-mission-row" data-task-id="${escapeHtml(tid)}">
-          <td><span class="code-font text-cyan">${escapeHtml(shortId)}</span></td>
+          <td><span class="code-font text-blue">${escapeHtml(shortId)}</span></td>
           <td class="cell-truncate">${escapeHtml(obj)}</td>
-          <td><span class="badge ${getStatusBadge(stat)}">${escapeHtml(stat)}</span></td>
+          <td><span class="badge ${getStatusBadge(stat)}"><span class="status-dot ${getStatusDotClass(stat)}"></span>${escapeHtml(stat)}</span></td>
+          <td><span class="badge badge-outline">${escapeHtml(stage)}</span></td>
           <td class="text-dim">${escapeHtml(dur)}</td>
           <td class="text-dim">${escapeHtml(created)}</td>
         </tr>
@@ -2320,7 +2348,7 @@ Verification: VERIFIED_SUCCESS`,
     }
 
     if (items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No missions match current filter.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No missions match current filter.</td></tr>';
       return;
     }
 
@@ -2329,14 +2357,16 @@ Verification: VERIFIED_SUCCESS`,
       const shortId = tid.slice(0, 8);
       const obj = t.objective || t.prompt || 'Autonomous SWE task';
       const stat = (t.status || 'PENDING').toUpperCase();
+      const stage = (t.current_stage || 'INSPECT_REPOSITORY').toUpperCase();
       const dur = formatDuration(t);
       const created = t.created_at ? formatTime(t.created_at) : 'Recently';
 
       return `
         <tr class="clickable-mission-row" data-task-id="${escapeHtml(tid)}">
-          <td><span class="code-font text-cyan">${escapeHtml(shortId)}</span></td>
+          <td><span class="code-font text-blue">${escapeHtml(shortId)}</span></td>
           <td class="cell-truncate">${escapeHtml(obj)}</td>
-          <td><span class="badge ${getStatusBadge(stat)}">${escapeHtml(stat)}</span></td>
+          <td><span class="badge ${getStatusBadge(stat)}"><span class="status-dot ${getStatusDotClass(stat)}"></span>${escapeHtml(stat)}</span></td>
+          <td><span class="badge badge-outline">${escapeHtml(stage)}</span></td>
           <td class="text-dim">${escapeHtml(dur)}</td>
           <td class="text-dim">${escapeHtml(created)}</td>
           <td style="text-align: right;">
@@ -2632,7 +2662,7 @@ Verification: VERIFIED_SUCCESS`,
     const total = STAGES.length;
     const completedCount = completedStages.length;
     const pct = Math.min(100, Math.round(((completedCount) / total) * 100));
-    dom.stepperFill.style.width = `${Math.max(12, pct)}%`;
+    if (dom.stepperFill) dom.stepperFill.style.width = `${Math.max(12, pct)}%`;
 
     STAGES.forEach((stage) => {
       const node = document.getElementById(`step-${stage}`);
@@ -2641,7 +2671,8 @@ Verification: VERIFIED_SUCCESS`,
 
       if (completedStages.includes(stage)) {
         node.classList.add('completed');
-        node.querySelector('.node-circle').innerHTML = '&check;';
+        const circle = node.querySelector('.node-circle') || node.querySelector('.step-badge');
+        if (circle) circle.innerHTML = '&check;';
       } else if (stage === currentStage) {
         node.classList.add('active');
       }
@@ -2654,27 +2685,28 @@ Verification: VERIFIED_SUCCESS`,
         gateNode.classList.add('active');
       } else if (completedStages.includes('implement_change')) {
         gateNode.classList.add('completed');
-        gateNode.querySelector('.node-circle').innerHTML = '&check;';
+        const circle = gateNode.querySelector('.node-circle') || gateNode.querySelector('.step-badge');
+        if (circle) circle.innerHTML = '&check;';
       }
     }
   }
 
   function renderCodeChanges(ch) {
     const files = ch.affected_files || [];
-    dom.modifiedFilesCount.textContent = `${files.length} Files`;
-    dom.diffLinesAdded.textContent = `+${ch.total_lines_added || 0} lines`;
-    dom.diffLinesRemoved.textContent = `-${ch.total_lines_removed || 0} lines`;
-    dom.tabCounterChanges.textContent = String(files.length);
+    if (dom.modifiedFilesCount) dom.modifiedFilesCount.textContent = `${files.length} Files`;
+    if (dom.diffLinesAdded) dom.diffLinesAdded.textContent = `+${ch.total_lines_added || 0} lines`;
+    if (dom.diffLinesRemoved) dom.diffLinesRemoved.textContent = `-${ch.total_lines_removed || 0} lines`;
+    if (dom.tabCounterChanges) dom.tabCounterChanges.textContent = String(files.length);
 
-    dom.diffValidationBadge.textContent = `VALIDATION: ${ch.validation_status || 'PENDING'}`;
-    dom.diffApprovalBadge.textContent = `APPROVAL: ${ch.approval_status || 'NONE'}`;
-    dom.diffApplicationBadge.textContent = `APPLICATION: ${ch.application_status || 'PENDING'}`;
+    if (dom.diffValidationBadge) dom.diffValidationBadge.textContent = `VALIDATION: ${ch.validation_status || 'PENDING'}`;
+    if (dom.diffApprovalBadge) dom.diffApprovalBadge.textContent = `APPROVAL: ${ch.approval_status || 'NONE'}`;
+    if (dom.diffApplicationBadge) dom.diffApplicationBadge.textContent = `APPLICATION: ${ch.application_status || 'PENDING'}`;
 
     if (ch.unified_diff && ch.unified_diff.trim()) {
-      dom.diffFileLabel.textContent = files.length > 0 ? files.join(', ') : 'Unified Diff';
-      dom.diffCodeBlock.innerHTML = formatUnifiedDiff(ch.unified_diff);
+      if (dom.diffFileLabel) dom.diffFileLabel.textContent = files.length > 0 ? files.join(', ') : 'Unified Diff';
+      if (dom.diffCodeBlock) dom.diffCodeBlock.innerHTML = formatUnifiedDiff(ch.unified_diff);
     } else {
-      dom.diffCodeBlock.innerHTML = '<code>No patch proposals or modifications generated yet.</code>';
+      if (dom.diffCodeBlock) dom.diffCodeBlock.innerHTML = '<code>No patch proposals or modifications generated yet.</code>';
     }
   }
 
@@ -2893,115 +2925,137 @@ Verification: VERIFIED_SUCCESS`,
   function renderTestResults(tests) {
     renderTestSelection(tests);
     if (tests.executed) {
-      dom.testTargetVal.textContent = tests.target || 'pytest';
-      dom.testExitCodeBadge.textContent = `EXIT CODE: ${tests.exit_code !== null ? tests.exit_code : '--'}`;
-      dom.testExitCodeBadge.className = tests.passed ? 'badge badge-emerald' : 'badge badge-rose';
-      dom.testOutcomeBadge.textContent = tests.passed ? 'STATUS: PASSED' : 'STATUS: FAILED';
-      dom.testOutcomeBadge.className = tests.passed ? 'badge badge-emerald' : 'badge badge-rose';
-      dom.testDurationBadge.textContent = `DURATION: ${tests.duration}s`;
+      if (dom.testTargetVal) dom.testTargetVal.textContent = tests.target || 'pytest';
+      if (dom.testExitCodeBadge) {
+        dom.testExitCodeBadge.textContent = `EXIT CODE: ${tests.exit_code !== null ? tests.exit_code : '--'}`;
+        dom.testExitCodeBadge.className = tests.passed ? 'badge badge-emerald' : 'badge badge-rose';
+      }
+      if (dom.testOutcomeBadge) {
+        dom.testOutcomeBadge.textContent = tests.passed ? 'STATUS: PASSED' : 'STATUS: FAILED';
+        dom.testOutcomeBadge.className = tests.passed ? 'badge badge-emerald' : 'badge badge-rose';
+      }
+      if (dom.testDurationBadge) dom.testDurationBadge.textContent = `DURATION: ${tests.duration}s`;
 
-      dom.metricTestsPassed.textContent = tests.passed ? '1' : '0';
-      dom.metricTestsFailed.textContent = tests.passed ? '0' : '1';
+      if (dom.metricTestsPassed) dom.metricTestsPassed.textContent = tests.passed ? '1' : '0';
+      if (dom.metricTestsFailed) dom.metricTestsFailed.textContent = tests.passed ? '0' : '1';
 
       const combined = [tests.stdout, tests.stderr].filter(Boolean).join('\n') || tests.output_summary;
-      dom.testOutputContent.textContent = combined || 'Tests completed with exit code ' + tests.exit_code;
+      if (dom.testOutputContent) dom.testOutputContent.textContent = combined || 'Tests completed with exit code ' + tests.exit_code;
     } else {
-      dom.testOutcomeBadge.textContent = 'STATUS: NOT RUN';
-      dom.testOutcomeBadge.className = 'badge badge-idle';
-      dom.testOutputContent.textContent = 'Controlled tests have not been executed yet.';
+      if (dom.testOutcomeBadge) {
+        dom.testOutcomeBadge.textContent = 'STATUS: NOT RUN';
+        dom.testOutcomeBadge.className = 'badge badge-idle';
+      }
+      if (dom.testOutputContent) dom.testOutputContent.textContent = 'Controlled tests have not been executed yet.';
     }
   }
 
   function renderRecoveryObservatory(rec) {
-    dom.recFailureCatVal.textContent = rec.failure_category || 'NONE DETECTED';
-    dom.recStrategyVal.textContent = rec.recovery_strategy || 'NONE';
-    dom.recAttemptVal.textContent = `${rec.attempt_number || 0} / 3`;
-    dom.recLifecycleStateVal.textContent = rec.recovery_state || 'IDLE';
+    if (dom.recFailureCatVal) dom.recFailureCatVal.textContent = rec.failure_category || 'NONE DETECTED';
+    if (dom.recStrategyVal) dom.recStrategyVal.textContent = rec.recovery_strategy || 'NONE';
+    if (dom.recAttemptVal) dom.recAttemptVal.textContent = `${rec.attempt_number || 0} / 3`;
+    if (dom.recLifecycleStateVal) dom.recLifecycleStateVal.textContent = rec.recovery_state || 'IDLE';
 
-    dom.metricRecoveryAttempts.textContent = String(rec.attempt_number || 0);
+    if (dom.metricRecoveryAttempts) dom.metricRecoveryAttempts.textContent = String(rec.attempt_number || 0);
 
     const b = rec.remaining_budget || {};
     const attRem = b.attempts_remaining !== undefined ? b.attempts_remaining : 3;
-    dom.budgetValAttempts.textContent = `${attRem} / 3`;
-    dom.budgetBarAttempts.style.width = `${Math.min(100, Math.round((attRem / 3) * 100))}%`;
+    if (dom.budgetValAttempts) dom.budgetValAttempts.textContent = `${attRem} / 3`;
+    if (dom.budgetBarAttempts) dom.budgetBarAttempts.style.width = `${Math.min(100, Math.round((attRem / 3) * 100))}%`;
 
     const timeRem = b.execution_seconds_remaining !== undefined ? b.execution_seconds_remaining : 120.0;
-    dom.budgetValTime.textContent = `${timeRem}s`;
-    dom.budgetBarTime.style.width = `${Math.min(100, Math.round((timeRem / 120.0) * 100))}%`;
+    if (dom.budgetValTime) dom.budgetValTime.textContent = `${timeRem}s`;
+    if (dom.budgetBarTime) dom.budgetBarTime.style.width = `${Math.min(100, Math.round((timeRem / 120.0) * 100))}%`;
 
     const patchRem = b.patch_regenerations_remaining !== undefined ? b.patch_regenerations_remaining : 2;
-    dom.budgetValPatch.textContent = `${patchRem} / 2`;
-    dom.budgetBarPatch.style.width = `${Math.min(100, Math.round((patchRem / 2) * 100))}%`;
+    if (dom.budgetValPatch) dom.budgetValPatch.textContent = `${patchRem} / 2`;
+    if (dom.budgetBarPatch) dom.budgetBarPatch.style.width = `${Math.min(100, Math.round((patchRem / 2) * 100))}%`;
 
     const testRem = b.test_retries_remaining !== undefined ? b.test_retries_remaining : 3;
-    dom.budgetValTests.textContent = `${testRem} / 3`;
-    dom.budgetBarTests.style.width = `${Math.min(100, Math.round((testRem / 3) * 100))}%`;
+    if (dom.budgetValTests) dom.budgetValTests.textContent = `${testRem} / 3`;
+    if (dom.budgetBarTests) dom.budgetBarTests.style.width = `${Math.min(100, Math.round((testRem / 3) * 100))}%`;
 
-    if (rec.rollback_performed) {
-      dom.rollbackAuditBadge.textContent = 'ROLLBACK: EXECUTED // ATTEMPTS ROLLED BACK CLEANLY';
-      dom.rollbackAuditBadge.className = 'badge badge-amber';
-    } else {
-      dom.rollbackAuditBadge.textContent = 'ROLLBACK: CLEAN // NO UNVERIFIED MUTATIONS';
-      dom.rollbackAuditBadge.className = 'badge badge-emerald';
+    if (dom.rollbackAuditBadge) {
+      if (rec.rollback_performed) {
+        dom.rollbackAuditBadge.textContent = 'ROLLBACK: EXECUTED // ATTEMPTS ROLLED BACK CLEANLY';
+        dom.rollbackAuditBadge.className = 'badge badge-amber';
+      } else {
+        dom.rollbackAuditBadge.textContent = 'ROLLBACK: CLEAN // NO UNVERIFIED MUTATIONS';
+        dom.rollbackAuditBadge.className = 'badge badge-emerald';
+      }
     }
 
     // Render history
     const history = rec.history || [];
-    if (history.length === 0) {
-      dom.recoveryEventsList.innerHTML = '<div class="empty-state">No recovery events occurred. Clean pipeline execution.</div>';
-    } else {
-      dom.recoveryEventsList.innerHTML = history.map(item => `
-        <div class="recovery-event-card">
-          <div>
-            <strong class="text-amber">Attempt #${item.attempt_number || 1} &bull; Strategy: ${item.strategy || 'TARGETED_REWRITE'}</strong>
-            <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">${escapeHtml(item.action || item.summary || 'Recovery attempt')}</p>
+    if (dom.recoveryEventsList) {
+      if (history.length === 0) {
+        dom.recoveryEventsList.innerHTML = '<div class="empty-state">No recovery events occurred. Clean pipeline execution.</div>';
+      } else {
+        dom.recoveryEventsList.innerHTML = history.map(item => `
+          <div class="recovery-event-card">
+            <div>
+              <strong class="text-amber">Attempt #${item.attempt_number || 1} &bull; Strategy: ${item.strategy || 'TARGETED_REWRITE'}</strong>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">${escapeHtml(item.action || item.summary || 'Recovery attempt')}</p>
+            </div>
+            <span class="badge ${item.success ? 'badge-emerald' : 'badge-rose'}">${item.success ? 'RESOLVED' : 'FAILED'}</span>
           </div>
-          <span class="badge ${item.success ? 'badge-emerald' : 'badge-rose'}">${item.success ? 'RESOLVED' : 'FAILED'}</span>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
   }
 
   function renderVerification(ver) {
-    dom.metricVerifPassed.textContent = ver.passed ? '1' : '0';
+    if (dom.metricVerifPassed) dom.metricVerifPassed.textContent = ver.passed ? '1' : '0';
 
     if (ver.status === 'passed') {
-      dom.verifStatusBox.innerHTML = `
-        <span class="verif-icon" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">&check;</span>
-        <div>
-          <h3 class="verif-heading text-emerald">Authoritative Verification Passed</h3>
-          <p class="verif-sub">${escapeHtml(ver.reason || 'VerificationEngine ground-truth confirmed.')}</p>
-        </div>
-      `;
-      dom.critExitCode.className = 'criterion-item passed';
-      dom.critRequirements.className = 'criterion-item passed';
-      dom.critEvidenceLedger.className = 'criterion-item passed';
+      if (dom.verifStatusBox) {
+        dom.verifStatusBox.innerHTML = `
+          <span class="verif-icon" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">&check;</span>
+          <div>
+            <h3 class="verif-heading text-emerald">Authoritative Verification Passed</h3>
+            <p class="verif-sub">${escapeHtml(ver.reason || 'VerificationEngine ground-truth confirmed.')}</p>
+          </div>
+        `;
+      }
+      if (dom.critExitCode) dom.critExitCode.className = 'criterion-item passed';
+      if (dom.critRequirements) dom.critRequirements.className = 'criterion-item passed';
+      if (dom.critEvidenceLedger) dom.critEvidenceLedger.className = 'criterion-item passed';
       if (dom.pipeStepVerification) {
         dom.pipeStepVerification.className = 'pipe-step completed';
         const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
         if (ind) ind.innerHTML = '&check;';
       }
     } else if (ver.status === 'failed') {
-      dom.verifStatusBox.innerHTML = `
-        <span class="verif-icon" style="border-color: var(--accent-rose); color: var(--accent-rose);">&times;</span>
-        <div>
-          <h3 class="verif-heading text-rose">Verification Failed</h3>
-          <p class="verif-sub">${escapeHtml(ver.reason || 'VerificationEngine criteria not satisfied.')}</p>
-        </div>
-      `;
+      if (dom.verifStatusBox) {
+        dom.verifStatusBox.innerHTML = `
+          <span class="verif-icon" style="border-color: var(--accent-rose); color: var(--accent-rose);">&times;</span>
+          <div>
+            <h3 class="verif-heading text-rose">Verification Failed</h3>
+            <p class="verif-sub">${escapeHtml(ver.reason || 'VerificationEngine criteria not satisfied.')}</p>
+          </div>
+        `;
+      }
+      if (dom.critExitCode) dom.critExitCode.className = 'criterion-item failed';
+      if (dom.critRequirements) dom.critRequirements.className = 'criterion-item failed';
+      if (dom.critEvidenceLedger) dom.critEvidenceLedger.className = 'criterion-item failed';
       if (dom.pipeStepVerification) {
         dom.pipeStepVerification.className = 'pipe-step failed';
         const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
         if (ind) ind.innerHTML = '&times;';
       }
     } else {
-      dom.verifStatusBox.innerHTML = `
-        <span class="verif-icon">?</span>
-        <div>
-          <h3 class="verif-heading">Authoritative Verification Pending</h3>
-          <p class="verif-sub">VerificationEngine runs during stage 6 (VERIFY).</p>
-        </div>
-      `;
+      if (dom.verifStatusBox) {
+        dom.verifStatusBox.innerHTML = `
+          <span class="verif-icon">?</span>
+          <div>
+            <h3 class="verif-heading">Authoritative Verification Pending</h3>
+            <p class="verif-sub">VerificationEngine runs during stage 6 (VERIFY).</p>
+          </div>
+        `;
+      }
+      if (dom.critExitCode) dom.critExitCode.className = 'criterion-item pending';
+      if (dom.critRequirements) dom.critRequirements.className = 'criterion-item pending';
+      if (dom.critEvidenceLedger) dom.critEvidenceLedger.className = 'criterion-item pending';
       if (dom.pipeStepVerification) {
         dom.pipeStepVerification.className = 'pipe-step pending';
         const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
@@ -4424,6 +4478,15 @@ Verification: VERIFIED_SUCCESS`,
     // 2. Topbar Actions & Branding
     const brand = document.getElementById('brandLogoTrigger');
     if (brand) brand.addEventListener('click', () => switchView('overview'));
+
+    const searchTrigger = document.getElementById('btnOpenCommandPalette') || document.getElementById('topbarSearchTrigger');
+    if (searchTrigger) {
+      searchTrigger.addEventListener('click', () => {
+        openModal('commandPaletteBackdrop');
+        const inp = document.getElementById('commandPaletteInput');
+        if (inp) inp.focus();
+      });
+    }
 
     const pill = dom.navMissionPill;
     if (pill) pill.addEventListener('click', () => switchView('mission-detail'));
