@@ -168,6 +168,11 @@ class TaskTestsResponse:
     stderr: str
     output_summary: str
     executed: bool
+    selection_strategy: str | None = None
+    selection_reason: str = ""
+    selected_targets: tuple[str, ...] = ()
+    is_explicit: bool = False
+    is_fallback: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -180,6 +185,11 @@ class TaskTestsResponse:
             "stderr": self.stderr,
             "output_summary": self.output_summary,
             "executed": self.executed,
+            "selection_strategy": self.selection_strategy,
+            "selection_reason": self.selection_reason,
+            "selected_targets": list(self.selected_targets),
+            "is_explicit": self.is_explicit,
+            "is_fallback": self.is_fallback,
         }
 
 

@@ -763,6 +763,7 @@ class MissionAPIService:
             return None
 
         test_res = record.coordinator.last_controlled_test_result
+        sel = record.coordinator.last_test_selection
         if test_res:
             return TaskTestsResponse(
                 task_id=str(record.task_id),
@@ -774,6 +775,11 @@ class MissionAPIService:
                 stderr=test_res.stderr,
                 output_summary=test_res.output_summary,
                 executed=True,
+                selection_strategy=sel.strategy.value if sel else None,
+                selection_reason=sel.reason if sel else "",
+                selected_targets=sel.selected_tests if sel else (),
+                is_explicit=sel.is_explicit if sel else False,
+                is_fallback=sel.is_fallback if sel else False,
             )
 
         return TaskTestsResponse(
@@ -786,6 +792,11 @@ class MissionAPIService:
             stderr="",
             output_summary="No tests executed yet.",
             executed=False,
+            selection_strategy=sel.strategy.value if sel else None,
+            selection_reason=sel.reason if sel else "",
+            selected_targets=sel.selected_tests if sel else (),
+            is_explicit=sel.is_explicit if sel else False,
+            is_fallback=sel.is_fallback if sel else False,
         )
 
     def get_task_recovery_detail(
@@ -1522,8 +1533,12 @@ class MissionAPIService:
                         "exit_code": test_res.exit_code,
                         "duration": test_res.duration_seconds,
                         "strategy": sel.strategy.value if sel else None,
+                        "selection_strategy": sel.strategy.value if sel else None,
                         "selection_reason": sel.reason if sel else "",
                         "selected_tests": list(sel.selected_tests) if sel else [],
+                        "selected_targets": list(sel.selected_tests) if sel else [],
+                        "is_explicit": sel.is_explicit if sel else False,
+                        "is_fallback": sel.is_fallback if sel else False,
                         "summary": (
                             f"Tests finished: passed={test_res.passed} "
                             f"(exit_code={test_res.exit_code}, target='{test_res.target}')"

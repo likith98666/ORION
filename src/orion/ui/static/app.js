@@ -126,12 +126,30 @@
     btnCopyDiff: document.getElementById('btnCopyDiff'),
     operationsList: document.getElementById('operationsList'),
 
-    // Tab 3: Controlled Tests
+    // Tab 3: Controlled Tests & Selection Intelligence
     testTargetVal: document.getElementById('testTargetVal'),
     testExitCodeBadge: document.getElementById('testExitCodeBadge'),
     testOutcomeBadge: document.getElementById('testOutcomeBadge'),
     testDurationBadge: document.getElementById('testDurationBadge'),
     testOutputContent: document.getElementById('testOutputContent'),
+    testSelectionSection: document.getElementById('testSelectionSection'),
+    testSelectionStrategyBadge: document.getElementById('testSelectionStrategyBadge'),
+    testSelectionModeBadge: document.getElementById('testSelectionModeBadge'),
+    testSelectionModeVal: document.getElementById('testSelectionModeVal'),
+    testSelectionScopeVal: document.getElementById('testSelectionScopeVal'),
+    testSelectionReasonVal: document.getElementById('testSelectionReasonVal'),
+    testSelectionCountBadge: document.getElementById('testSelectionCountBadge'),
+    testSelectedTargetsList: document.getElementById('testSelectedTargetsList'),
+    testSelectionEmptyState: document.getElementById('testSelectionEmptyState'),
+    btnCopyTestTargets: document.getElementById('btnCopyTestTargets'),
+    pipeStepTarget: document.getElementById('pipeStepTarget'),
+    pipeStepSelection: document.getElementById('pipeStepSelection'),
+    pipeStepExecution: document.getElementById('pipeStepExecution'),
+    pipeStepEvidence: document.getElementById('pipeStepEvidence'),
+    pipeStepVerification: document.getElementById('pipeStepVerification'),
+    testSelectionHistoricalNote: document.getElementById('testSelectionHistoricalNote'),
+    testSelectionHistoricalText: document.getElementById('testSelectionHistoricalText'),
+    ovTestSelection: document.getElementById('ovTestSelection'),
 
     // Tab 4: Recovery Observatory
     recFailureCatVal: document.getElementById('recFailureCatVal'),
@@ -1762,6 +1780,7 @@ Verification: VERIFIED_SUCCESS`,
   // Initialization
   // -------------------------------------------------------------
   async function init() {
+    initProductConsole();
     bindEvents();
     initIntroOverlay();
     initCommandPalette();
@@ -1837,6 +1856,9 @@ Verification: VERIFIED_SUCCESS`,
     }
     dom.btnGenReportNow.addEventListener('click', handleGenerateReportClick);
     dom.btnCopyDiff.addEventListener('click', handleCopyDiffClick);
+    if (dom.btnCopyTestTargets) {
+      dom.btnCopyTestTargets.addEventListener('click', handleCopyTestTargetsClick);
+    }
 
     // Quick Operator Interventions (Screen 1 & 8)
     if (dom.btnQuickPause) dom.btnQuickPause.addEventListener('click', () => handleIntervention('pause', 'Manual operator pause from Mission Command Center'));
@@ -1929,10 +1951,12 @@ Verification: VERIFIED_SUCCESS`,
   }
 
   function switchTab(tabId) {
-    dom.commandTabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    if (dom.commandTabBar) {
+      dom.commandTabBar.querySelectorAll('.subtab-btn, .tab-btn').forEach(b => b.classList.remove('active'));
+    }
+    document.querySelectorAll('.subtab-panel, .tab-panel').forEach(p => p.classList.remove('active'));
 
-    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    const btn = document.querySelector(`.subtab-btn[data-tab="${tabId}"], .tab-btn[data-tab="${tabId}"]`);
     const panel = document.getElementById(tabId);
     if (btn) btn.classList.add('active');
     if (panel) panel.classList.add('active');
@@ -2054,6 +2078,10 @@ Verification: VERIFIED_SUCCESS`,
       highlightActiveAgent(data.agent, data.stage);
     } else if (evName === 'AGENT_COMPLETED') {
       resetAgentHighlight();
+    }
+
+    if (evName === 'TEST_COMPLETED') {
+      renderTestSelection(data);
     }
 
     // Handle APPROVAL_REQUIRED: show banner & update pending approval package
@@ -2219,17 +2247,201 @@ Verification: VERIFIED_SUCCESS`,
     }
   }
 
+  let allTasksCache = [];
+
+  function formatDuration(task) {
+    if (task.duration_seconds !== undefined && task.duration_seconds !== null) {
+      return `${task.duration_seconds.toFixed(1)}s`;
+    }
+    if (task.duration_ms) {
+      return `${(task.duration_ms / 1000).toFixed(1)}s`;
+    }
+    return '--';
+  }
+
+  function getStatusBadge(status) {
+    const s = String(status || '').toUpperCase();
+    if (s === 'VERIFIED' || s === 'SUCCESS' || s === 'COMPLETED') return 'badge-emerald';
+    if (s === 'RUNNING') return 'badge-cyan pulsing';
+    if (s === 'FAILED' || s === 'CANCELLED') return 'badge-rose';
+    if (s === 'APPROVAL_REQUIRED' || s === 'PAUSED') return 'badge-amber';
+    return 'badge-outline';
+  }
+
+  function renderRecentMissions(list) {
+    const tbody = document.getElementById('recentMissionsTbody');
+    if (!tbody) return;
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No recent missions recorded.</td></tr>';
+      return;
+    }
+    const recent = list.slice(0, 5);
+    tbody.innerHTML = recent.map(t => {
+      const tid = t.task_id || t.mission_id || '';
+      const shortId = tid.slice(0, 8);
+      const obj = t.objective || t.prompt || 'Autonomous SWE task';
+      const stat = (t.status || 'PENDING').toUpperCase();
+      const dur = formatDuration(t);
+      const created = t.created_at ? formatTime(t.created_at) : 'Recently';
+
+      return `
+        <tr class="clickable-mission-row" data-task-id="${escapeHtml(tid)}">
+          <td><span class="code-font text-cyan">${escapeHtml(shortId)}</span></td>
+          <td class="cell-truncate">${escapeHtml(obj)}</td>
+          <td><span class="badge ${getStatusBadge(stat)}">${escapeHtml(stat)}</span></td>
+          <td class="text-dim">${escapeHtml(dur)}</td>
+          <td class="text-dim">${escapeHtml(created)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.clickable-mission-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.taskId;
+        if (id) {
+          selectTask(id);
+          switchView('mission-detail');
+        }
+      });
+    });
+  }
+
+  function renderAllMissions(list, filter = 'all') {
+    const tbody = document.getElementById('allMissionsTbody');
+    if (!tbody) return;
+
+    let items = list || [];
+    if (filter === 'verified') {
+      items = items.filter(t => (t.status || '').toUpperCase() === 'VERIFIED' || t.verification_status === 'VERIFIED');
+    } else if (filter === 'completed') {
+      items = items.filter(t => ['COMPLETED', 'VERIFIED', 'SUCCESS'].includes((t.status || '').toUpperCase()));
+    } else if (filter === 'failed') {
+      items = items.filter(t => ['FAILED', 'CANCELLED', 'ERROR'].includes((t.status || '').toUpperCase()));
+    }
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No missions match current filter.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map(t => {
+      const tid = t.task_id || t.mission_id || '';
+      const shortId = tid.slice(0, 8);
+      const obj = t.objective || t.prompt || 'Autonomous SWE task';
+      const stat = (t.status || 'PENDING').toUpperCase();
+      const dur = formatDuration(t);
+      const created = t.created_at ? formatTime(t.created_at) : 'Recently';
+
+      return `
+        <tr class="clickable-mission-row" data-task-id="${escapeHtml(tid)}">
+          <td><span class="code-font text-cyan">${escapeHtml(shortId)}</span></td>
+          <td class="cell-truncate">${escapeHtml(obj)}</td>
+          <td><span class="badge ${getStatusBadge(stat)}">${escapeHtml(stat)}</span></td>
+          <td class="text-dim">${escapeHtml(dur)}</td>
+          <td class="text-dim">${escapeHtml(created)}</td>
+          <td style="text-align: right;">
+            <button type="button" class="btn btn-secondary btn-xs btn-inspect-mission" data-task-id="${escapeHtml(tid)}">Inspect &rarr;</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.clickable-mission-row, .btn-inspect-mission').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = el.dataset.taskId || el.closest('tr')?.dataset.taskId;
+        if (id) {
+          selectTask(id);
+          switchView('mission-detail');
+        }
+      });
+    });
+  }
+
+  function updateActiveMissionCard(task) {
+    const noActive = document.getElementById('noActiveMissionState');
+    const activeContent = document.getElementById('activeMissionContent');
+    const pill = dom.navMissionPill;
+
+    if (!task) {
+      if (noActive) noActive.style.display = 'flex';
+      if (activeContent) activeContent.style.display = 'none';
+      if (pill) pill.style.display = 'none';
+      return;
+    }
+
+    const isRunning = task.status === 'running' || task.status === 'RUNNING' || task.status === 'PENDING';
+
+    if (pill) {
+      pill.style.display = 'flex';
+      if (dom.navMissionId) dom.navMissionId.textContent = (task.task_id || '').slice(0, 8);
+      if (dom.navMissionStage) dom.navMissionStage.textContent = task.current_stage ? `STAGE: ${task.current_stage.toUpperCase()}` : 'STAGE: IDLE';
+      const dot = document.getElementById('navMissionDot');
+      if (dot) {
+        dot.className = isRunning ? 'status-dot online pulsing' : 'status-dot online';
+      }
+    }
+
+    if (noActive) noActive.style.display = 'none';
+    if (activeContent) activeContent.style.display = 'block';
+
+    const ovStatus = document.getElementById('ovActiveStatus');
+    const ovId = document.getElementById('ovActiveId');
+    const ovObj = document.getElementById('ovActiveObjective');
+    const ovStageLabel = document.getElementById('ovActiveStageLabel');
+    const ovStagePct = document.getElementById('ovActiveStagePct');
+    const ovProgressFill = document.getElementById('ovActiveProgressFill');
+
+    const stat = (task.status || 'PENDING').toUpperCase();
+    if (ovStatus) {
+      ovStatus.textContent = stat;
+      ovStatus.className = `badge ${getStatusBadge(stat)}`;
+    }
+    if (ovId) ovId.textContent = (task.task_id || '').slice(0, 8);
+    if (ovObj) ovObj.textContent = task.objective || task.prompt || 'Autonomous SWE task';
+
+    const completed = task.stages_completed_count || 0;
+    const total = task.stages_total || 7;
+    const currentStage = task.current_stage || 'inspect_repository';
+    if (ovStageLabel) ovStageLabel.textContent = `STAGE: ${currentStage.toUpperCase()}`;
+    if (ovStagePct) ovStagePct.textContent = `${completed}/${total}`;
+    if (ovProgressFill) {
+      ovProgressFill.style.width = `${Math.min(100, Math.round((completed / total) * 100))}%`;
+    }
+
+    // System Status Row
+    const statExec = document.getElementById('statusExecVal');
+    const statVer = document.getElementById('statusVerifVal');
+    if (statExec) statExec.textContent = isRunning ? 'RUNNING' : 'READY';
+    if (statVer) statVer.textContent = task.verification_status === 'VERIFIED' ? 'VERIFIED' : 'READY';
+  }
+
+  async function selectTask(taskId) {
+    currentTaskId = taskId;
+    connectEventStream(taskId);
+    await refreshTaskData(taskId);
+    const found = allTasksCache.find(t => t.task_id === taskId);
+    if (found) updateActiveMissionCard(found);
+  }
+
   async function loadInitialTasks() {
     try {
       const res = await fetch('/api/tasks');
       if (res.ok) {
         const data = await res.json();
         const list = data.tasks || data.missions || [];
+        allTasksCache = list;
+        renderRecentMissions(list);
+        renderAllMissions(list);
+
         if (list.length > 0) {
           const first = list[0];
           currentTaskId = first.task_id || first.mission_id;
+          updateActiveMissionCard(first);
           connectEventStream(currentTaskId);
           await refreshTaskData(currentTaskId);
+        } else {
+          updateActiveMissionCard(null);
         }
       }
     } catch (err) {
@@ -2396,6 +2608,8 @@ Verification: VERIFIED_SUCCESS`,
       dom.ovEvidenceTier.innerHTML = `<span class="badge badge-cyan">${task.evidence_counts.total || 0} RECORDS</span>`;
     }
 
+    updateActiveMissionCard(task);
+
     // Stepper
     updateStepper(task.completed_stages || [], task.current_stage, task.approval_required);
 
@@ -2480,7 +2694,204 @@ Verification: VERIFIED_SUCCESS`,
     }).join('\n');
   }
 
+  function handleCopyTestTargetsClick() {
+    if (!dom.testSelectedTargetsList) return;
+    const items = Array.from(dom.testSelectedTargetsList.querySelectorAll('.target-path-text')).map(el => el.textContent.trim());
+    if (items.length === 0) {
+      showToast('No Targets', 'No test targets available to copy.', 'warning');
+      return;
+    }
+    const text = items.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Targets Copied', `Copied ${items.length} test ${items.length === 1 ? 'target' : 'targets'} to clipboard.`, 'info');
+      }).catch(() => {
+        showToast('Copy Failed', 'Clipboard write not permitted in browser context.', 'warning');
+      });
+    } else {
+      showToast('Targets Listed', `${items.length} targets available.`, 'info');
+    }
+  }
+
+  function renderTestSelection(tests) {
+    if (!dom.testSelectionSection) return;
+
+    const strat = tests.selection_strategy || tests.strategy || null;
+    const hasSelection = Boolean(strat);
+
+    if (hasSelection) {
+      const reason = tests.selection_reason || tests.reason || '';
+      const targets = tests.selected_targets || tests.selected_tests || (tests.target ? [tests.target] : []);
+      const isExplicit = Boolean(tests.is_explicit);
+      const isFallback = Boolean(tests.is_fallback);
+
+      // Determine Mode
+      let modeText = 'INFERRED';
+      let modeBadgeClass = 'badge badge-cyan';
+      if (isExplicit) {
+        modeText = 'EXPLICIT';
+        modeBadgeClass = 'badge badge-purple';
+      } else if (isFallback) {
+        modeText = 'FALLBACK';
+        modeBadgeClass = 'badge badge-amber';
+      }
+
+      // 1. Badges and Mode
+      if (dom.testSelectionStrategyBadge) {
+        dom.testSelectionStrategyBadge.textContent = String(strat);
+        dom.testSelectionStrategyBadge.className = 'badge badge-outline code-val';
+      }
+      if (dom.testSelectionModeBadge) {
+        dom.testSelectionModeBadge.textContent = `MODE: ${modeText}`;
+        dom.testSelectionModeBadge.className = modeBadgeClass;
+      }
+      if (dom.testSelectionModeVal) {
+        dom.testSelectionModeVal.textContent = modeText;
+      }
+
+      // 2. Scope
+      if (dom.testSelectionScopeVal) {
+        const count = targets.length;
+        dom.testSelectionScopeVal.textContent = count > 0
+          ? `${count} test ${count === 1 ? 'file' : 'files'}`
+          : '0 test files';
+      }
+
+      // 3. Selection Rationale
+      if (dom.testSelectionReasonVal) {
+        dom.testSelectionReasonVal.textContent = reason || 'Deterministic scope selected by TestTargetSelector based on task and repository context.';
+      }
+
+      // 4. Selected Targets List
+      if (dom.testSelectedTargetsList) {
+        dom.testSelectedTargetsList.replaceChildren();
+        if (targets.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-targets-state';
+          empty.textContent = 'No specific test targets identified';
+          dom.testSelectedTargetsList.appendChild(empty);
+        } else {
+          targets.forEach(tgt => {
+            const item = document.createElement('div');
+            item.className = 'target-path-item';
+            const icon = document.createElement('span');
+            icon.className = 'target-path-icon';
+            icon.textContent = '📄';
+            const text = document.createElement('span');
+            text.className = 'target-path-text code-val';
+            text.textContent = String(tgt);
+            item.appendChild(icon);
+            item.appendChild(text);
+            dom.testSelectedTargetsList.appendChild(item);
+          });
+        }
+      }
+
+      if (dom.testSelectionCountBadge) {
+        const count = targets.length;
+        dom.testSelectionCountBadge.textContent = `${count} TARGET${count === 1 ? '' : 'S'}`;
+      }
+
+      // 5. Execution Pipeline Visualizer
+      if (dom.pipeStepTarget) {
+        dom.pipeStepTarget.className = 'pipe-step completed';
+        const ind = dom.pipeStepTarget.querySelector('.pipe-indicator');
+        if (ind) ind.innerHTML = '&check;';
+      }
+      if (dom.pipeStepSelection) {
+        dom.pipeStepSelection.className = 'pipe-step completed';
+        const ind = dom.pipeStepSelection.querySelector('.pipe-indicator');
+        if (ind) ind.innerHTML = '&check;';
+      }
+      if (dom.pipeStepExecution) {
+        if (tests.executed) {
+          dom.pipeStepExecution.className = tests.passed ? 'pipe-step completed' : 'pipe-step failed';
+          const ind = dom.pipeStepExecution.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = tests.passed ? '&check;' : '&times;';
+        } else {
+          dom.pipeStepExecution.className = 'pipe-step pending';
+          const ind = dom.pipeStepExecution.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = '&bull;';
+        }
+      }
+      if (dom.pipeStepEvidence) {
+        if (tests.executed) {
+          dom.pipeStepEvidence.className = 'pipe-step completed';
+          const ind = dom.pipeStepEvidence.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = '&check;';
+        } else {
+          dom.pipeStepEvidence.className = 'pipe-step pending';
+          const ind = dom.pipeStepEvidence.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = '&bull;';
+        }
+      }
+      if (dom.pipeStepVerification) {
+        if (tests.executed && tests.passed) {
+          dom.pipeStepVerification.className = 'pipe-step active';
+          const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = '&bull;';
+        }
+      }
+
+      // 6. Overview Table Row
+      if (dom.ovTestSelection) {
+        dom.ovTestSelection.innerHTML = `<span class="${modeBadgeClass}">${modeText} // ${escapeHtml(strat)}</span>`;
+      }
+
+      // 7. Historical Note (if provided in metadata or historical comparison)
+      if (tests.historical_note && dom.testSelectionHistoricalNote && dom.testSelectionHistoricalText) {
+        dom.testSelectionHistoricalText.textContent = String(tests.historical_note);
+        dom.testSelectionHistoricalNote.style.display = 'flex';
+      }
+    } else {
+      // Honest unavailable state
+      if (dom.testSelectionStrategyBadge) {
+        dom.testSelectionStrategyBadge.textContent = 'PENDING SELECTION';
+        dom.testSelectionStrategyBadge.className = 'badge badge-outline code-val';
+      }
+      if (dom.testSelectionModeBadge) {
+        dom.testSelectionModeBadge.textContent = 'MODE: STANDBY';
+        dom.testSelectionModeBadge.className = 'badge badge-idle';
+      }
+      if (dom.testSelectionModeVal) {
+        dom.testSelectionModeVal.textContent = 'STANDBY';
+      }
+      if (dom.testSelectionScopeVal) {
+        dom.testSelectionScopeVal.textContent = '--';
+      }
+      if (dom.testSelectionReasonVal) {
+        dom.testSelectionReasonVal.textContent = 'Selection data unavailable. Test target selection occurs when Stage 5 (RUN_TESTS) executes.';
+      }
+      if (dom.testSelectionCountBadge) {
+        dom.testSelectionCountBadge.textContent = '0 TARGETS';
+      }
+      if (dom.testSelectedTargetsList) {
+        dom.testSelectedTargetsList.replaceChildren();
+        const empty = document.createElement('div');
+        empty.className = 'empty-targets-state';
+        empty.id = 'testSelectionEmptyState';
+        empty.textContent = 'Selection data unavailable';
+        dom.testSelectedTargetsList.appendChild(empty);
+      }
+      if (dom.ovTestSelection) {
+        dom.ovTestSelection.innerHTML = '<span class="badge badge-idle">STANDBY</span>';
+      }
+      if (dom.testSelectionHistoricalNote) {
+        dom.testSelectionHistoricalNote.style.display = 'none';
+      }
+      ['pipeStepTarget', 'pipeStepSelection', 'pipeStepExecution', 'pipeStepEvidence', 'pipeStepVerification'].forEach(stepId => {
+        const step = dom[stepId];
+        if (step) {
+          step.className = 'pipe-step pending';
+          const ind = step.querySelector('.pipe-indicator');
+          if (ind) ind.innerHTML = '&bull;';
+        }
+      });
+    }
+  }
+
   function renderTestResults(tests) {
+    renderTestSelection(tests);
     if (tests.executed) {
       dom.testTargetVal.textContent = tests.target || 'pytest';
       dom.testExitCodeBadge.textContent = `EXIT CODE: ${tests.exit_code !== null ? tests.exit_code : '--'}`;
@@ -2565,6 +2976,11 @@ Verification: VERIFIED_SUCCESS`,
       dom.critExitCode.className = 'criterion-item passed';
       dom.critRequirements.className = 'criterion-item passed';
       dom.critEvidenceLedger.className = 'criterion-item passed';
+      if (dom.pipeStepVerification) {
+        dom.pipeStepVerification.className = 'pipe-step completed';
+        const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
+        if (ind) ind.innerHTML = '&check;';
+      }
     } else if (ver.status === 'failed') {
       dom.verifStatusBox.innerHTML = `
         <span class="verif-icon" style="border-color: var(--accent-rose); color: var(--accent-rose);">&times;</span>
@@ -2573,6 +2989,11 @@ Verification: VERIFIED_SUCCESS`,
           <p class="verif-sub">${escapeHtml(ver.reason || 'VerificationEngine criteria not satisfied.')}</p>
         </div>
       `;
+      if (dom.pipeStepVerification) {
+        dom.pipeStepVerification.className = 'pipe-step failed';
+        const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
+        if (ind) ind.innerHTML = '&times;';
+      }
     } else {
       dom.verifStatusBox.innerHTML = `
         <span class="verif-icon">?</span>
@@ -2581,42 +3002,64 @@ Verification: VERIFIED_SUCCESS`,
           <p class="verif-sub">VerificationEngine runs during stage 6 (VERIFY).</p>
         </div>
       `;
+      if (dom.pipeStepVerification) {
+        dom.pipeStepVerification.className = 'pipe-step pending';
+        const ind = dom.pipeStepVerification.querySelector('.pipe-indicator');
+        if (ind) ind.innerHTML = '&bull;';
+      }
     }
   }
 
   function renderEvidenceList() {
     let items = cachedEvidence;
     if (currentEvidenceFilter !== 'all') {
-      items = cachedEvidence.filter(item => item.level.toLowerCase() === currentEvidenceFilter.toLowerCase());
+      items = cachedEvidence.filter(item => (item.level || '').toLowerCase() === currentEvidenceFilter.toLowerCase());
     }
 
-    dom.evidenceFilteredCount.textContent = `Showing ${items.length} of ${cachedEvidence.length} entries`;
+    if (dom.evidenceFilteredCount) {
+      dom.evidenceFilteredCount.textContent = `Showing ${items.length} of ${cachedEvidence.length} entries`;
+    }
+
+    // Update Overview stats
+    const countVer = cachedEvidence.filter(e => (e.level || '').toLowerCase() === 'verified').length;
+    const countObs = cachedEvidence.filter(e => (e.level || '').toLowerCase() === 'observed').length;
+    const countClm = cachedEvidence.filter(e => (e.level || '').toLowerCase() === 'claimed').length;
+    const elV = document.getElementById('ovVerifiedCount');
+    const elO = document.getElementById('ovObservedCount');
+    const elC = document.getElementById('ovClaimedCount');
+    if (elV) elV.textContent = countVer;
+    if (elO) elO.textContent = countObs;
+    if (elC) elC.textContent = countClm;
+
+    if (!dom.evidenceFeed) return;
 
     if (items.length === 0) {
-      dom.evidenceFeed.innerHTML = '<div class="empty-state">No evidence records matching current filter.</div>';
+      dom.evidenceFeed.innerHTML = '<tr><td colspan="5" class="table-empty">No evidence records matching filter.</td></tr>';
       return;
     }
 
     dom.evidenceFeed.innerHTML = items.map(item => {
-      const levelClass = item.level === 'verified' ? 'badge-emerald' : (item.level === 'observed' ? 'badge-cyan' : 'badge-purple');
+      const lvl = (item.level || 'CLAIMED').toUpperCase();
+      let levelClass = 'badge-purple';
+      if (lvl === 'VERIFIED') levelClass = 'badge-emerald';
+      else if (lvl === 'OBSERVED') levelClass = 'badge-cyan';
+      else if (lvl === 'CLAIMED') levelClass = 'badge-amber';
+
+      const timeStr = item.timestamp ? formatTime(item.timestamp) : '--';
+      const sourceStr = item.source || 'OrionVerifier';
+      const summaryStr = item.summary || item.content || 'Evidence observation recorded';
+
       return `
-        <div class="evidence-card">
-          <div class="evidence-card-header">
-            <div class="evidence-badges">
-              <span class="badge ${levelClass}">${item.level.toUpperCase()}</span>
-              <span class="badge badge-outline">${item.category}</span>
-              <span class="badge badge-outline">stage: ${item.stage}</span>
-            </div>
-            <span class="evidence-time">${formatTime(item.timestamp)}</span>
-          </div>
-          <div class="evidence-summary">${escapeHtml(item.summary)}</div>
-          <pre class="evidence-content"><code>${escapeHtml(item.content)}</code></pre>
-          <div class="evidence-provenance">
-            <span>SOURCE: ${escapeHtml(item.source)}</span>
-            <span>TASK: ${item.task_id ? String(item.task_id).slice(0, 8) : '--'}</span>
-            <span>TOOL: ${item.tool_name || 'none'}</span>
-          </div>
-        </div>
+        <tr class="evidence-row">
+          <td><span class="badge ${levelClass}">${escapeHtml(lvl)}</span></td>
+          <td><span class="badge badge-outline">${escapeHtml(item.category || 'SWE')}</span></td>
+          <td>
+            <div class="cell-statement"><strong>${escapeHtml(summaryStr)}</strong></div>
+            ${item.content && item.content !== summaryStr ? `<pre class="cell-evidence-code"><code>${escapeHtml(item.content.slice(0, 300))}</code></pre>` : ''}
+          </td>
+          <td><span class="code-font cell-prov">${escapeHtml(sourceStr)}</span></td>
+          <td class="text-dim">${escapeHtml(timeStr)}</td>
+        </tr>
       `;
     }).join('');
   }
@@ -2713,9 +3156,12 @@ Verification: VERIFIED_SUCCESS`,
 
       const created = await res.json();
       currentTaskId = created.task_id || created.mission_id;
+      closeModal('newMissionModal');
+      switchView('mission-detail');
       showToast('Mission Launched', `Mission ${currentTaskId.slice(0, 8)} started in ${execution_mode} mode.`, 'success');
       connectEventStream(currentTaskId);
       await refreshTaskData(currentTaskId);
+      await loadInitialTasks();
 
       // Trigger execution pipeline immediately
       await fetch(`/api/tasks/${currentTaskId}/run`, {
@@ -3692,5 +4138,488 @@ Verification: VERIFIED_SUCCESS`,
     });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+
+  // -------------------------------------------------------------
+  // WEBSITE INTERACTIVITY & DUAL-MODE WORKSPACE CONTROLS
+  // -------------------------------------------------------------
+  let currentWebsiteStage = 1;
+  let simCurrentStage = 1;
+  let simAutoInterval = null;
+  let currentSimulatorScenario = 'calc';
+
+  const SIMULATOR_SCENARIOS = {
+    calc: {
+      title: 'Target: calc.py • Failure: Off-by-one arithmetic subtraction in add()',
+      agent: 'SWE Agent',
+      diff: `<span class="diff-line-del">- def add(a: int, b: int) -> int:</span>\n<span class="diff-line-del">-     return a - b + 1  # Logic flaw</span>\n<span class="diff-line-add">+ def add(a: int, b: int) -> int:</span>\n<span class="diff-line-add">+     return a + b      # Repaired AST node</span>`,
+      output: `<span class="text-cyan">[SUBPROCESS SANDBOX]</span> Running pytest tests/test_calc.py (shell=False)...<br><span class="text-emerald">tests/test_calc.py::test_addition PASSED [100%]</span><br><span class="text-emerald">[VERIFIED] Exit Code: 0 • Assertions: 12/12 • Verification Signature: SHA-256 Valid</span>`,
+      templateIndex: 0
+    },
+    sec: {
+      title: 'Target: storage.py • Security: Path traversal directory escape attempt',
+      agent: 'Diagnostics Specialist',
+      diff: `<span class="diff-line-del">- def sanitize_path(target: str) -> Path:</span>\n<span class="diff-line-del">-     return Path(WORKSPACE_ROOT) / target</span>\n<span class="diff-line-add">+ def sanitize_path(target: str) -> Path:</span>\n<span class="diff-line-add">+     resolved = (Path(WORKSPACE_ROOT) / target).resolve()</span>\n<span class="diff-line-add">+     if not resolved.is_relative_to(WORKSPACE_ROOT): raise SecurityBoundaryError()</span>\n<span class="diff-line-add">+     return resolved</span>`,
+      output: `<span class="text-amber">[POLICY EVALUATOR]</span> RULE-SEC-001 boundary check active.<br><span class="text-emerald">tests/test_security.py::test_path_traversal_quarantine PASSED [100%]</span><br><span class="text-emerald">[VERIFIED] Exit Code: 0 • Traversal blocked at kernel boundary.</span>`,
+      templateIndex: 3
+    },
+    rec: {
+      title: 'Target: config.py • Failure: Whitespace syntax exception in parser',
+      agent: 'Recovery Coordinator',
+      diff: `<span class="diff-line-del">- def parse_config(raw: str) -> dict:</span>\n<span class="diff-line-del">-     for line in raw.splitlines()</span>\n<span class="diff-line-add">+ def parse_config(raw: str) -> dict:</span>\n<span class="diff-line-add">+     for line in raw.splitlines():</span>\n<span class="diff-line-add">+         if not line.strip(): continue</span>`,
+      output: `<span class="text-amber">[SELF-HEALING RECOVERY]</span> Syntax diagnosis -> Attempt 1/3 (Budget: 120s).<br><span class="text-emerald">tests/test_config.py::test_parser_recovery PASSED [100%]</span><br><span class="text-emerald">[RECOVERY RESOLVED] Rollback audit logged • Verification Certificate Signed.</span>`,
+      templateIndex: 4
+    }
+  };
+
+  const PIPELINE_STAGE_DATA = {
+    1: {
+      badge: 'STAGE 01 OF 07',
+      title: 'Inspect Repository & AST Code Graph',
+      agent: 'Repository Intelligence & AST Mapper',
+      goal: 'Static AST analysis of target modules, blast-radius mapping, and symbol caller/callee cross-referencing.',
+      security: 'RULE-SEC-001 (Workspace Boundary), RULE-TOOL-001 (Path Traversal Quarantine)',
+      criteria: 'Valid Python AST parse tree generated with zero syntax exceptions; token-bounded context slice ready.',
+      artifactType: 'AST Node Inspector',
+      code: `{\n  "module": "calc.py",\n  "symbols": ["add", "subtract", "multiply", "divide"],\n  "ast_nodes": 42,\n  "blast_radius": ["tests/test_calc.py"],\n  "integrity_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"\n}`
+    },
+    2: {
+      badge: 'STAGE 02 OF 07',
+      title: 'Analyze Failure & Taxonomy Classification',
+      agent: 'Diagnostics Specialist',
+      goal: 'Isolate root-cause exception, classify failure into 1 of 6 formal taxonomy categories, and formulate repair hypothesis.',
+      security: 'RULE-SEC-003 (Deterministic Classifier), RULE-TOOL-002 (Read-Only Tool Access)',
+      criteria: 'Deterministic taxonomy classification output; minimal reproduction stack trace extracted.',
+      artifactType: 'Failure Taxonomy Profile',
+      code: `{\n  "category": "SWE_LOGIC_DEFECT",\n  "target_file": "calc.py",\n  "failing_line": 14,\n  "exception_type": "AssertionError",\n  "observed_value": "-3",\n  "expected_value": "7",\n  "hypothesis": "Subtraction operator used instead of addition in arithmetic accumulator."\n}`
+    },
+    3: {
+      badge: 'STAGE 03 OF 07',
+      title: 'Formulate Patch & Minimal Blast-Radius Diff',
+      agent: 'SWE Agent (Lead Synthesizer)',
+      goal: 'Synthesize minimal unified diff correcting logic error, verify AST parseability, and compute optimistic hash lock.',
+      security: 'RULE-SEC-002 (Model Output Untrusted: AST Validation Mandatory)',
+      criteria: 'Unified diff parses with ast.parse(); zero modifications outside target blast radius.',
+      artifactType: 'Unified Diff Patch',
+      code: `--- a/calc.py\n+++ b/calc.py\n@@ -12,4 +12,4 @@\n def add(a: int, b: int) -> int:\n-    return a - b + 1\n+    return a + b\n`
+    },
+    4: {
+      badge: 'STAGE 04 OF 07',
+      title: 'Dual-Key Human Approval Gate (HITL)',
+      agent: 'Human Oversight & ApprovalService',
+      goal: 'Enforce policy checkpoint. Human operator reviews blast radius and unified diff before writing to workspace.',
+      security: 'RULE-SEC-008 (Dual-Key Approval), RULE-SEC-009 (Single-Use Non-Replayable Cryptographic Token)',
+      criteria: 'Valid cryptographic token signed by operator; replay attempts rejected with 403 Forbidden.',
+      artifactType: 'Approval Audit Record',
+      code: `{\n  "decision": "APPROVED",\n  "approver": "lead-engineer@orion.internal",\n  "token_id": "tok_9f8e7d6c5b4a",\n  "token_consumed": true,\n  "timestamp": "2026-10-04T16:00:00Z",\n  "hash_lock": "sha256:7a8b9c..."\n}`
+    },
+    5: {
+      badge: 'STAGE 05 OF 07',
+      title: 'Implement Controlled Change in Workspace',
+      agent: 'Workspace Isolation Engine',
+      goal: 'Apply verified unified diff atomically within workspace containment boundary, updating file modification timestamp.',
+      security: 'RULE-SEC-006 (Path Traversal Quarantine), RULE-SEC-007 (Protected Paths Immutably Blocked)',
+      criteria: 'Diff applied cleanly with zero reject chunks; SHA-256 state matches expected post-condition hash.',
+      artifactType: 'Patch Application Journal',
+      code: `{\n  "target_path": "calc.py",\n  "applied_chunks": 1,\n  "rejected_chunks": 0,\n  "pre_hash": "sha256:a1b2c3...",\n  "post_hash": "sha256:d4e5f6...",\n  "status": "ATOMIC_COMMIT_SUCCESS"\n}`
+    },
+    6: {
+      badge: 'STAGE 06 OF 07',
+      title: 'Execute Sandboxed Pytest Runner',
+      agent: 'Sandboxed Subprocess Runner',
+      goal: 'Execute test suite in isolated physical subprocess (shell=False) with argv tokenization and timeout watchdogs.',
+      security: 'RULE-SEC-005 (Arbitrary Shell Forbidden), RULE-BUDGET-002 (120s Execution Timeout)',
+      criteria: 'Subprocess terminates with exit code 0; all test assertions pass; zero regression failures.',
+      artifactType: 'Pytest Subprocess Output',
+      code: `============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1\nrootdir: C:\\Users\\LIKITH\\ORION\ncollected 12 items\n\ntests\\test_calc.py ............                                          [100%]\n\n============================== 12 passed in 0.04s ==============================`
+    },
+    7: {
+      badge: 'STAGE 07 OF 07',
+      title: 'Authoritative Ground Truth Verification',
+      agent: 'Verifier Authority',
+      goal: 'Evaluate physical execution results independently, generate cryptographic evidence proof, and seal mission.',
+      security: 'RULE-SEC-010 (Verification Cannot Be Manufactured), RULE-SEC-013 (Cryptographic Evidence Sealed)',
+      criteria: 'Independent VerificationEngine certification; SHA-256 seal committed to forensic immutable ledger.',
+      artifactType: 'Certified Verification Report',
+      code: `{\n  "verification_status": "CERTIFIED_PASS",\n  "authority": "VerificationEngine.v10",\n  "exit_code": 0,\n  "assertions_passed": 12,\n  "assertions_failed": 0,\n  "cryptographic_seal": "sha256:91e2b4c8f0...",\n  "mission_state": "SUCCESS"\n}`
+    }
+  };
+
+  const QUICKSTART_SNIPPETS = {
+    local: `# 1. Clone repository\ngit clone https://github.com/orion-ai/orion.git\ncd ORION\n\n# 2. Create virtual environment\npython -m venv .venv\n.\\.venv\\Scripts\\activate      # Windows (or: source .venv/bin/activate)\n\n# 3. Verify clean test suite (1,412 tests)\npytest -q\n\n# 4. Launch Mission Command Center\npython -m orion --host 127.0.0.1 --port 8000 --workspace .`,
+    docker: `# Run production hardened non-root container with local workspace mount\ndocker run -d \\\n  --name orion-platform \\\n  -p 8000:8000 \\\n  -v $(pwd):/workspace:rw \\\n  --security-opt no-new-privileges:true \\\n  orion-ai/orion:latest\n\n# Check health probe\ncurl http://localhost:8000/api/v1/health`,
+    api: `# Submit new mission directive via REST API\ncurl -X POST http://127.0.0.1:8000/api/v1/missions \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "prompt": "Analyze calc.py, repair off-by-one arithmetic in add(), run tests, and verify.",\n    "workspace_root": ".",\n    "execution_mode": "controlled"\n  }'\n\n# Returns: {"task_id": "...", "status": "PENDING", "events_url": "/api/tasks/{id}/events"}`,
+    cli: `# Full CLI arguments reference\npython -m orion --help\n\n# Common options:\n#   --host HOST          Bind address (default: 127.0.0.1, use 0.0.0.0 in Docker)\n#   --port PORT          Port number (default: 8000)\n#   --workspace PATH     Target workspace root path (default: .)\n#   --version            Display ORION version`
+  };
+
+  // =============================================================
+  // Product Console Modal Management
+  // =============================================================
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.modal-backdrop.open').forEach(m => {
+      m.classList.remove('open');
+      m.setAttribute('aria-hidden', 'true');
+    });
+  }
+
+  // =============================================================
+  // Primary Information Architecture & View Router
+  // =============================================================
+  let currentViewName = 'overview';
+
+  function switchView(viewName, subName) {
+    currentViewName = viewName || 'overview';
+
+    // 1. Hide all main pages, show target page
+    const pages = {
+      'overview': 'viewOverview',
+      'mission-detail': 'viewMissionDetail',
+      'missions-all': 'viewMissionsAll',
+      'missions-history': 'viewMissionsAll',
+      'agents': 'viewAgents',
+      'evidence': 'viewEvidence',
+      'system': 'viewSystem'
+    };
+
+    const targetPageId = pages[viewName] || 'viewOverview';
+    document.querySelectorAll('.view-page').forEach(p => p.classList.remove('active'));
+    const targetPage = document.getElementById(targetPageId);
+    if (targetPage) {
+      targetPage.classList.add('active');
+    }
+
+    // 2. Update Sidebar Active State
+    document.querySelectorAll('#sidebarNav .nav-item').forEach(item => {
+      const v = item.dataset.view;
+      const s = item.dataset.sub;
+      let isMatch = false;
+      if (subName) {
+        isMatch = (v === viewName && s === subName);
+      } else {
+        isMatch = (v === viewName && !s);
+      }
+      item.classList.toggle('active', isMatch);
+    });
+
+    // 3. Update Breadcrumb
+    const bc = document.getElementById('topbarBreadcrumb');
+    if (bc) {
+      if (viewName === 'overview') {
+        bc.textContent = 'Overview';
+      } else if (viewName === 'mission-detail') {
+        const idTail = currentTaskId ? currentTaskId.slice(0, 8) : 'Detail';
+        bc.textContent = `Missions / ${idTail}`;
+      } else if (viewName === 'missions-all') {
+        bc.textContent = 'Missions / All';
+      } else if (viewName === 'missions-history') {
+        bc.textContent = 'Missions / History';
+      } else if (viewName === 'agents') {
+        bc.textContent = 'System / Workforce';
+      } else if (viewName === 'evidence') {
+        bc.textContent = 'Evidence / Ledger';
+      } else if (viewName === 'system') {
+        const subLabel = (subName || 'security').toUpperCase();
+        bc.textContent = `System / ${subLabel}`;
+      }
+    }
+
+    // 4. Handle Sub-Navigation & Specific Page Workflows
+    if (viewName === 'overview') {
+      window.location.hash = 'overview';
+      loadInitialTasks();
+    } else if (viewName === 'mission-detail') {
+      window.location.hash = `mission-${currentTaskId ? currentTaskId.slice(0, 8) : 'current'}`;
+      if (subName === 'pipeline') {
+        switchTab('tab-changes');
+        const st = document.getElementById('stepperNodes');
+        if (st) st.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (subName === 'testscope') {
+        switchTab('tab-tests');
+        const ts = document.getElementById('testSelectionSection');
+        if (ts) ts.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else if (subName === 'changes') {
+        switchTab('tab-changes');
+      } else if (subName === 'recovery') {
+        switchTab('tab-recovery');
+      } else if (subName === 'verification') {
+        switchTab('tab-verification');
+      } else if (subName === 'graph') {
+        switchTab('tab-graph');
+      }
+      if (currentTaskId) {
+        refreshTaskData(currentTaskId);
+      }
+    } else if (viewName === 'missions-all') {
+      window.location.hash = 'missions';
+      renderAllMissions(allTasksCache, 'all');
+    } else if (viewName === 'missions-history') {
+      window.location.hash = 'history';
+      renderAllMissions(allTasksCache, 'completed');
+    } else if (viewName === 'agents') {
+      window.location.hash = 'workforce';
+      if (currentTaskId) {
+        fetch(`/api/tasks/${currentTaskId}/agents`).then(r => r.ok && r.json()).then(d => {
+          if (d) renderWorkforceRoster(d);
+        }).catch(() => {});
+      }
+    } else if (viewName === 'evidence') {
+      window.location.hash = 'evidence';
+      renderEvidenceList();
+    } else if (viewName === 'system') {
+      const activeSub = subName || 'security';
+      window.location.hash = `system-${activeSub}`;
+
+      // Toggle system subpanels
+      const subPanels = {
+        'security': 'sysSubSecurity',
+        'eval': 'sysSubEval',
+        'obs': 'sysSubObs',
+        'health': 'sysSubHealth'
+      };
+      Object.entries(subPanels).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (key === activeSub) ? 'block' : 'none';
+      });
+
+      // Update system subnav buttons
+      document.querySelectorAll('#systemSubnav button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.subview === activeSub);
+      });
+
+      if (activeSub === 'security') loadPolicyData();
+      if (activeSub === 'eval') loadEvalData();
+      if (activeSub === 'obs') loadObsData(currentTaskId);
+    }
+  }
+
+  // =============================================================
+  // Product Console Event Wiring & Setup
+  // =============================================================
+  function initProductConsole() {
+    // 1. Sidebar Navigation Items
+    document.querySelectorAll('#sidebarNav .nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const v = item.dataset.view;
+        const s = item.dataset.sub;
+        switchView(v, s);
+      });
+    });
+
+    // 2. Topbar Actions & Branding
+    const brand = document.getElementById('brandLogoTrigger');
+    if (brand) brand.addEventListener('click', () => switchView('overview'));
+
+    const pill = dom.navMissionPill;
+    if (pill) pill.addEventListener('click', () => switchView('mission-detail'));
+
+    const btnNew = dom.btnNewMission;
+    if (btnNew) btnNew.addEventListener('click', () => openModal('newMissionModal'));
+
+    const btnOvNew = document.getElementById('btnOverviewNewMission');
+    if (btnOvNew) btnOvNew.addEventListener('click', () => openModal('newMissionModal'));
+
+    const btnOvQuick = document.getElementById('btnOverviewQuickTemplate');
+    if (btnOvQuick) btnOvQuick.addEventListener('click', () => openModal('newMissionModal'));
+
+    const btnDemo = document.getElementById('btnOpenDemoTools');
+    if (btnDemo) btnDemo.addEventListener('click', () => openModal('demoToolsModal'));
+
+    const btnSbDemo = document.getElementById('btnSidebarDemo');
+    if (btnSbDemo) btnSbDemo.addEventListener('click', () => openModal('demoToolsModal'));
+
+    const btnSbArch = document.getElementById('btnSidebarArch');
+    if (btnSbArch) btnSbArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const btnOpenArch = document.getElementById('btnOpenArchitecture');
+    if (btnOpenArch) btnOpenArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const btnOpenArchMod = document.getElementById('btnOpenArchModal');
+    if (btnOpenArchMod) {
+      btnOpenArchMod.addEventListener('click', () => {
+        closeModal('demoToolsModal');
+        openModal('architectureModal');
+      });
+    }
+
+    const btnCmd = document.getElementById('btnOpenCommandPalette');
+    if (btnCmd) btnCmd.addEventListener('click', () => openModal('commandPaletteBackdrop'));
+
+    // 3. Overview Shortcuts
+    const btnOvJump = document.getElementById('btnOvJumpMission');
+    if (btnOvJump) btnOvJump.addEventListener('click', () => switchView('mission-detail'));
+
+    const linkAllM = document.getElementById('linkViewAllMissions');
+    if (linkAllM) linkAllM.addEventListener('click', (e) => { e.preventDefault(); switchView('missions-all'); });
+
+    const linkEv = document.getElementById('linkViewEvidenceLedger');
+    if (linkEv) linkEv.addEventListener('click', (e) => { e.preventDefault(); switchView('evidence'); });
+
+    const btnMisEv = document.getElementById('btnMissionViewEvidence');
+    if (btnMisEv) btnMisEv.addEventListener('click', () => switchView('evidence'));
+
+    // 4. Modal Close Triggers
+    const btnNewClose = document.getElementById('btnNewMissionClose');
+    if (btnNewClose) btnNewClose.addEventListener('click', () => closeModal('newMissionModal'));
+
+    const btnNewCancel = document.getElementById('btnNewMissionCancel');
+    if (btnNewCancel) btnNewCancel.addEventListener('click', () => closeModal('newMissionModal'));
+
+    const btnDemoClose = document.getElementById('btnDemoToolsClose');
+    if (btnDemoClose) btnDemoClose.addEventListener('click', () => closeModal('demoToolsModal'));
+
+    const btnArchClose = document.getElementById('btnArchClose');
+    if (btnArchClose) btnArchClose.addEventListener('click', () => closeModal('architectureModal'));
+
+    const btnAppClose = document.getElementById('modalApprovalCloseBtn');
+    if (btnAppClose) btnAppClose.addEventListener('click', () => closeModal('approvalModalBackdrop'));
+
+    const btnTourClose = document.getElementById('btnTourClose');
+    if (btnTourClose) btnTourClose.addEventListener('click', () => endProductTour());
+
+    const btnTourSkip = document.getElementById('btnTourSkip');
+    if (btnTourSkip) btnTourSkip.addEventListener('click', () => endProductTour());
+
+    const btnLaunchTour = document.getElementById('btnLaunchTourModal');
+    if (btnLaunchTour) {
+      btnLaunchTour.addEventListener('click', () => {
+        closeModal('demoToolsModal');
+        startProductTour();
+      });
+    }
+
+    const btnTogglePres = document.getElementById('btnTogglePresenterModal');
+    if (btnTogglePres) {
+      btnTogglePres.addEventListener('click', () => {
+        closeModal('demoToolsModal');
+        togglePresentationMode();
+      });
+    }
+
+    const btnExitPres = document.getElementById('btnExitPresentation');
+    if (btnExitPres) {
+      btnExitPres.addEventListener('click', () => {
+        exitPresentationMode();
+      });
+    }
+
+    // Close on backdrop click outside dialog
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+          backdrop.classList.remove('open');
+          backdrop.setAttribute('aria-hidden', 'true');
+        }
+      });
+    });
+
+    // 5. Mission Templates Chips inside Modal
+    document.querySelectorAll('#missionTemplatesBar .template-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.dataset.prompt;
+        const mode = chip.dataset.mode || 'controlled';
+        if (dom.taskInputPrompt && prompt) {
+          dom.taskInputPrompt.value = prompt;
+          dom.taskInputPrompt.focus();
+        }
+        if (dom.executionModeSelect) {
+          dom.executionModeSelect.value = mode;
+        }
+      });
+    });
+
+    // 6. Mission History Filter Tabs
+    const filterBtns = document.querySelectorAll('#missionsFilterGroup button');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAllMissions(allTasksCache, btn.dataset.filter);
+      });
+    });
+
+    // 7. System Subnav Buttons
+    document.querySelectorAll('#systemSubnav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchView('system', btn.dataset.subview);
+      });
+    });
+
+    // 8. Mission Detail Subtab Buttons
+    document.querySelectorAll('#commandTabBar .subtab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    // 9. Global Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+K: Command Palette
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openModal('commandPaletteBackdrop');
+        const inp = document.getElementById('commandPaletteInput');
+        if (inp) inp.focus();
+      }
+      // P: Presentation Mode (when not typing in an input)
+      if (e.key.toLowerCase() === 'p' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        togglePresentationMode();
+      }
+      // Escape: Close Modals or Exit Presenter
+      if (e.key === 'Escape') {
+        closeAllModals();
+        exitPresentationMode();
+        endProductTour();
+      }
+    });
+
+    // 10. Check Initial Hash on page load
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'missions') {
+      switchView('missions-all');
+    } else if (hash === 'history') {
+      switchView('missions-history');
+    } else if (hash === 'workforce') {
+      switchView('agents');
+    } else if (hash === 'evidence') {
+      switchView('evidence');
+    } else if (hash.startsWith('system')) {
+      const parts = hash.split('-');
+      switchView('system', parts[1] || 'security');
+    } else if (hash.startsWith('mission')) {
+      switchView('mission-detail');
+    } else {
+      switchView('overview');
+    }
+  }
+
+  function togglePresentationMode() {
+    const isPres = document.body.classList.toggle('presentation-mode');
+    const banner = document.getElementById('presentationBanner');
+    if (banner) banner.style.display = isPres ? 'flex' : 'none';
+  }
+
+  function exitPresentationMode() {
+    document.body.classList.remove('presentation-mode');
+    const banner = document.getElementById('presentationBanner');
+    if (banner) banner.style.display = 'none';
+  }
+
+    document.addEventListener('DOMContentLoaded', init);
 })();

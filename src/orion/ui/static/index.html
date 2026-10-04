@@ -3,341 +3,983 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ORION — Autonomous AI Engineering Mission Command Center">
-  <title>ORION // Mission Command Center</title>
+  <meta name="description" content="ORION — Certified Autonomous AI Software Engineering Console">
+  <title>ORION // Certified AI Software Engineer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
 </head>
-<body class="orion-app">
+<body class="orion-shell">
 
   <!-- =========================================================================
-       ORION INTRO / APPLICATION ENTRY EXPERIENCE
+       1. TOP APP BAR (CALM, RESTRAINED, SYSTEM TELEMETRY & ACTIONS)
        ========================================================================= -->
-  <div class="orion-intro-overlay" id="orionIntroOverlay">
-    <div class="intro-backdrop-grid"></div>
-    <div class="intro-container">
-      <div class="intro-brand">
-        <div class="intro-mark-wrapper">
-          <svg class="intro-mark" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round" fill="rgba(59, 130, 246, 0.08)"/>
-            <polygon points="24,12 34,18 34,30 24,36 14,30 14,18" stroke="#0EA5E9" stroke-width="1.5" stroke-linejoin="round"/>
-            <circle cx="24" cy="24" r="3.5" fill="#3B82F6"/>
-            <line x1="24" y1="4" x2="24" y2="12" stroke="#3B82F6" stroke-width="1.5"/>
-            <line x1="24" y1="36" x2="24" y2="44" stroke="#3B82F6" stroke-width="1.5"/>
-            <line x1="6" y1="24" x2="14" y2="24" stroke="#0EA5E9" stroke-width="1.5"/>
-            <line x1="34" y1="24" x2="42" y2="24" stroke="#0EA5E9" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <h1 class="intro-title">ORION</h1>
-        <div class="intro-subtitle">AUTONOMOUS ENGINEERING INTELLIGENCE</div>
-        <p class="intro-tagline">Observe. Reason. Execute. Verify.</p>
-      </div>
-
-      <div class="intro-actions">
-        <button class="btn btn-primary btn-lg" id="btnEnterOrion">
-          <span>ENTER ORION</span>
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
-        <button class="btn btn-secondary btn-lg" id="btnIntroDemo">
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          <span>EXPLORE DEMO</span>
-        </button>
-        <button class="btn btn-secondary btn-lg" id="btnIntroArch">
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>ARCHITECTURE</span>
-        </button>
-        <button class="btn btn-secondary btn-lg" id="btnIntroMission">
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>RUN REAL MISSION</span>
-        </button>
-      </div>
-
-      <!-- RESTRAINED TECHNICAL LIFECYCLE VISUALIZATION -->
-      <div class="intro-lifecycle">
-        <div class="intro-lifecycle-header">DETERMINISTIC 7-STAGE ENGINEERING LIFECYCLE</div>
-        <div class="intro-lifecycle-track">
-          <div class="intro-stage-step"><span class="step-num">01</span><span class="step-txt">INSPECT</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">02</span><span class="step-txt">ANALYZE</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">03</span><span class="step-txt">FORMULATE</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">04</span><span class="step-txt">IMPLEMENT</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">05</span><span class="step-txt">TEST</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">06</span><span class="step-txt">VERIFY</span></div>
-          <span class="intro-stage-arrow">&rarr;</span>
-          <div class="intro-stage-step"><span class="step-num">07</span><span class="step-txt">REPORT</span></div>
-        </div>
-      </div>
-
-      <!-- REAL SYSTEM STATE BADGES -->
-      <div class="intro-system-state">
-        <div class="intro-state-card">
-          <span class="status-dot online"></span>
-          <span class="state-lbl">SYSTEM</span>
-          <strong class="state-val" id="introSysState">ONLINE</strong>
-        </div>
-        <div class="intro-state-card">
-          <span class="status-dot online"></span>
-          <span class="state-lbl">ENGINE</span>
-          <strong class="state-val" id="introEngineState">READY</strong>
-        </div>
-        <div class="intro-state-card">
-          <span class="status-dot online"></span>
-          <span class="state-lbl">WORKSPACE</span>
-          <strong class="state-val" id="introWorkspaceState">CONTAINED</strong>
-        </div>
-        <div class="intro-state-card">
-          <span class="status-dot online"></span>
-          <span class="state-lbl">VERIFICATION</span>
-          <strong class="state-val" id="introVerifState">AUTHORITATIVE</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================================
-       TOP COMMAND BAR (ENTERPRISE PRODUCT HEADER)
-       ========================================================================= -->
-  <header class="navbar" id="mainNavbar">
-    <div class="nav-brand" id="brandLogoTrigger" title="Click to view ORION system architecture">
-      <div class="brand-mark">
-        <svg class="brand-svg" width="22" height="22" viewBox="0 0 48 48" fill="none" stroke="currentColor">
-          <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" stroke="#3B82F6" stroke-width="3" stroke-linejoin="round" fill="rgba(59, 130, 246, 0.1)"/>
-          <polygon points="24,14 32,19 32,29 24,34 16,29 16,19" stroke="#0EA5E9" stroke-width="2.5" stroke-linejoin="round"/>
-          <circle cx="24" cy="24" r="3" fill="#3B82F6"/>
+  <header class="app-topbar" id="mainNavbar">
+    <div class="topbar-left">
+      <div class="topbar-brand" id="brandLogoTrigger" title="ORION Certified SWE Console">
+        <svg class="topbar-logo" width="20" height="20" viewBox="0 0 48 48" fill="none" stroke="currentColor">
+          <polygon points="24,4 42,14 42,34 24,44 6,34 6,14" stroke="#3B82F6" stroke-width="3" stroke-linejoin="round" fill="rgba(59, 130, 246, 0.12)"/>
+          <polygon points="24,14 32,19 32,29 24,34 16,29 16,19" stroke="#0EA5E9" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="24" cy="24" r="2.5" fill="#3B82F6"/>
         </svg>
+        <span class="topbar-title">ORION</span>
       </div>
-      <div class="brand-text">
-        <span class="brand-title">ORION</span>
-        <span class="brand-tag">AUTONOMOUS ENGINEERING INTELLIGENCE</span>
+      <div class="topbar-divider"></div>
+      <div class="topbar-breadcrumb" id="topbarBreadcrumb">Overview</div>
+    </div>
+
+    <!-- Active Mission Context (Only shown when mission is running) -->
+    <div class="topbar-center" id="navCenterStatus">
+      <div class="mission-context-chip" id="navMissionPill" style="display: none;">
+        <span class="status-dot pulsing" id="navMissionDot"></span>
+        <span class="context-label">MISSION</span>
+        <span class="context-id code-font" id="navMissionId">STANDBY</span>
+        <span class="context-sep">&bull;</span>
+        <span class="context-stage" id="navMissionStage">STAGE: IDLE</span>
       </div>
     </div>
 
-    <!-- Active Mission Center Status Indicator -->
-    <div class="nav-center-status" id="navCenterStatus">
-      <div class="mission-status-pill" id="navMissionPill">
-        <span class="pill-dot" id="navMissionDot"></span>
-        <span class="pill-label">MISSION:</span>
-        <span class="pill-val code-val" id="navMissionId">STANDBY</span>
-        <span class="pill-divider">&bull;</span>
-        <span class="pill-stage" id="navMissionStage">STAGE: IDLE</span>
-      </div>
-    </div>
-
-    <!-- Telemetry Status & Global Actions -->
-    <div class="nav-right-telemetry">
-      <div class="telemetry-item" title="Central deterministic engine core">
+    <!-- Restrained Right Actions & Status -->
+    <div class="topbar-right">
+      <div class="telemetry-pill" title="Backend Core Health">
         <span class="status-dot online" id="coreStatusDot"></span>
-        <span class="telemetry-label">SYSTEM:</span>
-        <span class="telemetry-val" id="coreStatusText">ONLINE</span>
-      </div>
-      <div class="telemetry-item" title="Server-Sent Events real-time event bus">
-        <span class="status-dot pulsing-cyan" id="sseStatusDot"></span>
-        <span class="telemetry-label">STREAM:</span>
-        <span class="telemetry-val text-cyan" id="sseStatusText">CONNECTED</span>
-      </div>
-      <div class="telemetry-item version-item" title="Verified Release Candidate Build">
-        <span class="badge badge-outline version-badge">V10.0.0-RC1</span>
+        <span class="telemetry-text" id="coreStatusText">API: HEALTHY</span>
       </div>
 
-      <div class="nav-actions">
-        <button class="btn btn-secondary btn-sm" id="btnOpenArchitecture" title="Explore ORION Subsystems & Architecture">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>Architecture</span>
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btnPresentationMode" title="Toggle Presentation Mode (Key: P)">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h20v14H2z"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
-          <span>Present</span>
-          <kbd class="cp-kbd-chip">P</kbd>
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btnHelpTour" title="Guided Product Tour">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span>Tour</span>
-        </button>
-        <button class="btn btn-secondary btn-sm command-palette-trigger" id="btnOpenCommandPalette" title="Search ORION commands and views (Ctrl+K)">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <span class="cp-trigger-text">Search</span>
-          <kbd class="cp-kbd-chip">Ctrl+K</kbd>
-        </button>
-        <button class="btn btn-secondary btn-sm" id="btnRefresh" title="Sync telemetry with backend">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Sync
-        </button>
-        <button class="btn btn-primary btn-sm" id="btnNewMission" title="Initialize new autonomous SWE task">
-          <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          New Mission
-        </button>
+      <div class="telemetry-pill" title="Server-Sent Events Stream">
+        <span class="status-dot online" id="sseStatusDot"></span>
+        <span class="telemetry-text" id="sseStatusText">SSE LIVE</span>
       </div>
+
+      <div class="topbar-divider"></div>
+
+      <button type="button" class="btn btn-secondary btn-sm" id="btnOpenDemoTools" title="Access Demo Scenarios, Architecture & Tools">
+        <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span>Demo &amp; Tools</span>
+      </button>
+
+      <button type="button" class="btn btn-secondary btn-sm" id="btnOpenCommandPalette" title="Search commands (Ctrl+K)">
+        <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Search</span>
+        <kbd class="kbd-chip">Ctrl+K</kbd>
+      </button>
+
+      <button type="button" class="btn btn-secondary btn-sm" id="btnRefresh" title="Sync telemetry with backend">
+        <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+
+      <button type="button" class="btn btn-primary btn-sm" id="btnNewMission" title="Initialize new autonomous SWE task">
+        <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>New Mission</span>
+      </button>
+
+      <!-- Auxiliary / hidden contract action triggers -->
+      <button id="btnOpenArchitecture" style="display: none;"></button>
+      <button id="btnPresentationMode" style="display: none;"></button>
+      <button id="btnHelpTour" style="display: none;"></button>
     </div>
   </header>
 
   <!-- =========================================================================
-       APPLICATION SHELL: SIDEBAR NAVIGATION + MAIN VIEWPORT
+       2. APPLICATION BODY: SIDEBAR + MAIN CONTENT AREA
        ========================================================================= -->
-  <div class="app-layout">
+  <div class="app-shell-body">
 
-    <!-- ENTERPRISE WORKSTATION SIDEBAR -->
-    <aside class="sidebar" id="appSidebar">
+    <!-- COMPACT, STABLE SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
       <div class="sidebar-header">
-        <span class="sidebar-label">ENGINEERING CONTROL PLANE</span>
+        <div class="sidebar-title">ORION</div>
+        <div class="sidebar-subtitle">CERTIFIED SWE CONSOLE</div>
       </div>
 
-      <nav class="sidebar-nav" id="commandTabBar">
-        <!-- GROUP 1: OPERATIONS -->
-        <div class="nav-group">
-          <div class="nav-group-title">OPERATIONS</div>
-          <button class="tab-btn active" data-tab="tab-overview" id="tabBtnOverview">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            <span class="tab-label">Mission Command</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-demo" id="tabBtnDemo">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            <span class="tab-label">Demo Center</span>
-            <span class="tab-counter" id="tabCounterDemo">5</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-graph" id="tabBtnGraph">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="12" r="3"></circle><line x1="8.59" y1="7.49" x2="15.42" y2="10.51"></line><line x1="8.59" y1="16.51" x2="15.42" y2="13.49"></line></svg>
-            <span class="tab-label">Execution Graph</span>
-            <span class="tab-counter" id="tabCounterNodes">8</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-workforce" id="tabBtnWorkforce">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            <span class="tab-label">Workforce</span>
-            <span class="tab-counter" id="tabCounterAgents">4</span>
-          </button>
-        </div>
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- GROUP 1: OVERVIEW -->
+        <div class="nav-section-label">OVERVIEW</div>
+        <a class="nav-item active" data-view="overview" id="navOverview">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Overview</span>
+        </a>
 
-        <!-- GROUP 2: ENGINEERING -->
-        <div class="nav-group">
-          <div class="nav-group-title">ENGINEERING</div>
-          <button class="tab-btn" data-tab="tab-repo" id="tabBtnRepo">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            <span class="tab-label">Repository</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-changes" id="tabBtnChanges">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-            <span class="tab-label">Patch Intelligence</span>
-            <span class="tab-counter" id="tabCounterChanges">0</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-tests" id="tabBtnTests">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span class="tab-label">Tests Runner</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-verification" id="tabBtnVerification">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            <span class="tab-label">Verification</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-recovery" id="tabBtnRecovery">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-            <span class="tab-label">Recovery</span>
-            <span class="tab-badge-pulse" id="tabRecoveryPulse" style="display:none;"></span>
-          </button>
-        </div>
+        <!-- GROUP 2: MISSIONS -->
+        <div class="nav-section-label">MISSIONS</div>
+        <a class="nav-item" data-view="mission-detail" id="navMissionActive">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+          <span>Active Mission</span>
+        </a>
+        <a class="nav-item" data-view="missions-all" id="navMissionsAll">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <span>All Missions</span>
+        </a>
+        <a class="nav-item" data-view="missions-history" id="navMissionsHistory">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>History</span>
+        </a>
 
-        <!-- GROUP 3: GOVERNANCE -->
-        <div class="nav-group">
-          <div class="nav-group-title">GOVERNANCE</div>
-          <button class="tab-btn" data-tab="tab-hitl" id="tabBtnHitl">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            <span class="tab-label">Human Oversight</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-policy" id="tabBtnPolicy">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            <span class="tab-label">Policy &amp; Security</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-evidence" id="tabBtnEvidence">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span class="tab-label">Evidence Ledger</span>
-          </button>
-        </div>
+        <!-- GROUP 3: EXECUTION -->
+        <div class="nav-section-label">EXECUTION</div>
+        <a class="nav-item" data-view="mission-detail" data-sub="pipeline" id="navExecPipeline">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+          <span>Pipeline</span>
+        </a>
+        <a class="nav-item" data-view="mission-detail" data-sub="testscope" id="navExecTestScope">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          <span>Test Scope</span>
+        </a>
+        <a class="nav-item" data-view="mission-detail" data-sub="changes" id="navExecChanges">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          <span>Code Changes</span>
+        </a>
+        <a class="nav-item" data-view="mission-detail" data-sub="recovery" id="navExecRecovery">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+          <span>Recovery</span>
+        </a>
 
-        <!-- GROUP 4: INTELLIGENCE -->
-        <div class="nav-group">
-          <div class="nav-group-title">INTELLIGENCE</div>
-          <button class="tab-btn" data-tab="tab-eval" id="tabBtnEval">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-            <span class="tab-label">Evaluation Lab</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-observability" id="tabBtnObservability">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            <span class="tab-label">Observability</span>
-          </button>
-          <button class="tab-btn" data-tab="tab-report" id="tabBtnReport">
-            <svg class="tab-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span class="tab-label">Certified Report</span>
-          </button>
-        </div>
+        <!-- GROUP 4: EVIDENCE -->
+        <div class="nav-section-label">EVIDENCE</div>
+        <a class="nav-item" data-view="evidence" id="navEvidenceLedger">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Evidence Ledger</span>
+        </a>
+        <a class="nav-item" data-view="mission-detail" data-sub="verification" id="navEvidenceVerification">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Verification</span>
+        </a>
+
+        <!-- GROUP 5: SYSTEM -->
+        <div class="nav-section-label">SYSTEM</div>
+        <a class="nav-item" data-view="agents" id="navSystemWorkforce">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>Workforce</span>
+        </a>
+        <a class="nav-item" data-view="system" data-sub="security" id="navSystemSecurity">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Security &amp; Policy</span>
+        </a>
+        <a class="nav-item" data-view="system" data-sub="eval" id="navSystemEval">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>Evaluation Lab</span>
+        </a>
+        <a class="nav-item" data-view="system" data-sub="obs" id="navSystemObs">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>Observability</span>
+        </a>
+        <a class="nav-item" data-view="system" data-sub="health" id="navSystemHealth">
+          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+          <span>Health</span>
+        </a>
       </nav>
+
+      <!-- Sidebar Footer Info -->
+      <div class="sidebar-footer">
+        <div class="sidebar-version-row">
+          <span class="version-label">BUILD</span>
+          <span class="version-tag">V10.0.0-RC1</span>
+        </div>
+        <div class="sidebar-links-row">
+          <button type="button" class="sidebar-footer-link" id="btnSidebarArch">Architecture</button>
+          <span class="sep">&bull;</span>
+          <button type="button" class="sidebar-footer-link" id="btnSidebarDemo">Demo Center</button>
+        </div>
+      </div>
     </aside>
 
-    <!-- =========================================================================
-         MAIN WORKSPACE VIEWPORT
-         ========================================================================= -->
-    <main class="main-viewport" id="mainViewport">
+    <!-- MAIN VIEWPORT CONTENT (PAGES) -->
+    <main class="app-main" id="appMainViewport">
 
-      <!-- IDE BREADCRUMBS -->
-      <nav class="ide-breadcrumbs" id="ideBreadcrumbs" aria-label="Breadcrumbs">
-        <span class="bc-item bc-root">ORION</span>
-        <span class="bc-sep">/</span>
-        <span class="bc-item bc-section" id="bcSection">OPERATIONS</span>
-        <span class="bc-sep">/</span>
-        <span class="bc-item bc-target" id="bcTarget">MISSION COMMAND</span>
-        <span class="bc-sep">/</span>
-        <span class="bc-item bc-tail code-val" id="bcMissionTail">STANDBY</span>
-      </nav>
+      <!-- =====================================================================
+           PAGE 1: OVERVIEW PAGE
+           ===================================================================== -->
+      <div class="view-page active" id="viewOverview">
+        <div class="page-container">
+          <!-- Overview Header -->
+          <div class="overview-header" id="overviewHeader">
+            <div class="overview-title-block">
+              <h1 class="page-title">ORION</h1>
+              <div class="page-subtitle-badge">Certified AI Software Engineer</div>
+              <p class="page-description">Autonomous repository analysis, controlled implementation, testing and evidence-based verification.</p>
+            </div>
+            <div class="overview-actions">
+              <button type="button" class="btn btn-primary" id="btnOverviewNewMission">
+                <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>New Mission</span>
+              </button>
+            </div>
+          </div>
 
-      <!-- CONNECTION LOST / DISCONNECTED BANNER -->
-      <div class="connection-lost-banner card" id="connectionLostBanner" style="display: none;">
-        <div class="connection-lost-content">
-          <span class="status-dot pulsing-amber"></span>
-          <span class="banner-title">STREAM DISCONNECTED:</span>
-          <span class="banner-text">Real-time telemetry connection lost. ORION Command Center is reconnecting with exponential backoff...</span>
+          <!-- 1. System Status (Compact Row) -->
+          <div class="system-status-row" id="systemStatusRow">
+            <div class="status-cell">
+              <span class="status-indicator online"></span>
+              <div class="status-info">
+                <span class="status-key">API</span>
+                <span class="status-val text-emerald" id="statusApiVal">HEALTHY</span>
+              </div>
+            </div>
+            <div class="status-cell">
+              <span class="status-indicator online"></span>
+              <div class="status-info">
+                <span class="status-key">EXECUTION</span>
+                <span class="status-val text-cyan" id="statusExecVal">READY</span>
+              </div>
+            </div>
+            <div class="status-cell">
+              <span class="status-indicator online"></span>
+              <div class="status-info">
+                <span class="status-key">VERIFICATION</span>
+                <span class="status-val text-emerald" id="statusVerifVal">READY</span>
+              </div>
+            </div>
+            <div class="status-cell">
+              <span class="status-indicator online"></span>
+              <div class="status-info">
+                <span class="status-key">SECURITY</span>
+                <span class="status-val text-purple" id="statusSecVal">ENFORCED</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Active Mission Section -->
+          <div class="overview-section">
+            <div class="section-title-bar">
+              <h3 class="section-heading">ACTIVE MISSION</h3>
+            </div>
+            <div class="active-mission-card panel" id="activeMissionCard">
+              <div class="empty-state" id="noActiveMissionState">
+                <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
+                <div class="empty-title">No Active Mission</div>
+                <div class="empty-desc">ORION is standing by. Submit a new task or choose from pre-configured engineering templates.</div>
+                <div class="empty-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnOverviewQuickTemplate">Quick Templates &rarr;</button>
+                </div>
+              </div>
+
+              <!-- Populated when mission active -->
+              <div class="active-mission-content" id="activeMissionContent" style="display: none;">
+                <div class="active-mission-meta">
+                  <div class="meta-left">
+                    <span class="badge badge-cyan" id="ovActiveStatus">RUNNING</span>
+                    <span class="mission-id-link code-font" id="ovActiveId">109ab6cf</span>
+                  </div>
+                  <div class="meta-right">
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnOvJumpMission">View Mission Details &rarr;</button>
+                  </div>
+                </div>
+                <div class="active-mission-objective" id="ovActiveObjective">Repository repair directive</div>
+                <div class="active-mission-progress">
+                  <div class="progress-label">
+                    <span id="ovActiveStageLabel">STAGE: IMPLEMENT</span>
+                    <span class="progress-pct" id="ovActiveStagePct">4/7</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="ovActiveProgressFill" style="width: 57%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Recent Missions Section -->
+          <div class="overview-section">
+            <div class="section-title-bar">
+              <h3 class="section-heading">RECENT MISSIONS</h3>
+              <a class="section-action-link" id="linkViewAllMissions" href="#">View all &rarr;</a>
+            </div>
+            <div class="panel-table-wrap panel">
+              <table class="data-table" id="recentMissionsTable">
+                <thead>
+                  <tr>
+                    <th style="width: 130px;">Mission</th>
+                    <th>Objective</th>
+                    <th style="width: 120px;">Status</th>
+                    <th style="width: 100px;">Duration</th>
+                    <th style="width: 160px;">Created</th>
+                  </tr>
+                </thead>
+                <tbody id="recentMissionsTbody">
+                  <tr>
+                    <td colspan="5" class="table-empty">Loading mission history...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 4. Evidence & System Summary -->
+          <div class="overview-section">
+            <div class="section-title-bar">
+              <h3 class="section-heading">EVIDENCE PROVENANCE</h3>
+              <a class="section-action-link" id="linkViewEvidenceLedger" href="#">Open ledger &rarr;</a>
+            </div>
+            <div class="evidence-summary-strip panel">
+              <div class="evidence-stat-box">
+                <span class="stat-number text-emerald" id="ovVerifiedCount">0</span>
+                <span class="stat-desc">Verified Claims</span>
+              </div>
+              <div class="evidence-stat-box">
+                <span class="stat-number text-cyan" id="ovObservedCount">0</span>
+                <span class="stat-desc">Observed Outputs</span>
+              </div>
+              <div class="evidence-stat-box">
+                <span class="stat-number text-amber" id="ovClaimedCount">0</span>
+                <span class="stat-desc">Hypotheses Tested</span>
+              </div>
+              <div class="evidence-stat-box">
+                <span class="stat-number text-purple" id="ovInvariantsCount">20/20</span>
+                <span class="stat-desc">Security Invariants Enforced</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <button class="btn btn-xs btn-outline" id="btnReconnectNow">Reconnect Now</button>
       </div>
 
-      <!-- DUAL-KEY APPROVAL REQUIRED ALERT BANNER -->
-      <section class="approval-alert-banner card" id="approvalAlertBanner" style="display: none;">
-        <div class="alert-content">
-          <div class="alert-icon-ring pulsing-amber">
-            <svg class="alert-icon text-amber" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <!-- =====================================================================
+           PAGE 2: MISSION DETAIL PAGE (CORE INDUSTRIAL WORKSPACE)
+           ===================================================================== -->
+      <div class="view-page" id="viewMissionDetail">
+        <div class="page-container">
+
+          <!-- Connection Lost Alert -->
+          <div class="connection-lost-banner" id="connectionLostBanner" style="display: none;">
+            <span>SSE Stream Disconnected. Re-establishing telemetry...</span>
+            <button type="button" class="btn btn-secondary btn-xs" id="btnReconnectNow">Reconnect</button>
           </div>
-          <div class="alert-text">
-            <div class="alert-headline-row">
-              <span class="badge badge-amber">OPERATOR AUTHORIZATION REQUIRED</span>
-              <span class="badge badge-outline code-val" id="approvalToolBadge">TOOL: apply_change</span>
-              <span class="badge badge-rose" id="approvalRiskBadge">RISK: HIGH</span>
+
+          <!-- Dual-Key Human Approval Alert Banner -->
+          <div class="approval-alert-banner" id="approvalAlertBanner" style="display: none;">
+            <div class="approval-alert-left">
+              <span class="alert-icon">⚠️</span>
+              <div>
+                <div class="alert-title">
+                  <strong>HUMAN APPROVAL REQUIRED</strong>
+                  <span class="badge badge-amber" id="approvalRiskBadge">HIGH RISK</span>
+                  <span class="badge badge-outline code-font" id="approvalToolBadge">TOOL: apply_patch</span>
+                </div>
+                <div class="alert-rationale" id="approvalRationaleText">Security policy requires operator confirmation before file modification.</div>
+              </div>
             </div>
-            <h3 class="alert-title">Code Modification Patch Awaiting Dual-Key Authorization</h3>
-            <p class="alert-sub" id="approvalRationaleText">A synthesized patch affecting repository files requires explicit authorization before applying to workspace.</p>
+            <div class="approval-alert-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnInspectApprovalDiff">Inspect Diff</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnQuickApprove">Approve</button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnQuickDeny">Deny</button>
+            </div>
+          </div>
+
+          <!-- Mission Header -->
+          <div class="mission-detail-header panel">
+            <div class="mission-header-top">
+              <div class="mission-header-id-group">
+                <span class="badge badge-outline" id="missionStatusBadge">STANDBY</span>
+                <span class="mission-id-pill code-font" id="missionIdBadge">No Active Mission</span>
+                <span class="badge badge-outline" id="missionLifecycleBadge">IDLE</span>
+                <span class="workspace-pill" id="missionWorkspaceBadge">Workspace: .</span>
+              </div>
+              <div class="mission-header-actions">
+                <button type="button" class="btn btn-secondary btn-xs" id="btnReplayMission" title="Timeline Replay">Replay</button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btnMissionViewEvidence" title="Jump to Evidence">View Evidence</button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btnQuickPause" title="Pause Execution">Pause</button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btnQuickResume" title="Resume Execution">Resume</button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btnQuickSteer" title="Inject Directive">Steer</button>
+                <button type="button" class="btn btn-danger btn-xs" id="btnQuickForceFail" title="Force Fail Safe">Force Fail</button>
+                <button type="button" class="btn btn-danger btn-xs" id="btnCancelMission">Cancel</button>
+              </div>
+            </div>
+            <div class="mission-header-objective" id="missionObjective">No mission objective selected. Launch a new mission to begin.</div>
+          </div>
+
+          <!-- Mission Pipeline Stepper (7 Stages) -->
+          <div class="pipeline-section panel">
+            <div class="pipeline-header">
+              <span class="pipeline-title">DETERMINISTIC 7-STAGE PIPELINE</span>
+              <span class="pipeline-legend">
+                <span class="legend-item"><span class="dot done"></span> Completed</span>
+                <span class="legend-item"><span class="dot running"></span> Running</span>
+                <span class="legend-item"><span class="dot pending"></span> Pending</span>
+              </span>
+            </div>
+            <div class="pipeline-stepper" id="stepperNodes">
+              <div class="step-node" id="step-inspect_repository" data-stage="inspect_repository">
+                <div class="step-badge">1</div>
+                <div class="step-text"><span class="step-label">INSPECT</span><span class="step-desc">Repo &amp; AST</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-analyze_failure" data-stage="analyze_failure">
+                <div class="step-badge">2</div>
+                <div class="step-text"><span class="step-label">ANALYZE</span><span class="step-desc">Taxonomy</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-formulate_fix" data-stage="formulate_fix">
+                <div class="step-badge">3</div>
+                <div class="step-text"><span class="step-label">FORMULATE</span><span class="step-desc">Patch Synthesizer</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-approval_gate" data-stage="approval_gate">
+                <div class="step-badge">4</div>
+                <div class="step-text"><span class="step-label">APPROVAL</span><span class="step-desc">Dual-Key Gate</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-implement_change" data-stage="implement_change">
+                <div class="step-badge">5</div>
+                <div class="step-text"><span class="step-label">IMPLEMENT</span><span class="step-desc">Controlled Diff</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-run_tests" data-stage="run_tests">
+                <div class="step-badge">6</div>
+                <div class="step-text"><span class="step-label">TEST</span><span class="step-desc">Sandbox Pytest</span></div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-node" id="step-verify" data-stage="verify">
+                <div class="step-badge">7</div>
+                <div class="step-text"><span class="step-label">VERIFY</span><span class="step-desc">Ground Truth</span></div>
+              </div>
+              <div class="step-line" style="display: none;"></div>
+              <div class="step-node" id="step-generate_report" data-stage="generate_report" style="display: none;">
+                <div class="step-badge">8</div>
+                <div class="step-text"><span class="step-label">REPORT</span><span class="step-desc">Certified Proof</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mission Detail Sub-navigation Tabs -->
+          <div class="detail-subtabs" id="commandTabBar">
+            <button type="button" class="subtab-btn active" data-tab="tab-changes" id="tabBtnChanges">Code Changes &amp; Diff</button>
+            <button type="button" class="subtab-btn" data-tab="tab-tests" id="tabBtnTests">Tests &amp; Test Scope</button>
+            <button type="button" class="subtab-btn" data-tab="tab-verification" id="tabBtnVerification">Verification Authority</button>
+            <button type="button" class="subtab-btn" data-tab="tab-recovery" id="tabBtnRecovery">Self-Healing Recovery</button>
+            <button type="button" class="subtab-btn" data-tab="tab-graph" id="tabBtnGraph">Execution Graph (DAG)</button>
+            <button type="button" class="subtab-btn" data-tab="tab-overview" id="tabBtnOverview" style="display: none;">Overview</button>
+            <button type="button" class="subtab-btn" data-tab="tab-workforce" id="tabBtnWorkforce" style="display: none;">Workforce</button>
+            <button type="button" class="subtab-btn" data-tab="tab-repo" id="tabBtnRepo" style="display: none;">Repo</button>
+            <button type="button" class="subtab-btn" data-tab="tab-evidence" id="tabBtnEvidence" style="display: none;">Evidence</button>
+            <button type="button" class="subtab-btn" data-tab="tab-hitl" id="tabBtnHitl" style="display: none;">HITL</button>
+            <button type="button" class="subtab-btn" data-tab="tab-policy" id="tabBtnPolicy" style="display: none;">Policy</button>
+            <button type="button" class="subtab-btn" data-tab="tab-eval" id="tabBtnEval" style="display: none;">Eval</button>
+            <button type="button" class="subtab-btn" data-tab="tab-observability" id="tabBtnObservability" style="display: none;">Obs</button>
+            <button type="button" class="subtab-btn" data-tab="tab-demo" id="tabBtnDemo" style="display: none;">Demo</button>
+            <button type="button" class="subtab-btn" data-tab="tab-report" id="tabBtnReport" style="display: none;">Report</button>
+          </div>
+
+          <!-- TAB CONTENT PANELS -->
+
+          <!-- PANEL: CODE CHANGES & EXECUTION ACTIVITY (TAB-CHANGES) -->
+          <div class="subtab-panel active" id="tab-changes">
+            <div class="execution-two-column">
+              <!-- Left: Code Diff Viewer -->
+              <div class="exec-col-left panel">
+                <div class="panel-header">
+                  <div class="panel-header-left">
+                    <span class="panel-title">PATCH INTELLIGENCE // UNIFIED DIFF</span>
+                    <span class="badge badge-outline"><span id="modifiedFilesCount">0</span> Files Modified</span>
+                  </div>
+                  <div class="diff-stats-chips">
+                    <span class="chip-add">+<span id="diffLinesAdded">0</span></span>
+                    <span class="chip-del">-<span id="diffLinesRemoved">0</span></span>
+                  </div>
+                </div>
+                <div class="diff-viewer-wrapper">
+                  <pre class="diff-code-block" id="diffCodeBlock">No code changes synthesized yet.</pre>
+                </div>
+              </div>
+
+              <!-- Right: Execution Activity & Metadata -->
+              <div class="exec-col-right panel">
+                <div class="panel-header">
+                  <span class="panel-title">EXECUTION METADATA</span>
+                  <span class="badge badge-cyan" id="execActiveAgent">SWE AGENT</span>
+                </div>
+                <div class="metadata-grid">
+                  <div class="meta-row">
+                    <span class="meta-label">Task ID</span>
+                    <span class="meta-val code-font" id="ovTaskId">-</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Execution ID</span>
+                    <span class="meta-val code-font" id="ovExecutionId">-</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Workspace Root</span>
+                    <span class="meta-val code-font" id="ovWorkspaceRoot">.</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Lifecycle State</span>
+                    <span class="meta-val" id="ovLifecycleState">IDLE</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Current Stage</span>
+                    <span class="meta-val" id="ovCurrentStage">inspect_repository</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Completed Stages</span>
+                    <span class="meta-val" id="ovStagesCompleted">0 / 7</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Approval Gate</span>
+                    <span class="meta-val" id="ovApprovalStatus">NOT_REQUIRED</span>
+                  </div>
+                </div>
+
+                <div class="panel-divider"></div>
+                <div class="panel-header" style="padding-top: 0.5rem;">
+                  <span class="panel-title">TIMELINE EVENTS</span>
+                </div>
+                <div class="timeline-stream-box" id="timelineStream">
+                  <div class="empty-state">No events recorded.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: TESTS & TEST SCOPE (TAB-TESTS) -->
+          <div class="subtab-panel" id="tab-tests">
+            <!-- TEST SCOPE SECTION (Integrated bounded test selection) -->
+            <div class="test-scope-card panel" id="testSelectionSection">
+              <div class="panel-header">
+                <div class="panel-header-left">
+                  <span class="panel-title">TEST SCOPE SELECTION</span>
+                  <span class="badge badge-cyan code-val" id="testSelectionStrategyBadge">DIRECT_TEST_MAPPING</span>
+                  <span class="badge badge-outline" id="testSelectionModeBadge">MODE: INFERRED</span>
+                </div>
+                <div class="test-header-right" style="display: flex; gap: 0.5rem; align-items: center;">
+                  <span class="badge badge-emerald code-font" id="testTargetVal" style="display: none;">tests/unit/...</span>
+                  <span class="badge badge-emerald" id="testSelectionCountBadge">0 TARGETS</span>
+                </div>
+              </div>
+              <div class="test-scope-body">
+                <div class="scope-meta-row" style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.8125rem;">
+                  <div><span class="text-dim">Mode: </span><span class="code-font" id="testSelectionModeVal">INFERRED</span></div>
+                  <div><span class="text-dim">Scope: </span><span class="code-font" id="testSelectionScopeVal">--</span></div>
+                </div>
+                <div class="scope-reason-box" style="margin-bottom: 0.75rem;">
+                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 0.25rem;">Selection Rationale:</span>
+                  <span class="scope-text" id="testSelectionReasonVal" style="font-size: 0.8125rem; color: var(--text-secondary);">Targeted test mapping inferred from AST blast radius. Only tests covering modified functions are scheduled.</span>
+                </div>
+                <div class="scope-targets-box">
+                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 0.25rem;">Selected Test Targets:</span>
+                  <div class="targets-list" id="testSelectedTargetsList">
+                    <div class="empty-targets-state" id="testSelectionEmptyState">No specific test targets identified</div>
+                  </div>
+                </div>
+                <div id="testSelectionHistoricalNote" style="display: none; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                  <span id="testSelectionHistoricalText"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sandboxed Test Runner Output -->
+            <div class="test-runner-card panel">
+              <div class="panel-header">
+                <div class="panel-header-left">
+                  <span class="panel-title">SANDBOXED SUBPROCESS TEST RUNNER</span>
+                  <span class="badge badge-outline">shell=False</span>
+                </div>
+                <div class="test-exit-badge">
+                  <span>Exit Code:</span>
+                  <span class="badge badge-outline code-font" id="testExitCodeBadge">READY</span>
+                </div>
+              </div>
+              <div class="test-terminal-output">
+                <pre class="terminal-code" id="testOutputContent">No tests executed yet.</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: VERIFICATION AUTHORITY (TAB-VERIFICATION) -->
+          <div class="subtab-panel" id="tab-verification">
+            <div class="verification-card panel" id="verifStatusBox">
+              <div class="panel-header">
+                <span class="panel-title">AUTHORITATIVE GROUND TRUTH VERIFICATION</span>
+                <span class="badge badge-emerald" id="verifAuthorityBadge">VerificationEngine.v10</span>
+              </div>
+              <div class="verification-grid">
+                <div class="verif-metric-cell">
+                  <span class="verif-key">Result</span>
+                  <span class="verif-val text-emerald" id="verifResultVal">VERIFIED</span>
+                </div>
+                <div class="verif-metric-cell">
+                  <span class="verif-key">Tests</span>
+                  <span class="verif-val text-emerald" id="verifTestsVal">PASS</span>
+                </div>
+                <div class="verif-metric-cell">
+                  <span class="verif-key">Exit Code</span>
+                  <span class="verif-val code-font" id="verifExitCodeVal">0</span>
+                </div>
+                <div class="verif-metric-cell">
+                  <span class="verif-key">Evidence Proof</span>
+                  <span class="verif-val text-cyan" id="verifEvidenceCountVal">6 VERIFIED</span>
+                </div>
+              </div>
+              <div class="verif-statement-box">
+                <p class="verif-statement" id="verifStatementText">Authoritative VerificationEngine confirmed: all assertions satisfied, zero regressions, and cryptographic hash matches certified state.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: RECOVERY OBSERVATORY (TAB-RECOVERY) -->
+          <div class="subtab-panel" id="tab-recovery">
+            <div class="recovery-container panel">
+              <div class="panel-header">
+                <span class="panel-title">BOUNDED SELF-HEALING RECOVERY</span>
+                <span class="badge badge-outline" id="rollbackAuditBadge">ROLLBACK READY</span>
+              </div>
+              <div class="recovery-metrics-row">
+                <div class="rec-metric-box">
+                  <span class="rec-label">Failure Category</span>
+                  <span class="rec-val text-amber" id="recFailureCatVal">NONE</span>
+                </div>
+                <div class="rec-metric-box">
+                  <span class="rec-label">Active Strategy</span>
+                  <span class="rec-val text-cyan" id="recStrategyVal">STANDBY</span>
+                </div>
+                <div class="rec-metric-box">
+                  <span class="rec-label">Recovery Attempt</span>
+                  <span class="rec-val" id="recAttemptVal">0 / 3</span>
+                </div>
+              </div>
+              <div class="recovery-budget-bars">
+                <div class="budget-item">
+                  <div class="budget-head"><span>Attempts Budget (Max 3)</span><span id="budgetTxtAttempts">0/3</span></div>
+                  <div class="budget-track"><div class="budget-fill" id="budgetBarAttempts" style="width: 0%;"></div></div>
+                </div>
+                <div class="budget-item">
+                  <div class="budget-head"><span>Time Budget (Max 120s)</span><span id="budgetTxtTime">0s/120s</span></div>
+                  <div class="budget-track"><div class="budget-fill" id="budgetBarTime" style="width: 0%;"></div></div>
+                </div>
+                <div class="budget-item">
+                  <div class="budget-head"><span>Patch Allocations (Max 2)</span><span id="budgetTxtPatch">0/2</span></div>
+                  <div class="budget-track"><div class="budget-fill" id="budgetBarPatch" style="width: 0%;"></div></div>
+                </div>
+                <div class="budget-item">
+                  <div class="budget-head"><span>Test Executions (Max 3)</span><span id="budgetTxtTests">0/3</span></div>
+                  <div class="budget-track"><div class="budget-fill" id="budgetBarTests" style="width: 0%;"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: EXECUTION GRAPH (DAG) (TAB-GRAPH) -->
+          <div class="subtab-panel" id="tab-graph">
+            <div class="dag-container panel">
+              <div class="panel-header">
+                <div class="panel-header-left">
+                  <span class="panel-title">EXECUTION TOPOLOGY // DIRECTED ACYCLIC GRAPH</span>
+                  <span class="badge badge-outline"><span id="graphNodeCountBadge">8</span> Nodes</span>
+                </div>
+                <span class="badge badge-cyan" id="graphActiveNodeBadge">Node: inspect_repository</span>
+              </div>
+              <div class="dag-nodes-grid" id="dagNodesGrid">
+                <!-- Dynamically populated -->
+              </div>
+              <div class="dag-detail-panel panel" id="dagNodeDetailPanel">
+                <h4 class="dag-detail-title" id="dagDetailNodeTitle">Select a node to inspect</h4>
+                <div class="dag-detail-meta" id="dagDetailMetaGrid"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 3: MISSIONS LIST / HISTORY PAGE
+           ===================================================================== -->
+      <div class="view-page" id="viewMissionsAll">
+        <div class="page-container">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Missions History</h2>
+              <p class="page-description">Complete log of autonomous engineering missions, durations, and verification states.</p>
+            </div>
+            <div class="missions-filter-tabs" id="missionsFilterGroup">
+              <button type="button" class="btn btn-secondary btn-xs active" data-filter="all">All</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-filter="verified">Verified</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-filter="completed">Completed</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-filter="failed">Failed</button>
+            </div>
+          </div>
+
+          <div class="panel-table-wrap panel">
+            <table class="data-table" id="allMissionsTable">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Mission ID</th>
+                  <th>Directive / Objective</th>
+                  <th style="width: 130px;">Status</th>
+                  <th style="width: 110px;">Duration</th>
+                  <th style="width: 170px;">Created</th>
+                  <th style="width: 90px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="allMissionsTbody">
+                <tr><td colspan="6" class="table-empty">No missions recorded.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="alert-actions">
-          <button class="btn btn-secondary btn-sm" id="btnInspectApprovalDiff">Review Diff</button>
-          <button class="btn btn-emerald btn-sm" id="btnQuickApprove">Authorize &amp; Apply</button>
-          <button class="btn btn-rose btn-sm" id="btnQuickDeny">Deny &amp; Terminate</button>
-        </div>
-      </section>
+      </div>
 
-      <!-- TAB 1: MISSION COMMAND CENTER -->
-      <div class="tab-panel active" id="tab-overview">
-
-        <!-- DIRECTIVE ENTRY CONSOLE -->
-        <section class="command-input-section card" id="commandInputSection">
-          <div class="command-input-header">
-            <div class="command-title-row">
-              <span class="terminal-prompt">&gt;</span>
-              <h2 class="command-title">MISSION COMMAND CENTER // ENTER ENGINEERING TASK</h2>
+      <!-- =====================================================================
+           PAGE 4: AGENTS / WORKFORCE ROSTER
+           ===================================================================== -->
+      <div class="view-page" id="viewAgents">
+        <div class="page-container">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Workforce Roster</h2>
+              <p class="page-description">Authoritative multi-agent technical roster with strict permission policies and conflict arbitrator contracts.</p>
             </div>
-            <span class="badge badge-outline">AUTONOMOUS SOFTWARE ENGINEERING</span>
+            <div class="agent-counts">
+              <span class="badge badge-outline"><span id="workforceTotalBadge">4</span> Total Agents</span>
+              <span class="badge badge-emerald"><span id="workforceActiveBadge">4</span> Active</span>
+            </div>
           </div>
+
+          <div class="panel-table-wrap panel" id="tab-workforce">
+            <table class="data-table" id="workforceTable">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Role</th>
+                  <th style="width: 220px;">Agent Name</th>
+                  <th style="width: 120px;">Status</th>
+                  <th>Current Responsibility / Task</th>
+                  <th style="width: 150px;">Permission Tier</th>
+                  <th style="width: 120px;">Last Activity</th>
+                </tr>
+              </thead>
+              <tbody id="workforceCardsGrid">
+                <!-- Dynamically populated or rendered -->
+                <tr class="agent-row" data-agent="swe">
+                  <td><span class="badge badge-cyan">SWE</span></td>
+                  <td><strong>Software Engineer Agent</strong></td>
+                  <td><span class="badge badge-emerald">STANDBY</span></td>
+                  <td>AST-aware code synthesis, minimal blast-radius diffs, SHA-256 locks</td>
+                  <td><span class="code-font">TIER_CONTROLLED</span></td>
+                  <td class="text-dim">Just now</td>
+                </tr>
+                <tr class="agent-row" data-agent="diagnostics">
+                  <td><span class="badge badge-amber">DX</span></td>
+                  <td><strong>Diagnostics Specialist</strong></td>
+                  <td><span class="badge badge-emerald">STANDBY</span></td>
+                  <td>Failure isolation across 6 formal taxonomy categories</td>
+                  <td><span class="code-font">READ_ONLY</span></td>
+                  <td class="text-dim">Just now</td>
+                </tr>
+                <tr class="agent-row" data-agent="verifier">
+                  <td><span class="badge badge-emerald">VF</span></td>
+                  <td><strong>Verifier Authority</strong></td>
+                  <td><span class="badge badge-emerald">STANDBY</span></td>
+                  <td>Independent ground truth judge; sandboxed pytest assertions</td>
+                  <td><span class="code-font">AUTHORITATIVE</span></td>
+                  <td class="text-dim">Just now</td>
+                </tr>
+                <tr class="agent-row" data-agent="recovery">
+                  <td><span class="badge badge-purple">RC</span></td>
+                  <td><strong>Recovery Coordinator</strong></td>
+                  <td><span class="badge badge-emerald">STANDBY</span></td>
+                  <td>Bounded self-healing (attempts &le; 3, runtime &le; 120s, patches &le; 2)</td>
+                  <td><span class="code-font">RECOVERY_GATE</span></td>
+                  <td class="text-dim">Just now</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 5: EVIDENCE PROVENANCE LEDGER
+           ===================================================================== -->
+      <div class="view-page" id="viewEvidence">
+        <div class="page-container">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Evidence Provenance Ledger</h2>
+              <p class="page-description">Cryptographic, append-only ledger tracking Claimed &rarr; Observed &rarr; Verified evidence items.</p>
+            </div>
+            <div class="evidence-filter-group" id="evidenceFilterGroup">
+              <button type="button" class="btn btn-secondary btn-xs active filter-btn" data-filter="all">All</button>
+              <button type="button" class="btn btn-secondary btn-xs filter-btn" data-filter="verified">Verified</button>
+              <button type="button" class="btn btn-secondary btn-xs filter-btn" data-filter="observed">Observed</button>
+              <button type="button" class="btn btn-secondary btn-xs filter-btn" data-filter="claimed">Claimed</button>
+            </div>
+          </div>
+
+          <div class="evidence-axiom-banner panel">
+            <span class="axiom-icon">⚖️</span>
+            <span><strong>Core Verification Axiom:</strong> EXECUTION &ne; SUCCESS. VERIFIED EXECUTION = SUCCESS.</span>
+          </div>
+
+          <div class="panel-table-wrap panel" id="tab-evidence">
+            <table class="data-table" id="evidenceTable">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Level</th>
+                  <th style="width: 140px;">Category</th>
+                  <th>Statement / Evidence Content</th>
+                  <th style="width: 180px;">Cryptographic Provenance</th>
+                  <th style="width: 140px;">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="evidenceFeed">
+                <tr><td colspan="5" class="table-empty">No evidence recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 6: SYSTEM (HEALTH, SECURITY, EVALUATION, OBSERVABILITY)
+           ===================================================================== -->
+      <div class="view-page" id="viewSystem">
+        <div class="page-container">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">System &amp; Governance</h2>
+              <p class="page-description">Authoritative PolicyEngine guardrails, evaluation benchmarks, and distributed observability traces.</p>
+            </div>
+            <div class="system-subnav" id="systemSubnav">
+              <button type="button" class="btn btn-secondary btn-xs active" data-subview="security">Security &amp; Policy</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-subview="eval">Evaluation Lab</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-subview="obs">Observability</button>
+              <button type="button" class="btn btn-secondary btn-xs" data-subview="health">Health &amp; Diagnostics</button>
+            </div>
+          </div>
+
+          <!-- SUBVIEW: SECURITY & POLICY ENGINE -->
+          <div class="system-subpanel active" id="sysSubSecurity">
+            <div class="panel-section-title">20 NON-NEGOTIABLE SECURITY INVARIANTS</div>
+            <div class="invariants-table-wrap panel" id="tab-policy">
+              <table class="data-table policy-rules-table" id="policyRulesTable">
+                <thead>
+                  <tr>
+                    <th style="width: 110px;">Rule ID</th>
+                    <th style="width: 140px;">Tier</th>
+                    <th style="width: 220px;">Invariant Name</th>
+                    <th>Formal Enforcement Specification</th>
+                    <th style="width: 110px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="policyRulesList">
+                  <!-- Dynamically populated or rendered -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="panel-section-title" style="margin-top: 1.5rem;">POLICY EVALUATION DECISION STREAM</div>
+            <div class="panel" id="policyDecisionsBox">
+              <div id="policyDecisionsList" class="policy-decisions-feed">
+                <div class="empty-state">No policy evaluation events recorded.</div>
+              </div>
+              <form id="policySimForm" style="display: none;"></form>
+            </div>
+          </div>
+
+          <!-- SUBVIEW: EVALUATION LAB -->
+          <div class="system-subpanel" id="sysSubEval" style="display: none;">
+            <div class="panel-section-title">STANDARDIZED BENCHMARK SUITES</div>
+            <div class="panel" id="tab-eval">
+              <div class="panel-header">
+                <span class="panel-title">EXPERIMENT COMPARATOR</span>
+                <div class="eval-actions">
+                  <button type="button" class="btn btn-primary btn-xs" id="btnRunEvaluation">Run Evaluation</button>
+                  <button type="button" class="btn btn-secondary btn-xs" id="btnCompareExperiments">Compare Experiments</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table eval-runs-table" id="evalRunsTable">
+                  <thead>
+                    <tr>
+                      <th>Run ID</th>
+                      <th>Suite</th>
+                      <th>Pass@1</th>
+                      <th>Recovery Rate</th>
+                      <th>Mean Duration</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="evalRunsTbody">
+                    <tr><td colspan="6" class="table-empty">No benchmark evaluation runs recorded.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBVIEW: OBSERVABILITY -->
+          <div class="system-subpanel" id="sysSubObs" style="display: none;">
+            <div class="panel-section-title">DISTRIBUTED TRACER WATERFALL</div>
+            <div class="panel trace-waterfall-container" id="tab-observability">
+              <div class="panel-header">
+                <span class="panel-title">SPAN TRACE WATERFALL</span>
+                <span class="badge badge-outline">P50 / P90 / P99 Quantiles</span>
+              </div>
+              <div class="trace-waterfall-box" id="obsTraceWaterfall">
+                <div class="empty-state">No active trace spans recorded.</div>
+              </div>
+            </div>
+
+            <div class="obs-two-col" style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="panel">
+                <div class="panel-header"><span class="panel-title">BOTTLENECK DETECTOR</span></div>
+                <div id="obsBottlenecksList" class="obs-list-box"><div class="empty-state">No bottlenecks detected.</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-header"><span class="panel-title">OPTIMIZATION INSIGHTS</span></div>
+                <div id="obsRecommendationsList" class="obs-list-box"><div class="empty-state">System latency optimal.</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBVIEW: HEALTH -->
+          <div class="system-subpanel" id="sysSubHealth" style="display: none;">
+            <div class="panel-section-title">SYSTEM HEALTH &amp; DIAGNOSTICS</div>
+            <div class="panel">
+              <div class="metadata-grid">
+                <div class="meta-row"><span class="meta-label">Engine Core</span><span class="meta-val text-emerald">RUNNING (Python 3.12 Pure Standard Library)</span></div>
+                <div class="meta-row"><span class="meta-label">Dependencies</span><span class="meta-val text-emerald">0 Third-Party Runtime Dependencies</span></div>
+                <div class="meta-row"><span class="meta-label">Uptime</span><span class="meta-val code-font" id="engineUptime">Active</span></div>
+                <div class="meta-row"><span class="meta-label">Rate Limiter</span><span class="meta-val">TokenBucket (Sliding Window Active)</span></div>
+                <div class="meta-row"><span class="meta-label">Workspace Isolation</span><span class="meta-val text-emerald">ENFORCED (Traversal / UNC / Symlinks Blocked)</span></div>
+                <div class="meta-row"><span class="meta-label">Active Missions</span><span class="meta-val" id="activeMissionsCount">0</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Retained auxiliary contract elements for HITL and Repo tools -->
+          <div id="tab-repo" style="display: none;">
+            <input type="text" id="repoImpactTargetFile">
+            <button id="btnAnalyzeImpact"></button>
+            <input type="text" id="repoContextTargetFile">
+            <button id="btnAnalyzeContext"></button>
+          </div>
+          <div id="tab-hitl" style="display: none;">
+            <div id="hitlClarificationsList"></div>
+            <form id="hitlInterveneForm"></form>
+            <form id="hitlFeedbackForm"></form>
+            <div id="hitlHistoryList"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =========================================================================
+       3. MODALS & AUXILIARY CONTROLS (TUCKED AWAY, ACCESSIBLE, NOT CLUTTERED)
+       ========================================================================= -->
+
+  <!-- NEW MISSION MODAL -->
+  <div class="modal-backdrop" id="newMissionModal">
+    <div class="modal-dialog panel">
+      <div class="modal-header">
+        <h3 class="modal-title">Initialize Engineering Mission</h3>
+        <button type="button" class="modal-close-btn" id="btnNewMissionClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick Templates Bar (Matches contract) -->
+        <div class="templates-section">
+          <span class="templates-header-label">Quick-Launch Templates:</span>
           <div class="mission-templates-bar" id="missionTemplatesBar">
-            <span class="templates-label">Quick Templates:</span>
             <button type="button" class="template-chip" data-task="Fix Calculator Addition Offset" data-prompt="Analyze calc.py, repair off-by-one arithmetic subtraction in add(), execute tests/test_calc.py, and verify fix." data-mode="controlled">
               <span class="chip-dot dot-cyan"></span>Fix Off-By-One Bug
             </button>
@@ -351,1521 +993,221 @@
               <span class="chip-dot dot-rose"></span>Security-Sensitive Task
             </button>
             <button type="button" class="template-chip" data-task="Autonomous Self-Healing Recovery" data-prompt="Execute self-healing task with bounded retries: parse_config whitespace bug, isolate assertion failure, trigger recovery retry, and verify." data-mode="controlled">
-              <span class="chip-dot dot-emerald"></span>Failure + Recovery
-            </button>
-          </div>
-          <form class="command-form" id="commandCenterForm">
-            <div class="command-input-row">
-              <div class="input-col-task">
-                <label for="taskInputPrompt" class="input-label">Natural-Language Task Directive</label>
-                <input type="text" id="taskInputPrompt" class="input-field input-task-glow" placeholder="e.g., Analyze failing tests, synthesize bounded patch, run controlled tests, and verify fix." required value="Analyze repository, synthesize repair patch, run tests, and verify authoritative fix.">
-              </div>
-              <div class="input-col-workspace">
-                <label for="workspaceInputPath" class="input-label">Permitted Workspace Root</label>
-                <input type="text" id="workspaceInputPath" class="input-field code-val" placeholder="C:/Projects/workspace" required value="C:/Users/LIKITH/ORION">
-              </div>
-              <div class="input-col-mode">
-                <label for="executionModeSelect" class="input-label">Execution Mode</label>
-                <select id="executionModeSelect" class="input-field select-field">
-                  <option value="controlled">Controlled (Approval Guarded)</option>
-                  <option value="autonomous">Autonomous (Auto-Approve)</option>
-                </select>
-              </div>
-              <div class="input-col-btn">
-                <button type="submit" class="btn btn-primary btn-launch" id="btnSubmitTask">
-                  <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                  Launch Mission
-                </button>
-              </div>
-            </div>
-          </form>
-        </section>
-
-        <!-- ACTIVE MISSION HERO & 7-STAGE WORKFLOW STEPPER -->
-        <section class="mission-hero card" id="missionHeroSection">
-          <div class="mission-hero-header">
-            <div class="mission-meta">
-              <div class="badge-row">
-                <span class="badge badge-accent code-val" id="missionIdBadge">MISSION: STANDBY</span>
-                <span class="badge badge-status" id="missionStatusBadge">STANDBY</span>
-                <span class="badge badge-lifecycle" id="missionLifecycleBadge">STATE: RECEIVED</span>
-                <span class="badge badge-outline code-val" id="missionWorkspaceBadge">WORKSPACE: LOCALHOST</span>
-              </div>
-              <h2 class="mission-objective" id="missionObjective">Awaiting Engineering Task Submission...</h2>
-            </div>
-            <div class="mission-hero-controls">
-              <button class="btn btn-secondary btn-sm" id="btnRunPipeline">
-                <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Execute Pipeline
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btnAdvanceStage">Advance Stage &rarr;</button>
-              <button class="btn btn-rose-subtle btn-sm" id="btnCancelMission" title="Halt and cancel active mission pipeline">
-                <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                Cancel Mission
-              </button>
-            </div>
-          </div>
-
-          <!-- 7-STAGE WORKFLOW STEPPER + APPROVAL GATE -->
-          <div class="stepper-wrapper">
-            <div class="stepper-track">
-              <div class="stepper-progress-fill" id="stepperFill" style="width: 14%;"></div>
-            </div>
-            <div class="stepper-nodes" id="stepperNodes">
-              <div class="step-node active" data-stage="inspect_repository" id="step-inspect_repository">
-                <div class="node-circle">1</div>
-                <div class="node-label">Inspect</div>
-                <div class="node-sub">Read-only</div>
-              </div>
-              <div class="step-node" data-stage="analyze_failure" id="step-analyze_failure">
-                <div class="node-circle">2</div>
-                <div class="node-label">Analyze</div>
-                <div class="node-sub">Diagnosis</div>
-              </div>
-              <div class="step-node" data-stage="formulate_fix" id="step-formulate_fix">
-                <div class="node-circle">3</div>
-                <div class="node-label">Formulate</div>
-                <div class="node-sub">Patch Plan</div>
-              </div>
-              <div class="step-node step-gate" data-stage="approval_gate" id="step-approval_gate">
-                <div class="node-circle">!</div>
-                <div class="node-label">Approval Gate</div>
-                <div class="node-sub">Dual-Key</div>
-              </div>
-              <div class="step-node" data-stage="implement_change" id="step-implement_change">
-                <div class="node-circle">4</div>
-                <div class="node-label">Implement</div>
-                <div class="node-sub">Apply Patch</div>
-              </div>
-              <div class="step-node" data-stage="run_tests" id="step-run_tests">
-                <div class="node-circle">5</div>
-                <div class="node-label">Run Tests</div>
-                <div class="node-sub">Controlled</div>
-              </div>
-              <div class="step-node" data-stage="verify" id="step-verify">
-                <div class="node-circle">6</div>
-                <div class="node-label">Verify</div>
-                <div class="node-sub">Authoritative</div>
-              </div>
-              <div class="step-node" data-stage="generate_report" id="step-generate_report">
-                <div class="node-circle">7</div>
-                <div class="node-label">Report</div>
-                <div class="node-sub">Certified</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- MISSION COMMAND TWO-COLUMN WORKBENCH -->
-        <div class="mission-workbench-grid">
-          <!-- LEFT COLUMN: EXECUTION PARAMETERS & INVARIANTS -->
-          <div class="workbench-col">
-            <!-- PARAMETERS CARD -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <span>Execution Parameters</span>
-                </div>
-                <div class="quick-intervene-group">
-                  <button class="btn btn-xs btn-outline" id="btnQuickPause" title="Pause active mission execution">Pause</button>
-                  <button class="btn btn-xs btn-outline" id="btnQuickResume" title="Resume paused mission execution">Resume</button>
-                  <button class="btn btn-xs btn-secondary" id="btnQuickSteer" title="Submit guidance directive to active agent">Steer</button>
-                  <button class="btn btn-xs btn-rose" id="btnQuickForceFail" title="Force fail active mission">Force Fail</button>
-                </div>
-              </div>
-              <table class="detail-table">
-                <tbody>
-                  <tr><th>Task ID</th><td class="code-val" id="ovTaskId">None</td></tr>
-                  <tr><th>Execution ID</th><td class="code-val" id="ovExecutionId">None</td></tr>
-                  <tr><th>Workspace Root</th><td class="code-val" id="ovWorkspaceRoot">None</td></tr>
-                  <tr><th>Lifecycle State</th><td id="ovLifecycleState"><span class="badge badge-idle">RECEIVED</span></td></tr>
-                  <tr><th>Current Stage</th><td id="ovCurrentStage"><span class="badge badge-idle">None</span></td></tr>
-                  <tr><th>Stages Completed</th><td id="ovStagesCompleted" class="code-val">0 / 7</td></tr>
-                  <tr><th>Approval Status</th><td id="ovApprovalStatus"><span class="badge badge-idle">NONE REQUIRED</span></td></tr>
-                  <tr><th>Current Blocker</th><td id="ovBlockerStatus"><span class="badge badge-idle">NONE</span></td></tr>
-                  <tr><th>Recovery State</th><td id="ovRecoveryState"><span class="badge badge-idle">IDLE</span></td></tr>
-                  <tr><th>Verification State</th><td id="ovVerificationState"><span class="badge badge-idle">PENDING</span></td></tr>
-                  <tr><th>Evidence Status</th><td id="ovEvidenceTier"><span class="badge badge-cyan">0 RECORDS</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- INVARIANTS & SUBSYSTEM GUARANTEES -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                  <span>Subsystem Deterministic Guarantees</span>
-                </div>
-                <span class="badge badge-emerald">ZERO-TRUST</span>
-              </div>
-              <ul class="invariants-list">
-                <li class="inv-item">
-                  <span class="inv-check text-emerald">&check;</span>
-                  <div>
-                    <strong>Workspace Isolation &amp; Containment</strong>
-                    <p>Path traversal blocked, absolute escapes prevented, protected files secured.</p>
-                  </div>
-                </li>
-                <li class="inv-item">
-                  <span class="inv-check text-emerald">&check;</span>
-                  <div>
-                    <strong>Dual-Key Approval Authority</strong>
-                    <p>High-risk patch applications require ApprovalService authorization. Client cannot self-approve.</p>
-                  </div>
-                </li>
-                <li class="inv-item">
-                  <span class="inv-check text-emerald">&check;</span>
-                  <div>
-                    <strong>Authoritative VerificationEngine</strong>
-                    <p>Task success requires VerificationEngine ground-truth confirmation. Test pass alone is insufficient.</p>
-                  </div>
-                </li>
-                <li class="inv-item">
-                  <span class="inv-check text-emerald">&check;</span>
-                  <div>
-                    <strong>Bounded Self-Healing &amp; Full Transparency</strong>
-                    <p>Strict budget limits on recovery attempts and execution time. Failed attempts recorded; never erased.</p>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- RIGHT COLUMN: TELEMETRY METRICS & REAL-TIME STREAM -->
-          <div class="workbench-col">
-            <!-- METRICS SUMMARY CARDS -->
-            <div class="card metrics-overview-card" id="metricsOverviewCard">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                  <span>Operational Telemetry</span>
-                </div>
-                <span class="badge badge-outline" id="metricEvidenceCount">0 Evidence</span>
-              </div>
-              <div class="metrics-grid">
-                <div class="metric-box">
-                  <span class="metric-number text-emerald" id="metricTestsPassed">0</span>
-                  <span class="metric-name">Tests Passed</span>
-                </div>
-                <div class="metric-box">
-                  <span class="metric-number text-rose" id="metricTestsFailed">0</span>
-                  <span class="metric-name">Tests Failed</span>
-                </div>
-                <div class="metric-box">
-                  <span class="metric-number text-cyan" id="metricVerifPassed">0</span>
-                  <span class="metric-name">Verified Pass</span>
-                </div>
-                <div class="metric-box">
-                  <span class="metric-number text-amber" id="metricRecoveryAttempts">0</span>
-                  <span class="metric-name">Recoveries</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- LIVE TELEMETRY STREAM -->
-            <div class="card live-timeline-card" id="liveTimelineCard">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <span>Live Execution Event Stream</span>
-                </div>
-                <span class="live-pulse-badge"><span class="pulse-point"></span> SSE ACTIVE</span>
-              </div>
-              <div class="timeline-replay-bar" id="timelineReplayBar" style="display: none;">
-                <div class="replay-bar-meta">
-                  <span class="replay-label">HISTORICAL REPLAY:</span>
-                  <span class="replay-step-counter" id="replayStepCounter">0 / 0</span>
-                </div>
-                <div class="replay-controls-row">
-                  <button type="button" class="btn btn-secondary btn-xs" id="btnReplayPrev" title="Step Back in History">&larr;</button>
-                  <input type="range" class="replay-scrubber" id="timelineReplayScrubber" min="0" max="0" value="0">
-                  <button type="button" class="btn btn-secondary btn-xs" id="btnReplayNext" title="Step Forward in History">&rarr;</button>
-                  <button type="button" class="btn btn-primary btn-xs" id="btnReplayLive" title="Return to Live Stream">Live View</button>
-                </div>
-              </div>
-              <div class="timeline-stream" id="timelineStream">
-                <div class="timeline-empty">Awaiting real-time execution stream...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- TAB: INTERACTIVE DEMO CENTER & PLAYER -->
-      <div class="tab-panel" id="tab-demo">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-              <h3 class="obs-title" style="margin:0;">Interactive Demonstration Center</h3>
-              <span class="badge badge-amber frozen-demo-badge">DEMONSTRATION SCENARIO (FROZEN DEMO)</span>
-            </div>
-            <p class="obs-desc">Deterministic, truth-grounded scenario player based on verified ORION evaluation tasks. Inspect the full 7-stage engineering lifecycle with step-by-step evidence verification.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-outline" id="demoCurrentScenarioBadge">SCENARIO: SWE-BUG-001</span>
-            <button class="btn btn-primary btn-sm" id="btnDemoRunReal" title="Transition from Demo to live backend execution">
-              <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Run as Real Mission in Command Center &rarr;
+              <span class="chip-dot dot-emerald"></span>Self-Healing Recovery
             </button>
           </div>
         </div>
 
-        <!-- SCENARIOS SELECTOR CARDS -->
-        <div class="demo-scenarios-bar card">
-          <div class="demo-bar-title-row">
-            <span class="terminal-prompt">&gt;</span>
-            <span class="demo-bar-title">SELECT DETERMINISTIC ENGINEERING SCENARIO:</span>
+        <!-- Command Center Form (Matches contract) -->
+        <form id="commandCenterForm" class="command-form">
+          <div class="form-group">
+            <label for="taskInputPrompt" class="form-label">Engineering Directive / Objective</label>
+            <textarea id="taskInputPrompt" class="form-textarea" rows="4" placeholder="Describe the bug, feature, or security guardrail to implement..." required></textarea>
           </div>
-          <div class="demo-scenarios-grid" id="demoScenariosGrid">
-            <!-- 5 Scenario Cards -->
-            <div class="demo-scenario-card active" data-scenario="0">
-              <div class="scenario-card-head">
-                <span class="badge badge-cyan">SWE-BUG-001</span>
-                <span class="scenario-diff-tag">EASY &bull; ASSERTION</span>
-              </div>
-              <h4 class="scenario-title">1. Repair Failing Test</h4>
-              <p class="scenario-desc">Fix off-by-one arithmetic subtraction in calc.py add() function.</p>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="workspaceInputPath" class="form-label">Workspace Path</label>
+              <input type="text" id="workspaceInputPath" class="form-input" value="." required>
             </div>
-            <div class="demo-scenario-card" data-scenario="1">
-              <div class="scenario-card-head">
-                <span class="badge badge-purple">SWE-SYN-001</span>
-                <span class="scenario-diff-tag">EASY &bull; AST SYNTAX</span>
-              </div>
-              <h4 class="scenario-title">2. Syntax AST Failure</h4>
-              <p class="scenario-desc">Resolve missing colon syntax error in validator.py regex parsing.</p>
-            </div>
-            <div class="demo-scenario-card" data-scenario="2">
-              <div class="scenario-card-head">
-                <span class="badge badge-amber">SWE-REG-001</span>
-                <span class="scenario-diff-tag">MEDIUM &bull; REGRESSION</span>
-              </div>
-              <h4 class="scenario-title">3. Regression Repair</h4>
-              <p class="scenario-desc">Repair SimpleCache TTL invalidation regression causing premature evictions.</p>
-            </div>
-            <div class="demo-scenario-card" data-scenario="3">
-              <div class="scenario-card-head">
-                <span class="badge badge-rose">SWE-SEC-001</span>
-                <span class="scenario-diff-tag">HARD &bull; POLICY GATE</span>
-              </div>
-              <h4 class="scenario-title">4. Security Boundary</h4>
-              <p class="scenario-desc">Block directory traversal in storage.py; evaluate policy approval gate.</p>
-            </div>
-            <div class="demo-scenario-card" data-scenario="4">
-              <div class="scenario-card-head">
-                <span class="badge badge-emerald">SWE-REC-001</span>
-                <span class="scenario-diff-tag">MEDIUM &bull; SELF-HEAL</span>
-              </div>
-              <h4 class="scenario-title">5. Failure + Recovery</h4>
-              <p class="scenario-desc">Test failure triggers failure classification, bounded replan, and verified recovery.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- DEMO PLAYER CONSOLE & CONTROLS -->
-        <div class="demo-player-card card" id="demoPlayerCard">
-          <div class="demo-player-topbar">
-            <div class="player-controls-left">
-              <button class="btn btn-primary btn-sm" id="btnDemoPlay">
-                <svg class="btn-icon" id="demoPlayIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span id="demoPlayText">Play Demo</span>
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btnDemoRestart" title="Restart scenario from Stage 1">
-                <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                Restart
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btnDemoPrevStage" title="Previous Stage">&larr; Prev</button>
-              <button class="btn btn-secondary btn-sm" id="btnDemoNextStage" title="Next Stage">Next &rarr;</button>
-            </div>
-
-            <div class="player-controls-center">
-              <span class="player-stage-tag" id="demoActiveStageName">STAGE 1/7: INSPECT REPOSITORY</span>
-            </div>
-
-            <div class="player-controls-right">
-              <label for="demoSpeedSelect" class="player-speed-label">Speed:</label>
-              <select id="demoSpeedSelect" class="input-field select-field select-speed">
-                <option value="1">1.0x (Deliberate)</option>
-                <option value="2">2.0x (Paced)</option>
-                <option value="4">4.0x (Rapid)</option>
+            <div class="form-group" style="width: 180px;">
+              <label for="executionModeSelect" class="form-label">Execution Mode</label>
+              <select id="executionModeSelect" class="form-select">
+                <option value="controlled" selected>Controlled (HITL)</option>
+                <option value="autonomous">Autonomous</option>
               </select>
             </div>
           </div>
-
-          <!-- 7-STAGE SCRUBBER TRACK -->
-          <div class="demo-timeline-track" id="demoTimelineTrack">
-            <div class="demo-track-step active" data-stage="0">
-              <div class="demo-step-circle">1</div>
-              <span class="demo-step-text">01. INSPECT</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="1">
-              <div class="demo-step-circle">2</div>
-              <span class="demo-step-text">02. ANALYZE</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="2">
-              <div class="demo-step-circle">3</div>
-              <span class="demo-step-text">03. FORMULATE</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="3">
-              <div class="demo-step-circle">4</div>
-              <span class="demo-step-text">04. IMPLEMENT</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="4">
-              <div class="demo-step-circle">5</div>
-              <span class="demo-step-text">05. TEST</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="5">
-              <div class="demo-step-circle">6</div>
-              <span class="demo-step-text">06. VERIFY</span>
-            </div>
-            <div class="demo-track-line"></div>
-            <div class="demo-track-step" data-stage="6">
-              <div class="demo-step-circle">7</div>
-              <span class="demo-step-text">07. REPORT</span>
-            </div>
-          </div>
-          <input type="range" class="demo-slider-scrubber" id="demoScrubber" min="0" max="6" value="0">
-        </div>
-
-        <!-- STAGE EVIDENCE VIEWPORT -->
-        <div class="demo-evidence-viewport" id="demoStageViewport">
-          <!-- Populated dynamically per active stage -->
-        </div>
-
-        <!-- PRINCIPLE BANNER: EXECUTION != SUCCESS, VERIFIED EXECUTION = SUCCESS -->
-        <div class="demo-principle-banner card">
-          <div class="principle-icon text-cyan">🛡️</div>
-          <div class="principle-content">
-            <div class="principle-headline">CORE ARCHITECTURAL PRINCIPLE: EXECUTION &ne; SUCCESS &bull; VERIFIED EXECUTION = SUCCESS</div>
-            <p class="principle-subtext">ORION does not treat a terminating subprocess or generated patch as proof of resolution. A mission succeeds only when the authoritative VerificationEngine independently confirms test execution ground truth, AST compliance, and tamper-resistant evidence provenance.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: EXECUTION GRAPH (DAG VIEW) -->
-      <div class="tab-panel" id="tab-graph">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Directed Acyclic Graph (DAG) Execution Topology</h3>
-            <p class="obs-desc">Deterministic 7-stage software engineering graph with explicit state transitions, cycle prevention, and node-level provenance.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="graphNodeCountBadge">8 Work Nodes</span>
-            <span class="badge badge-outline" id="graphActiveNodeBadge">CURRENT: STANDBY</span>
-            <span class="badge badge-purple" id="graphStateBadge">TOPOLOGY: DETERMINISTIC SWE</span>
-          </div>
-        </div>
-
-        <div class="graph-legend card">
-          <span class="legend-title">NODE STATES:</span>
-          <span class="legend-item"><span class="dot-legend dot-pending"></span> PENDING</span>
-          <span class="legend-item"><span class="dot-legend dot-ready"></span> READY</span>
-          <span class="legend-item"><span class="dot-legend dot-running"></span> RUNNING</span>
-          <span class="legend-item"><span class="dot-legend dot-gate"></span> APPROVAL GATE</span>
-          <span class="legend-item"><span class="dot-legend dot-completed"></span> COMPLETED</span>
-          <span class="legend-item"><span class="dot-legend dot-verified"></span> VERIFIED</span>
-          <span class="legend-item"><span class="dot-legend dot-failed"></span> FAILED</span>
-        </div>
-
-        <div class="dag-container card" id="dagContainer">
-          <div class="dag-nodes-grid" id="dagNodesGrid">
-            <!-- Dynamically populated or rendered -->
-          </div>
-        </div>
-
-        <div class="dag-node-detail-panel card" id="dagNodeDetailPanel" style="display: none;">
-          <h4 class="block-title" id="dagDetailNodeTitle">Node Details</h4>
-          <div class="node-meta-grid" id="dagDetailMetaGrid"></div>
-        </div>
-      </div>
-
-      <!-- TAB 3: WORKFORCE OBSERVATORY (AGENT ROSTER) -->
-      <div class="tab-panel" id="tab-workforce">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Autonomous Workforce Observatory</h3>
-            <p class="obs-desc">Specialist engineering agents operating under strict capability boundaries, deterministic tool policies, and evidence registration.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-purple" id="workforceTotalBadge">4 Autonomous Agents</span>
-            <span class="badge badge-cyan" id="workforceActiveBadge">1 Active</span>
-            <span class="badge badge-emerald">AUTHORITY: GOVERNED</span>
-          </div>
-        </div>
-
-        <!-- SPECIALIST CARDS GRID -->
-        <div class="workforce-cards-grid" id="workforceCardsGrid">
-          <!-- Dynamically populated by app.js -->
-        </div>
-
-        <!-- STATIC SPECIALIST AGENT ROSTER DECK (FALLBACK / INITIAL VIEW) -->
-        <div class="card workforce-card" id="workforceCard">
-          <div class="card-header">
-            <div class="card-title">
-              <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Specialist Engineering Roster</span>
-            </div>
-            <span class="badge badge-outline">ACTIVE ROSTER</span>
-          </div>
-          <div class="agent-list" id="agentList">
-            <div class="agent-item active-agent" id="agentSWE">
-              <div class="agent-avatar avatar-cyan">SWE</div>
-              <div class="agent-details">
-                <div class="agent-name">Orion-SWE-Engineer</div>
-                <div class="agent-caps">Code Modification &bull; Bounded Patch &bull; Execution</div>
-              </div>
-              <span class="agent-state-badge badge-active" id="badgeAgentSWE">ACTIVE</span>
-            </div>
-
-            <div class="agent-item" id="agentDiagnostics">
-              <div class="agent-avatar avatar-purple">DX</div>
-              <div class="agent-details">
-                <div class="agent-name">Diagnostic-Agent</div>
-                <div class="agent-caps">Failure Reproduction &bull; Root Cause Classification</div>
-              </div>
-              <span class="agent-state-badge badge-idle" id="badgeAgentDiagnostics">STANDBY</span>
-            </div>
-
-            <div class="agent-item" id="agentVerifier">
-              <div class="agent-avatar avatar-emerald">VF</div>
-              <div class="agent-details">
-                <div class="agent-name">Authoritative-Verifier</div>
-                <div class="agent-caps">VerificationEngine &bull; Factual Audit &bull; Ground Truth</div>
-              </div>
-              <span class="agent-state-badge badge-idle" id="badgeAgentVerifier">STANDBY</span>
-            </div>
-
-            <div class="agent-item" id="agentRecovery">
-              <div class="agent-avatar avatar-amber">RC</div>
-              <div class="agent-details">
-                <div class="agent-name">Recovery-Coordinator</div>
-                <div class="agent-caps">Bounded Self-Healing &bull; Budget Enforcer &bull; Rollback</div>
-              </div>
-              <span class="agent-state-badge badge-idle" id="badgeAgentRecovery">STANDBY</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: REPOSITORY INTELLIGENCE -->
-      <div class="tab-panel" id="tab-repo">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Repository Topology &amp; Blast Radius Intelligence</h3>
-            <p class="obs-desc">Deterministic static analysis of repository topology, AST cross-file call-graphs, change blast radius, and token-bounded context assembly.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="repoIndexStatusBadge">GRAPH: INDEXED</span>
-            <span class="badge badge-outline code-val" id="repoTotalFilesBadge">FILES: --</span>
-            <span class="badge badge-outline code-val" id="repoTotalSymbolsBadge">SYMBOLS: --</span>
-          </div>
-        </div>
-
-        <div class="repo-intel-grid">
-          <!-- BLAST RADIUS ANALYZER -->
-          <div class="card repo-tool-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-                <span>Change Blast Radius &amp; Dependency Impact</span>
-              </div>
-              <span class="badge badge-outline">TRANSITIVE DEPENDENCIES</span>
-            </div>
-            <div class="repo-tool-body">
-              <div class="form-group-inline">
-                <input type="text" id="repoImpactTargetFile" class="input-field code-val" placeholder="Target file path (e.g. src/orion/api/service.py)" value="src/orion/api/service.py">
-                <button class="btn btn-secondary btn-sm" id="btnAnalyzeImpact">Analyze Impact</button>
-              </div>
-              <div class="repo-results-box" id="repoImpactResults">
-                <div class="impact-metrics-row">
-                  <div class="impact-stat">
-                    <span class="impact-label">DIRECT DEPENDENTS:</span>
-                    <strong class="impact-val text-cyan" id="repoDirectDependentsCount">0</strong>
-                  </div>
-                  <div class="impact-stat">
-                    <span class="impact-label">TRANSITIVE RADIUS:</span>
-                    <strong class="impact-val text-amber" id="repoTransitiveDependentsCount">0</strong>
-                  </div>
-                  <div class="impact-stat">
-                    <span class="impact-label">BLAST SCORE:</span>
-                    <strong class="impact-val text-purple" id="repoBlastRadiusScore">0.0</strong>
-                  </div>
-                </div>
-                <div class="impact-paths-list" id="repoImpactedPathsList">
-                  <span class="text-dim">Enter target file above to compute blast radius.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- CONTEXT NEIGHBORHOOD OPTIMIZER -->
-          <div class="card repo-tool-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                <span>Context Neighborhood &amp; Token Budget</span>
-              </div>
-              <span class="badge badge-emerald">TOKEN-EFFICIENT</span>
-            </div>
-            <div class="repo-tool-body">
-              <div class="form-group-inline">
-                <input type="text" id="repoContextTargetFile" class="input-field code-val" placeholder="Target file path (e.g. src/orion/core/tools/executor.py)" value="src/orion/core/tools/executor.py">
-                <button class="btn btn-secondary btn-sm" id="btnAnalyzeContext">Build Context</button>
-              </div>
-              <div class="repo-results-box" id="repoContextResults">
-                <div class="impact-metrics-row">
-                  <div class="impact-stat">
-                    <span class="impact-label">INCLUDED FILES:</span>
-                    <strong class="impact-val text-emerald" id="repoContextFilesCount">0</strong>
-                  </div>
-                  <div class="impact-stat">
-                    <span class="impact-label">ESTIMATED TOKENS:</span>
-                    <strong class="impact-val text-cyan" id="repoContextTokensCount">0</strong>
-                  </div>
-                </div>
-                <div class="context-snippets-list" id="repoContextSnippets">
-                  <span class="text-dim">Enter target file above to assemble bounded context neighborhood.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 5: PATCH INTELLIGENCE (CODE CHANGES & UNIFIED DIFF) -->
-      <div class="tab-panel" id="tab-changes">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Patch Intelligence &amp; Unified Diff Inspector</h3>
-            <p class="obs-desc">Synthesized code modification proposals audited with boundary validation, line diff metrics, and operator approval tracking.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="modifiedFilesCount">0 Files</span>
-            <span class="badge badge-emerald code-val" id="diffLinesAdded">+0 lines</span>
-            <span class="badge badge-rose code-val" id="diffLinesRemoved">-0 lines</span>
-            <span class="badge badge-outline" id="diffValidationBadge">VALIDATION: PENDING</span>
-            <span class="badge badge-outline" id="diffApprovalBadge">APPROVAL: NONE</span>
-            <span class="badge badge-outline" id="diffApplicationBadge">APPLICATION: PENDING</span>
-          </div>
-        </div>
-
-        <div class="operations-list" id="operationsList" style="display: none;"></div>
-
-        <div class="diff-viewer-container card">
-          <div class="diff-toolbar">
-            <div class="diff-file-info">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              <span class="diff-file-label code-val" id="diffFileLabel">Unified Diff</span>
-            </div>
-            <button class="btn btn-xs btn-secondary" id="btnCopyDiff">Copy Diff</button>
-          </div>
-          <pre class="diff-code-block" id="diffCodeBlock"><code>No code changes or patch proposals generated yet.</code></pre>
-        </div>
-      </div>
-
-      <!-- TAB 6: CONTROLLED TESTS RUNNER -->
-      <div class="tab-panel" id="tab-tests">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Controlled Execution Authority &amp; Test Runner</h3>
-            <p class="obs-desc">Strictly isolated, allowlisted test execution runner enforcing bounded timeouts, memory limits, and ground-truth exit codes.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="test-target-info">
-              <span class="sub-label">TARGET:</span>
-              <span class="code-val" id="testTargetVal">allowlisted_tests</span>
-            </span>
-            <span class="badge badge-outline code-val" id="testExitCodeBadge">EXIT CODE: --</span>
-            <span class="badge badge-idle" id="testOutcomeBadge">STATUS: NOT RUN</span>
-            <span class="badge badge-outline code-val" id="testDurationBadge">DURATION: 0.0s</span>
-          </div>
-        </div>
-
-        <div class="test-terminal-box card">
-          <div class="terminal-bar-top">
-            <div class="terminal-dots">
-              <span class="terminal-dot red"></span>
-              <span class="terminal-dot yellow"></span>
-              <span class="terminal-dot green"></span>
-            </div>
-            <span class="terminal-title">Controlled Execution Runner Console Output</span>
-          </div>
-          <pre class="terminal-content" id="testOutputContent">Controlled tests have not been executed yet.</pre>
-        </div>
-      </div>
-
-      <!-- TAB 7: VERIFICATION CENTER -->
-      <div class="tab-panel" id="tab-verification">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Authoritative Verification Center</h3>
-            <p class="obs-desc">Ground-truth verification authority. In ORION, test pass alone is insufficient; VerificationEngine confirms absolute correctness.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-emerald">AUTHORITY: MANDATORY</span>
-          </div>
-        </div>
-
-        <div class="verification-hero card" id="verificationHero">
-          <div class="verif-status-box" id="verifStatusBox">
-            <span class="verif-icon" id="verifIcon">?</span>
-            <div>
-              <h3 class="verif-heading" id="verifHeading">Authoritative Verification Pending</h3>
-              <p class="verif-sub" id="verifReason">Authoritative verification executes during stage 6 (VERIFY).</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="verif-content-block card">
-          <h4 class="block-title">Formal Ground-Truth Acceptance Criteria</h4>
-          <div class="criteria-list" id="verifCriteriaList">
-            <div class="criterion-item pending" id="critExitCode">
-              <span class="crit-icon">&bull;</span>
-              <span>Allowlisted controlled test runner exit code 0</span>
-            </div>
-            <div class="criterion-item pending" id="critRequirements">
-              <span class="crit-icon">&bull;</span>
-              <span>All expected formal requirements satisfied</span>
-            </div>
-            <div class="criterion-item pending" id="critEvidenceLedger">
-              <span class="crit-icon">&bull;</span>
-              <span>Authoritative VerificationResult registered in evidence ledger</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 8: RECOVERY OBSERVATORY -->
-      <div class="tab-panel" id="tab-recovery">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Failure Recovery &amp; Forensic Healing Observatory</h3>
-            <p class="obs-desc">Autonomous self-healing coordinator with failure classification, finite budget enforcement, and zero-leakage rollback guarantees.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-emerald" id="rollbackAuditBadge">ROLLBACK: CLEAN // NO UNVERIFIED MUTATIONS</span>
-          </div>
-        </div>
-
-        <!-- RECOVERY STATS BANNER -->
-        <div class="recovery-hero-banner card">
-          <div class="rec-hero-stat">
-            <span class="rec-hero-label">FAILURE CLASSIFICATION:</span>
-            <span class="rec-hero-val text-amber" id="recFailureCatVal">NONE DETECTED</span>
-          </div>
-          <div class="rec-hero-stat">
-            <span class="rec-hero-label">ACTIVE RECOVERY STRATEGY:</span>
-            <span class="rec-hero-val text-cyan" id="recStrategyVal">NONE</span>
-          </div>
-          <div class="rec-hero-stat">
-            <span class="rec-hero-label">ATTEMPT COUNTER:</span>
-            <span class="rec-hero-val code-val" id="recAttemptVal">0 / 3</span>
-          </div>
-          <div class="rec-hero-stat">
-            <span class="rec-hero-label">RECOVERY STATE:</span>
-            <span class="rec-hero-val" id="recLifecycleStateVal">IDLE</span>
-          </div>
-        </div>
-
-        <!-- RECOVERY BUDGET PROGRESS BARS -->
-        <div class="recovery-budget-grid">
-          <div class="budget-card card">
-            <div class="budget-card-header">
-              <span>Remaining Attempts</span>
-              <strong id="budgetValAttempts" class="code-val">3 / 3</strong>
-            </div>
-            <div class="budget-track">
-              <div class="budget-fill cyan" id="budgetBarAttempts" style="width: 100%;"></div>
-            </div>
-          </div>
-          <div class="budget-card card">
-            <div class="budget-card-header">
-              <span>Execution Time Budget</span>
-              <strong id="budgetValTime" class="code-val">120.0s</strong>
-            </div>
-            <div class="budget-track">
-              <div class="budget-fill purple" id="budgetBarTime" style="width: 100%;"></div>
-            </div>
-          </div>
-          <div class="budget-card card">
-            <div class="budget-card-header">
-              <span>Patch Regenerations</span>
-              <strong id="budgetValPatch" class="code-val">2 / 2</strong>
-            </div>
-            <div class="budget-track">
-              <div class="budget-fill emerald" id="budgetBarPatch" style="width: 100%;"></div>
-            </div>
-          </div>
-          <div class="budget-card card">
-            <div class="budget-card-header">
-              <span>Test Retries</span>
-              <strong id="budgetValTests" class="code-val">3 / 3</strong>
-            </div>
-            <div class="budget-track">
-              <div class="budget-fill amber" id="budgetBarTests" style="width: 100%;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RECOVERY ATTEMPT HISTORY & ROLLBACK AUDIT -->
-        <div class="recovery-history-section card">
-          <div class="card-header">
-            <div class="card-title">
-              <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>Recovery Attempt History &amp; Rollback Audit</span>
-            </div>
-            <span class="badge badge-outline">IMMUTABLE LOG</span>
-          </div>
-          <div class="recovery-events-list" id="recoveryEventsList">
-            <div class="empty-state">No recovery events occurred. Clean pipeline execution.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 9: HUMAN OVERSIGHT (HITL) -->
-      <div class="tab-panel" id="tab-hitl">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Human-in-the-Loop &amp; Collaborative Oversight</h3>
-            <p class="obs-desc">Real-time collaborative steering, clarification resolution, manual interventions (Pause, Resume, Steer, Force Fail), and post-mission operator feedback.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-purple" id="hitlPendingCountBadge">0 Pending Clarifications</span>
-            <span class="badge badge-emerald">AUTHORITY: DUAL-KEY GOVERNED</span>
-          </div>
-        </div>
-
-        <div class="hitl-cockpit-grid">
-          <!-- CLARIFICATIONS -->
-          <div class="card hitl-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-amber" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Ambiguity &amp; Clarification Requests</span>
-              </div>
-              <span class="badge badge-amber" id="hitlClarificationsBadge">AWAITING OPERATOR</span>
-            </div>
-            <div class="hitl-card-body">
-              <div class="clarifications-list" id="hitlClarificationsList">
-                <div class="empty-state">No pending clarification requests. Autonomous execution unblocked.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- INTERVENTION CONSOLE -->
-          <div class="card hitl-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
-                <span>Operator Intervention Console</span>
-              </div>
-              <span class="badge badge-outline">LIFECYCLE STEERING</span>
-            </div>
-            <div class="hitl-card-body">
-              <form class="hitl-intervene-form" id="hitlInterveneForm">
-                <div class="form-group-row">
-                  <div class="form-group">
-                    <label for="hitlInterveneAction">Intervention Directive</label>
-                    <select id="hitlInterveneAction" class="input-field select-field">
-                      <option value="pause">Pause Active Execution</option>
-                      <option value="resume">Resume Paused Execution</option>
-                      <option value="steer">Steer / Inject Guidance</option>
-                      <option value="force_fail">Force Fail / Terminate</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="hitlInterveneOperator">Operator Identity</label>
-                    <input type="text" id="hitlInterveneOperator" class="input-field code-val" value="LeadDevSecOps" required>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="hitlInterveneReason">Decision Rationale</label>
-                  <input type="text" id="hitlInterveneReason" class="input-field" placeholder="Operational rationale for intervention" value="Manual architectural alignment directive" required>
-                </div>
-                <div class="form-group">
-                  <label for="hitlIntervenePayload">Steering Directive / Instructions (Optional)</label>
-                  <input type="text" id="hitlIntervenePayload" class="input-field" placeholder="e.g. Focus repair strictly on permission checks in auth middleware">
-                </div>
-                <div class="form-actions-right">
-                  <button type="submit" class="btn btn-secondary btn-sm" id="btnSubmitHitlIntervention">Dispatch Intervention</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- POST-MISSION FEEDBACK -->
-          <div class="card hitl-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <span>Operator Mission Evaluation &amp; Feedback</span>
-              </div>
-              <span class="badge badge-emerald">QUALITY SCORING</span>
-            </div>
-            <div class="hitl-card-body">
-              <form class="hitl-feedback-form" id="hitlFeedbackForm">
-                <div class="form-group-row">
-                  <div class="form-group">
-                    <label for="hitlFeedbackRating">Overall System Rating</label>
-                    <select id="hitlFeedbackRating" class="input-field select-field">
-                      <option value="5">5 Stars — Flawless Autonomous Resolution</option>
-                      <option value="4">4 Stars — Verified Patch with Minor Guidance</option>
-                      <option value="3">3 Stars — Acceptable but Required Steering</option>
-                      <option value="2">2 Stars — Partial Resolution / Retry Needed</option>
-                      <option value="1">1 Star — Mission Failure / Ineffective Patch</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="hitlFeedbackCorrections">Corrections / Caveats</label>
-                    <input type="text" id="hitlFeedbackCorrections" class="input-field" placeholder="Optional comma-separated corrections">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="hitlFeedbackComments">Engineering Comments &amp; Observations</label>
-                  <textarea id="hitlFeedbackComments" class="input-field textarea-field" rows="2" placeholder="Qualitative evaluation notes on patch synthesis, verification accuracy, and self-healing performance."></textarea>
-                </div>
-                <div class="form-actions-right">
-                  <button type="submit" class="btn btn-secondary btn-sm" id="btnSubmitFeedback">Submit Verified Review</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- OVERSIGHT AUDIT TRAIL -->
-          <div class="card hitl-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <span>Oversight Audit Trail</span>
-              </div>
-              <span class="badge badge-outline">IMMUTABLE</span>
-            </div>
-            <div class="hitl-card-body">
-              <div class="hitl-history-stream" id="hitlHistoryList">
-                <div class="empty-state">No manual interventions recorded for active mission.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 10: POLICY & SECURITY -->
-      <div class="tab-panel" id="tab-policy">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Policy Engine &amp; Zero-Trust Security Guardrails</h3>
-            <p class="obs-desc">Centralized zero-trust policy engine enforcing workspace containment, credential redaction, high-risk approval gates, recovery budgets, and verification integrity.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-emerald" id="policyRulesCountBadge">Active Guardrails</span>
-            <span class="badge badge-purple">FAIL-SAFE // DETERMINISTIC</span>
-          </div>
-        </div>
-
-        <div class="policy-dashboard-grid">
-          <!-- GUARDRAIL RULES TABLE -->
-          <div class="card policy-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Authoritative Guardrail Rules</span>
-              </div>
-              <span class="badge badge-outline">CENTRAL POLICY</span>
-            </div>
-            <div class="policy-card-body">
-              <div class="rules-table-container">
-                <table class="policy-rules-table" id="policyRulesTable">
-                  <thead>
-                    <tr>
-                      <th>Rule ID</th>
-                      <th>Name</th>
-                      <th>Effect</th>
-                      <th>Priority</th>
-                      <th>Actions &amp; Patterns</th>
-                    </tr>
-                  </thead>
-                  <tbody id="policyRulesList">
-                    <!-- Rendered dynamically -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- POLICY EVALUATION AUDIT STREAM -->
-          <div class="card policy-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                <span>Policy Evaluation Audit Stream</span>
-              </div>
-              <span class="badge badge-outline" id="policyDecisionsCountBadge">Audit Log</span>
-            </div>
-            <div class="policy-card-body">
-              <div class="policy-decisions-feed" id="policyDecisionsList">
-                <div class="empty-state">Awaiting policy evaluation events...</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- WHAT-IF POLICY SIMULATOR -->
-          <div class="card policy-card full-width">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-purple" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                <span>Policy Evaluation Simulator (What-If Analysis)</span>
-              </div>
-              <span class="badge badge-outline">SIMULATION ENGINE</span>
-            </div>
-            <div class="policy-card-body">
-              <form class="policy-sim-form" id="policySimForm">
-                <div class="form-group-row-4">
-                  <div class="form-group">
-                    <label for="policySimSubject">Subject / Actor</label>
-                    <input type="text" id="policySimSubject" class="input-field code-val" value="Orion-SWE-Engineer" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="policySimAction">Action</label>
-                    <input type="text" id="policySimAction" class="input-field code-val" value="modify_file" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="policySimResource">Target Resource</label>
-                    <input type="text" id="policySimResource" class="input-field code-val" value="src/orion/core/swe/coordinator.py" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="policySimRisk">Risk Tier</label>
-                    <select id="policySimRisk" class="input-field select-field">
-                      <option value="low">LOW</option>
-                      <option value="medium">MEDIUM</option>
-                      <option value="high" selected>HIGH</option>
-                      <option value="critical">CRITICAL</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-actions-right">
-                  <button type="submit" class="btn btn-secondary btn-sm" id="btnSimulatePolicy">Evaluate Policy Context</button>
-                </div>
-              </form>
-              <div class="policy-sim-result-box" id="policySimResult" style="display: none;">
-                <!-- Evaluated decision rendered here -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 11: EVALUATION LAB -->
-      <div class="tab-panel" id="tab-eval">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Evaluation Lab &amp; Ground-Truth Benchmarks</h3>
-            <p class="obs-desc">Ground-truth benchmarking platform tracking Pass@1, Verification Success Rate, Recovery Rate, Safe Termination Rate, P90 Latency, and Cost Regression across versions.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="evalSuitesCountBadge">3 Benchmark Suites</span>
-            <span class="badge badge-emerald">AUTHORITY: FORMAL V6</span>
-          </div>
-        </div>
-
-        <div class="eval-cockpit-grid">
-          <!-- EXECUTE BENCHMARK CARD -->
-          <div class="card eval-card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Execute Benchmark Experiment</span>
-              </div>
-              <span class="badge badge-outline">AUTOMATED RUNNER</span>
-            </div>
-            <div class="eval-card-body">
-              <form class="eval-run-form" id="evalRunForm">
-                <div class="form-group-row">
-                  <div class="form-group">
-                    <label for="evalSuiteSelect">Benchmark Corpus</label>
-                    <select id="evalSuiteSelect" class="input-field select-field">
-                      <option value="standard">standard // Core SWE Pipeline Suite</option>
-                      <option value="regression_guard">regression_guard // Anti-Regression Hardening</option>
-                      <option value="recovery_hardening">recovery_hardening // Fault Recovery Stress</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="evalVersionTag">Version Tag</label>
-                    <input type="text" id="evalVersionTag" class="input-field code-val" value="10.0.0-rc1" required>
-                  </div>
-                </div>
-                <div class="form-actions-right">
-                  <button type="submit" class="btn btn-secondary btn-sm" id="btnRunEvaluation">Execute Benchmark Suite</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- EXPERIMENT RUNS HISTORY -->
-          <div class="card eval-card full-width">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                <span>Recorded Benchmark Experiments</span>
-              </div>
-              <button class="btn btn-xs btn-secondary" id="btnRefreshEvalRuns">Refresh Experiments</button>
-            </div>
-            <div class="eval-card-body">
-              <div class="eval-table-container">
-                <table class="eval-runs-table" id="evalRunsTable">
-                  <thead>
-                    <tr>
-                      <th>Experiment ID</th>
-                      <th>Suite</th>
-                      <th>Version</th>
-                      <th>Success Rate</th>
-                      <th>Recovery Rate</th>
-                      <th>Safe Term.</th>
-                      <th>P90 Latency</th>
-                      <th>Cost ($)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="evalRunsList">
-                    <!-- Populated dynamically -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- EXPERIMENT COMPARISON -->
-          <div class="card eval-card full-width">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-purple" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-                <span>Differential Experiment Comparison</span>
-              </div>
-              <span class="badge badge-outline">REGRESSION DETECTOR</span>
-            </div>
-            <div class="eval-card-body">
-              <div class="compare-selectors-row">
-                <div class="form-group">
-                  <label for="evalCompareBaseSelect">Baseline Experiment</label>
-                  <select id="evalCompareBaseSelect" class="input-field select-field"></select>
-                </div>
-                <div class="form-group">
-                  <label for="evalCompareTargetSelect">Candidate Experiment</label>
-                  <select id="evalCompareTargetSelect" class="input-field select-field"></select>
-                </div>
-                <div class="form-group form-btn-align">
-                  <button class="btn btn-secondary btn-sm" id="btnCompareExperiments">Compare Metrics</button>
-                </div>
-              </div>
-              <div class="compare-results-box" id="evalCompareResults" style="display: none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 12: OBSERVABILITY & DISTRIBUTED TRACING -->
-      <div class="tab-panel" id="tab-observability">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Advanced Observability &amp; Distributed Tracing</h3>
-            <p class="obs-desc">Correlated execution traces correlating Mission &rarr; Task &rarr; Agent &rarr; Tool/Model &rarr; Verification with latency quantiles, token telemetry, bottleneck analysis, and proactive optimization.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="obsTotalSpansBadge">0 Spans</span>
-            <span class="badge badge-purple">HIERARCHY: CORRELATED</span>
-          </div>
-        </div>
-
-        <div class="obs-cockpit-grid">
-          <!-- LATENCY & TOKEN TELEMETRY CARDS -->
-          <div class="obs-metrics-bar">
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">P50 LATENCY:</span>
-              <strong class="obs-metric-val text-cyan" id="obsP50Val">-- ms</strong>
-            </div>
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">P90 LATENCY:</span>
-              <strong class="obs-metric-val text-amber" id="obsP90Val">-- ms</strong>
-            </div>
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">P99 LATENCY:</span>
-              <strong class="obs-metric-val text-rose" id="obsP99Val">-- ms</strong>
-            </div>
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">PROMPT TOKENS:</span>
-              <strong class="obs-metric-val text-purple code-val" id="obsPromptTokens">0</strong>
-            </div>
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">COMPLETION TOKENS:</span>
-              <strong class="obs-metric-val text-cyan code-val" id="obsCompletionTokens">0</strong>
-            </div>
-            <div class="obs-metric-card card">
-              <span class="obs-metric-label">ESTIMATED COST:</span>
-              <strong class="obs-metric-val text-emerald code-val" id="obsTotalCost">$0.000</strong>
-            </div>
-          </div>
-
-          <!-- TRACE WATERFALL -->
-          <div class="card obs-card full-width">
-            <div class="card-header">
-              <div class="card-title">
-                <svg class="card-icon text-cyan" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                <span>Distributed Trace Waterfall</span>
-              </div>
-              <button class="btn btn-xs btn-secondary" id="btnRefreshSpans">Refresh Waterfall</button>
-            </div>
-            <div class="obs-card-body">
-              <div class="trace-waterfall-container" id="obsTraceWaterfall">
-                <div class="empty-state">No execution trace spans recorded for current mission. Execute pipeline to view waterfall.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- BOTTLENECKS & RECOMMENDATIONS -->
-          <div class="obs-insights-grid">
-            <!-- SYSTEM BOTTLENECKS -->
-            <div class="card obs-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-amber" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                  <span>System Bottleneck Analysis</span>
-                </div>
-                <span class="badge badge-amber">CRITICAL PATH</span>
-              </div>
-              <div class="obs-card-body">
-                <div class="bottlenecks-list" id="obsBottlenecksList">
-                  <div class="empty-state">No execution bottlenecks detected.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- AUTONOMOUS OPTIMIZATION RECOMMENDATIONS -->
-            <div class="card obs-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg class="card-icon text-emerald" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
-                  <span>Autonomous Optimization Insights</span>
-                </div>
-                <span class="badge badge-emerald">HEURISTIC AI</span>
-              </div>
-              <div class="obs-card-body">
-                <div class="recommendations-list" id="obsRecommendationsList">
-                  <div class="empty-state">No performance recommendations needed. Pipeline operating at optimal latency.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 13: EVIDENCE LEDGER EXPLORER -->
-      <div class="tab-panel" id="tab-evidence">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Authoritative Evidence &amp; Provenance Ledger</h3>
-            <p class="obs-desc">Cryptographically verifiable, immutable record of claimed hypotheses, observed execution realities, and authoritative verification assertions.</p>
-          </div>
-          <div class="obs-badge-row">
-            <span class="badge badge-cyan" id="evidenceFilteredCount">Showing 0 entries</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="panel-toolbar">
-            <div class="filter-group" id="evidenceFilterGroup">
-              <button class="filter-btn active" data-filter="all">ALL</button>
-              <button class="filter-btn" data-filter="claimed">CLAIMED</button>
-              <button class="filter-btn" data-filter="observed">OBSERVED</button>
-              <button class="filter-btn" data-filter="verified">VERIFIED</button>
-            </div>
-          </div>
-          <div class="evidence-feed" id="evidenceFeed">
-            <div class="empty-state">No evidence records logged yet.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 14: CERTIFIED SWE MISSION REPORT -->
-      <div class="tab-panel" id="tab-report">
-        <div class="observatory-header">
-          <div class="obs-title-group">
-            <h3 class="obs-title">Certified SWE Mission Report</h3>
-            <p class="obs-desc">Comprehensive, verifiable certificate documenting the engineering directive, diff summary, controlled test telemetry, and verification audit trail.</p>
-          </div>
-        </div>
-
-        <div class="report-container card" id="reportContainer">
-          <div class="report-empty-state" id="reportEmptyState">
-            <svg class="empty-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <h3>Certified SWE Mission Report Pending</h3>
-            <p>Execute all workflow stages to generate the certified, evidence-backed SWE mission report.</p>
-            <button class="btn btn-secondary btn-sm" id="btnGenReportNow">Generate Certified Report</button>
-          </div>
-
-          <div class="report-content" id="reportContent" style="display: none;">
-            <!-- Populated dynamically -->
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <!-- =========================================================================
-       SYSTEM FOOTER (IDE COMMAND PLANE STATUS BAR)
-       ========================================================================= -->
-  <footer class="system-footer app-statusbar" id="systemFooter">
-    <div class="footer-left sb-left">
-      <span class="status-indicator-dot online"></span>
-      <span class="footer-item"><span class="footer-dim">CORE:</span> <strong id="coreStatusTextFooter" class="code-val">ONLINE</strong></span>
-      <span class="footer-sep">&bull;</span>
-      <span class="footer-item code-val"><span class="footer-dim">MISSION:</span> <strong id="sbMissionText">STANDBY</strong></span>
-      <span class="footer-sep">&bull;</span>
-      <span class="footer-item"><span class="footer-dim">STAGE:</span> <strong id="sbStageText">IDLE</strong></span>
-      <span class="footer-sep">&bull;</span>
-      <span class="footer-item"><span class="footer-dim">UPTIME:</span> <strong id="engineUptime" class="code-val">0.0s</strong></span>
-      <span class="footer-sep">&bull;</span>
-      <span class="footer-item"><span class="footer-dim">ACTIVE:</span> <strong id="activeMissionsCount" class="code-val">0</strong></span>
-    </div>
-    <div class="footer-center">
-      <span class="footer-tag" id="sbWorkspaceText">CONTAINMENT: CANONICAL BOUND</span>
-      <span class="footer-sep">&bull;</span>
-      <span class="footer-tag text-emerald" id="sbVerifText">VERIFICATION: AUTHORITATIVE</span>
-    </div>
-    <div class="footer-right sb-right">
-      <span class="footer-dim">POLICY: <strong class="text-emerald" id="sbPolicyText">ENFORCED</strong></span>
-      <span class="footer-sep">&bull;</span>
-      <strong class="footer-version code-val">V10.0.0-RC1</strong>
-    </div>
-  </footer>
-
-  <!-- =========================================================================
-       MODALS: DUAL-KEY APPROVAL & MISSION CREATION
-       ========================================================================= -->
-
-  <!-- INTERACTIVE APPROVAL MODAL -->
-  <div class="modal-backdrop" id="approvalModalBackdrop">
-    <div class="modal-window card modal-approval" id="approvalModal">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <span class="badge badge-rose">DUAL-KEY APPROVAL REQUIRED</span>
-          <h3 class="modal-title">Authorize Code Modification Patch</h3>
-        </div>
-        <button class="modal-close-btn" id="modalApprovalCloseBtn">&times;</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="approval-meta-grid">
-          <div class="approval-meta-item">
-            <span class="meta-label">REQUEST ID:</span>
-            <span class="code-val" id="modalApprovalReqId">--</span>
-          </div>
-          <div class="approval-meta-item">
-            <span class="meta-label">TOOL &amp; ACTION:</span>
-            <span class="code-val" id="modalApprovalAction">apply_change // apply_patch</span>
-          </div>
-          <div class="approval-meta-item">
-            <span class="meta-label">AFFECTED FILES:</span>
-            <span class="text-cyan code-val" id="modalApprovalFiles">--</span>
-          </div>
-          <div class="approval-meta-item">
-            <span class="meta-label">RATIONALE:</span>
-            <span id="modalApprovalRationale">--</span>
-          </div>
-        </div>
-
-        <div class="modal-diff-box">
-          <div class="diff-header-mini">Unified Diff Preview</div>
-          <pre class="diff-pre-modal" id="modalApprovalDiff"><code>Diff preview loading...</code></pre>
-        </div>
-
-        <form class="approval-decision-form" id="approvalDecisionForm">
-          <div class="form-group-row">
-            <div class="form-group">
-              <label for="inputApproverName">Approver Identity</label>
-              <input type="text" id="inputApproverName" class="input-field code-val" value="LeadSecurityOfficer" required>
-            </div>
-            <div class="form-group">
-              <label for="inputApprovalReason">Decision Rationale</label>
-              <input type="text" id="inputApprovalReason" class="input-field" value="Verified patch matches authorized test scope" required>
-            </div>
-          </div>
-          <div class="modal-footer modal-footer-approval">
-            <button type="button" class="btn btn-rose btn-sm" id="btnModalDeny">Deny Authorization</button>
-            <button type="submit" class="btn btn-emerald btn-sm" id="btnModalApprove">Authorize &amp; Apply Patch</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnNewMissionCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitTask">Launch Mission &rarr;</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- NEW MISSION MODAL -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal-window card" id="newMissionModal">
+  <!-- DUAL-KEY APPROVAL MODAL -->
+  <div class="modal-backdrop" id="approvalModalBackdrop">
+    <div class="modal-dialog panel" style="max-width: 760px;">
       <div class="modal-header">
-        <h3 class="modal-title">Initialize Autonomous SWE Task</h3>
-        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+        <h3 class="modal-title">Review Patch Proposal // Dual-Key Approval</h3>
+        <button type="button" class="modal-close-btn" id="modalApprovalCloseBtn">&times;</button>
       </div>
-      <form class="modal-form" id="createMissionForm">
-        <div class="form-group">
-          <label for="inputObjective">Engineering Task Directive</label>
-          <input type="text" id="inputObjective" class="input-field" placeholder="e.g., Analyze failing test in authentication module and verify repair" required value="Analyze repository, synthesize repair patch, run tests, and verify authoritative fix.">
-        </div>
-        <div class="form-group">
-          <label for="inputWorkspace">Workspace Root Path</label>
-          <input type="text" id="inputWorkspace" class="input-field code-val" placeholder="e.g., C:/Projects/repo" required value="C:/Users/LIKITH/ORION">
-        </div>
-        <div class="form-group">
-          <label for="inputExecutionMode">Execution Mode</label>
-          <select id="inputExecutionMode" class="input-field select-field">
-            <option value="controlled">Controlled (Approval Guarded)</option>
-            <option value="autonomous">Autonomous (Auto-Approve)</option>
-          </select>
-        </div>
+      <div class="modal-body">
+        <p class="modal-desc">Inspect proposed code diff before permitting physical disk write into repository workspace.</p>
+        <pre class="diff-code-block modal-diff" id="modalApprovalDiff">No pending diff.</pre>
+        <form id="approvalDecisionForm" style="display: none;"></form>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" id="btnCancelModal">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitModal">Launch Mission</button>
+          <button type="button" class="btn btn-danger" id="btnModalDeny">Deny Patch</button>
+          <button type="button" class="btn btn-primary" id="btnModalApprove">Approve &amp; Apply Patch</button>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- =========================================================================
-       COMMAND PALETTE (CTRL+K / CMD+K)
-       ========================================================================= -->
-  <div class="command-palette-backdrop" id="commandPaletteBackdrop">
-    <div class="command-palette-modal" id="commandPaletteModal">
-      <div class="command-palette-header">
-        <svg class="cp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" class="command-palette-input" id="commandPaletteInput" placeholder="Search views, tasks, and telemetry (e.g. 'tests', 'diff', 'verification')..." autocomplete="off">
-        <span class="cp-kbd-badge" id="cpCloseBadge">ESC</span>
-      </div>
-      <div class="command-palette-list" id="commandPaletteList"></div>
-      <div class="command-palette-footer">
-        <span class="cp-footer-hint"><kbd>&uarr;</kbd> <kbd>&darr;</kbd> Navigate</span>
-        <span class="cp-footer-hint"><kbd>&crarr;</kbd> Select</span>
-        <span class="cp-footer-hint"><kbd>ESC</kbd> Close</span>
       </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       ARCHITECTURE EXPLORER MODAL
-       ========================================================================= -->
-  <div class="modal-backdrop" id="architectureModal">
-    <div class="modal-window card modal-arch" id="archModalWindow">
+  <!-- DEMO & PRESENTATION TOOLS MODAL / DRAWER -->
+  <div class="modal-backdrop" id="demoToolsModal">
+    <div class="modal-dialog panel" style="max-width: 900px;">
       <div class="modal-header">
-        <div class="modal-title-group">
-          <span class="badge badge-cyan">SYSTEM ARCHITECTURE</span>
-          <h3 class="modal-title">ORION Autonomous Subsystem Pipeline</h3>
+        <div class="modal-header-left">
+          <h3 class="modal-title">Demonstration &amp; Presentation Center</h3>
+          <span class="badge badge-outline">INTERVIEW / DEMO READY</span>
         </div>
-        <button class="modal-close-btn" id="btnArchClose">&times;</button>
+        <button type="button" class="modal-close-btn" id="btnDemoToolsClose">&times;</button>
       </div>
-      <div class="modal-body arch-modal-body">
-        <p class="arch-summary-text">Click any subsystem node in the architecture flow below to inspect its core responsibility, architectural rationale, active API surface, and authoritative production status.</p>
-
-        <!-- PIPELINE FLOW DIAGRAM -->
-        <div class="arch-pipeline-flow" id="archPipelineFlow">
-          <div class="arch-node-chip active" data-subsystem="user_task">
-            <span class="arch-node-num">01</span>
-            <span class="arch-node-name">USER TASK</span>
-            <span class="arch-node-badge badge-outline">DIRECTIVE</span>
+      <div class="modal-body">
+        <!-- Replay Scrubber (Contract: timelineReplayBar) -->
+        <div class="replay-bar-wrapper" id="timelineReplayBar">
+          <div class="replay-header">
+            <span>Timeline Replay Scrubber</span>
+            <span class="replay-step-badge" id="replayStepCounter">Step 0/0</span>
           </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="planning">
-            <span class="arch-node-num">02</span>
-            <span class="arch-node-name">PLANNING</span>
-            <span class="arch-node-badge badge-outline">MISSION PLAN</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="dag">
-            <span class="arch-node-num">03</span>
-            <span class="arch-node-name">EXECUTION DAG</span>
-            <span class="arch-node-badge badge-outline">7-STAGE GRAPH</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="workforce">
-            <span class="arch-node-num">04</span>
-            <span class="arch-node-name">AGENTS &amp; TOOLS</span>
-            <span class="arch-node-badge badge-outline">SPECIALIST ROSTER</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="sync">
-            <span class="arch-node-num">05</span>
-            <span class="arch-node-name">STATE SYNC</span>
-            <span class="arch-node-badge badge-outline">SSE EVENT BUS</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="verification">
-            <span class="arch-node-num">06</span>
-            <span class="arch-node-name">VERIFICATION</span>
-            <span class="arch-node-badge badge-emerald">AUTHORITATIVE</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="recovery">
-            <span class="arch-node-num">07</span>
-            <span class="arch-node-name">RECOVERY</span>
-            <span class="arch-node-badge badge-amber">BOUNDED</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="evidence">
-            <span class="arch-node-num">08</span>
-            <span class="arch-node-name">EVIDENCE</span>
-            <span class="arch-node-badge badge-cyan">PROVENANCE</span>
-          </div>
-          <span class="arch-flow-arrow">&rarr;</span>
-          <div class="arch-node-chip" data-subsystem="report">
-            <span class="arch-node-num">09</span>
-            <span class="arch-node-name">FINAL REPORT</span>
-            <span class="arch-node-badge badge-purple">CERTIFIED</span>
+          <div class="replay-controls">
+            <button type="button" class="btn btn-secondary btn-xs" id="btnReplayPrev">&larr; Prev</button>
+            <input type="range" class="replay-slider" id="timelineReplayScrubber" min="0" max="10" value="0">
+            <button type="button" class="btn btn-secondary btn-xs" id="btnReplayNext">Next &rarr;</button>
+            <button type="button" class="btn btn-secondary btn-xs" id="btnReplayLive">Live Stream</button>
           </div>
         </div>
 
-        <!-- SELECTED SUBSYSTEM DETAIL PANEL -->
-        <div class="arch-detail-panel card" id="archDetailPanel">
-          <!-- Populated dynamically -->
+        <!-- Demo Center & Player (Contract: tab-demo) -->
+        <div class="demo-player-section" id="tab-demo">
+          <div class="demo-scenarios-bar" id="demoScenariosGrid">
+            <!-- Dynamically populated or pre-set -->
+            <button type="button" class="demo-scenario-btn active" data-scenario="SWE-BUG-001">SWE-BUG-001 (Math Fix)</button>
+            <button type="button" class="demo-scenario-btn" data-scenario="SWE-SYN-001">SWE-SYN-001 (Syntax AST)</button>
+            <button type="button" class="demo-scenario-btn" data-scenario="SWE-REG-001">SWE-REG-001 (Regression)</button>
+            <button type="button" class="demo-scenario-btn" data-scenario="SWE-SEC-001">SWE-SEC-001 (Security)</button>
+            <button type="button" class="demo-scenario-btn" data-scenario="SWE-REC-001">SWE-REC-001 (Self-Healing)</button>
+          </div>
+
+          <div class="demo-controls-row">
+            <div class="demo-buttons">
+              <button type="button" class="btn btn-primary btn-xs" id="btnDemoPlay">Play ▶</button>
+              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoRestart">Restart ↺</button>
+              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoPrevStage">&larr; Prev Stage</button>
+              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoNextStage">Next Stage &rarr;</button>
+              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoRunReal">Run as Real Mission &rarr;</button>
+            </div>
+            <div class="demo-speed">
+              <span>Speed:</span>
+              <select id="demoSpeedSelect" class="form-select-sm">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+              </select>
+            </div>
+          </div>
+
+          <input type="range" class="demo-scrubber" id="demoScrubber" min="0" max="7" value="1">
+          <div class="demo-track" id="demoTimelineTrack"></div>
+          <div class="demo-viewport panel" id="demoStageViewport">
+            <!-- FROZEN DEMO / DEMONSTRATION SCENARIO (contract text) -->
+            <div class="demo-viewport-banner">DEMONSTRATION SCENARIO // FROZEN DEMO</div>
+            <pre class="demo-output-code" id="demoViewportContent">Select a demonstration scenario above to preview full execution trace.</pre>
+          </div>
+        </div>
+
+        <div class="demo-tools-footer">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnLaunchTourModal">Guided Product Tour</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnTogglePresenterModal">Presentation Mode (P)</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnOpenArchModal">Architecture Explorer</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- =========================================================================
-       GUIDED PRODUCT TOUR CARD
-       ========================================================================= -->
-  <div class="product-tour-card card" id="productTourCard" style="display: none;">
-    <div class="tour-header">
-      <div class="tour-header-meta">
-        <span class="badge badge-cyan" id="tourStepBadge">STEP 1 OF 10</span>
-        <h4 class="tour-title" id="tourTitle">Mission Command Center</h4>
+  <!-- ARCHITECTURE EXPLORER MODAL -->
+  <div class="modal-backdrop" id="architectureModal">
+    <div class="modal-dialog panel" style="max-width: 960px;">
+      <div class="modal-header">
+        <h3 class="modal-title">ORION Subsystem Architecture Explorer</h3>
+        <button type="button" class="modal-close-btn" id="btnArchClose">&times;</button>
       </div>
-      <button class="tour-close-btn" id="btnTourClose" title="Exit Tour">&times;</button>
+      <div class="modal-body">
+        <div class="arch-flow" id="archPipelineFlow">
+          <!-- Flow steps -->
+        </div>
+        <div class="arch-detail panel" id="archDetailPanel">
+          <div class="empty-state">Select an architectural subsystem above to inspect specifications.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUIDED PRODUCT TOUR CARD -->
+  <div class="product-tour-card panel" id="productTourCard" style="display: none;">
+    <div class="tour-header">
+      <span class="badge badge-cyan" id="tourStepBadge">STEP 1 OF 10</span>
+      <h4 class="tour-title" id="tourTitle">Mission Command Center</h4>
+      <button type="button" class="tour-close-btn" id="btnTourClose">&times;</button>
     </div>
     <div class="tour-body">
-      <p class="tour-description" id="tourDescription">The Mission Command Center is ORION's primary directive console where you submit natural-language engineering tasks, select controlled or autonomous execution, and trigger pipeline runs.</p>
+      <p class="tour-description" id="tourDescription">The Mission Command Center is ORION's primary directive console where you submit natural-language engineering tasks.</p>
     </div>
     <div class="tour-footer">
-      <button type="button" class="btn btn-secondary btn-xs" id="btnTourSkip">Skip Tour</button>
-      <div class="tour-nav-buttons">
+      <button type="button" class="btn btn-secondary btn-xs" id="btnTourSkip">Skip</button>
+      <div class="tour-buttons">
         <button type="button" class="btn btn-secondary btn-xs" id="btnTourPrev">&larr; Back</button>
         <button type="button" class="btn btn-primary btn-xs" id="btnTourNext">Next &rarr;</button>
       </div>
     </div>
   </div>
 
-  <!-- PRESENTATION MODE FLOATING EXIT BANNER -->
+  <!-- PRESENTATION MODE FLOATING BANNER -->
   <div class="presentation-banner" id="presentationBanner" style="display: none;">
     <div class="pres-brand">ORION // PRESENTATION MODE</div>
     <div class="pres-sub">High-Legibility Demonstration Console &bull; Press [P] or Esc to exit</div>
-    <button class="btn btn-secondary btn-xs" id="btnExitPresentation">Exit Presenter (Esc)</button>
+    <button type="button" class="btn btn-secondary btn-xs" id="btnExitPresentation">Exit Presenter (Esc)</button>
   </div>
 
-  <!-- GLOBAL TOAST NOTIFICATIONS CONTAINER -->
+  <!-- COMMAND PALETTE MODAL (Ctrl+K) -->
+  <div class="modal-backdrop" id="commandPaletteBackdrop">
+    <div class="command-palette-modal panel" id="commandPaletteModal">
+      <div class="cp-search-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" class="cp-input" id="commandPaletteInput" placeholder="Type a view or command (Overview, Missions, Evidence, Graph)...">
+        <span class="kbd-chip" id="cpCloseBadge">Esc</span>
+      </div>
+      <div class="cp-results-list" id="commandPaletteList"></div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Retained auxiliary buttons for contract compatibility -->
+  <div style="display: none;">
+    <button id="btnEnterOrion"></button>
+    <button id="btnIntroDemo"></button>
+    <button id="btnIntroArch"></button>
+    <button id="btnIntroMission"></button>
+    <div class="orion-intro-overlay dismissed" id="orionIntroOverlay"></div>
+    <form id="createMissionForm"></form>
+    <button id="btnCancelModal"></button>
+    <button id="modalCloseBtn"></button>
+    <div id="modalBackdrop"></div>
+    <span id="tabCounterChanges"></span>
+    <span id="tabRecoveryPulse"></span>
+    <span id="tabCounterNodes"></span>
+    <span id="tabCounterAgents"></span>
+    <span id="tabCounterDemo"></span>
+    <span id="badgeAgentSWE"></span>
+    <span id="badgeAgentDiagnostics"></span>
+    <span id="badgeAgentVerifier"></span>
+    <span id="badgeAgentRecovery"></span>
+    <span id="metricTestsPassed"></span>
+    <span id="metricTestsFailed"></span>
+    <span id="metricVerifPassed"></span>
+    <span id="metricRecoveryAttempts"></span>
+    <span id="metricEvidenceCount"></span>
+    <button id="btnRunPipeline"></button>
+    <button id="btnAdvanceStage"></button>
+    <div id="stepperFill"></div>
+    <div id="agentSWE"></div>
+    <div id="agentDiagnostics"></div>
+    <div id="agentVerifier"></div>
+    <div id="agentRecovery"></div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>

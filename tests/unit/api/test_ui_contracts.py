@@ -294,3 +294,71 @@ def test_interactive_product_experience_contracts():
     assert "SUBSYSTEM_SPECS" in app_js
     assert "TOUR_STEPS" in app_js
     assert "showToast" in app_js
+
+
+def test_product_console_information_architecture():
+    """Verify ORION Product Console information architecture, shell, and pages."""
+    index_html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    app_css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+    app_js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+
+    # 1. Stable Application Shell
+    assert 'class="orion-shell"' in index_html
+    assert 'id="mainNavbar"' in index_html
+    assert 'id="topbarBreadcrumb"' in index_html
+    assert 'id="appSidebar"' in index_html
+    assert 'id="sidebarNav"' in index_html
+    assert 'id="appMainViewport"' in index_html
+
+    # 2. Compact Sidebar Navigation Groups & Links
+    assert 'id="navOverview"' in index_html
+    assert 'id="navMissionActive"' in index_html
+    assert 'id="navMissionsAll"' in index_html
+    assert 'id="navMissionsHistory"' in index_html
+    assert 'id="navExecPipeline"' in index_html
+    assert 'id="navExecTestScope"' in index_html
+    assert 'id="navExecChanges"' in index_html
+    assert 'id="navExecRecovery"' in index_html
+    assert 'id="navEvidenceLedger"' in index_html
+    assert 'id="navEvidenceVerification"' in index_html
+    assert 'id="navSystemWorkforce"' in index_html
+    assert 'id="navSystemSecurity"' in index_html
+
+    # 3. Pages
+    assert 'id="viewOverview"' in index_html
+    assert 'id="viewMissionDetail"' in index_html
+    assert 'id="viewMissionsAll"' in index_html
+    assert 'id="viewAgents"' in index_html
+    assert 'id="viewEvidence"' in index_html
+    assert 'id="viewSystem"' in index_html
+
+    # 4. Overview Page Structure
+    assert 'id="overviewHeader"' in index_html
+    assert 'id="systemStatusRow"' in index_html
+    assert 'id="activeMissionCard"' in index_html
+    assert 'id="recentMissionsTable"' in index_html
+    assert 'id="btnOverviewNewMission"' in index_html
+
+    # 5. Integrated Test Scope Selection
+    assert 'id="testSelectionSection"' in index_html
+    assert 'id="testSelectionStrategyBadge"' in index_html
+    assert 'id="testSelectionModeBadge"' in index_html
+    assert 'id="testSelectionReasonVal"' in index_html
+    assert 'id="testSelectedTargetsList"' in index_html
+
+    # 6. Evidence Ledger & Workforce Tables
+    assert 'id="evidenceTable"' in index_html
+    assert 'id="workforceTable"' in index_html
+
+    # 7. Modals
+    assert 'id="newMissionModal"' in index_html
+    assert 'id="demoToolsModal"' in index_html
+    assert 'id="commandPaletteBackdrop"' in index_html
+
+    # 8. CSS & JS Router Tokens
+    assert ".app-topbar" in app_css
+    assert ".app-sidebar" in app_css
+    assert ".view-page" in app_css
+    assert "switchView" in app_js
+    assert "initProductConsole" in app_js
+    assert "openModal" in app_js
