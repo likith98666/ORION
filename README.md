@@ -7,56 +7,119 @@
 [![Code Quality](https://img.shields.io/badge/ruff-clean-green.svg)]()
 [![Runtime Dependencies](https://img.shields.io/badge/dependencies-0%20third--party%20runtime-purple.svg)]()
 [![Security Invariants](https://img.shields.io/badge/security-20%2F20%20invariants%20verified-red.svg)]()
-[![Release Status](https://img.shields.io/badge/release-v1.0.0%20GA-emerald.svg)]()
+[![Pass@1 Benchmark](https://img.shields.io/badge/Pass%401-100.0%25-success.svg)]()
 
-> **ORION** is an authoritative, secure, reproducible, production-grade **Autonomous Software Engineering Platform**. It coordinates specialized technical agents to plan, formulate, execute, verify, and self-heal complex code modifications across real repositories with zero third-party runtime dependencies.
+> **ORION** is an authoritative, secure, reproducible, production-grade **Autonomous Software Engineering Operating System**. It coordinates specialized technical agents to plan, formulate, execute, verify, and self-heal complex code modifications across real repositories with zero third-party runtime dependencies.
 
 ---
 
-## 1. Executive Summary
+![ORION Mission Command Center Hero](docs/images/showcase/orion-hero.png)
+
+---
+
+## Table of Contents
+
+- [1. What ORION Is](#1-what-orion-is)
+- [2. Visual Showcase](#2-visual-showcase)
+- [3. Core Technical Observatories](#3-core-technical-observatories)
+- [4. System Architecture](#4-system-architecture)
+- [5. How a Mission Executes (7-Stage Workflow)](#5-how-a-mission-executes-7-stage-workflow)
+- [6. Epistemic Evidence & Verification Model](#6-epistemic-evidence--verification-model)
+- [7. Security Model & 20 Invariants](#7-security-model--20-invariants)
+- [8. Installation & Quickstart](#8-installation--quickstart)
+- [9. Running ORION Locally](#9-running-orion-locally)
+- [10. Running Tests & Quality Gates](#10-running-tests--quality-gates)
+- [11. Empirical Benchmarks & Evaluation](#11-empirical-benchmarks--evaluation)
+- [12. REST API & Integration](#12-rest-api--integration)
+- [13. Project Structure](#13-project-structure)
+- [14. Limitations & Known Constraints](#14-limitations--known-constraints)
+- [15. Engineering Roadmap](#15-engineering-roadmap)
+- [16. Contributing](#16-contributing)
+- [17. License](#17-license)
+
+---
+
+## 1. What ORION Is
 
 Unlike unconstrained chatbot loops that execute non-deterministic `while not solved` cycles, ORION operates like an industrial software engineering organization. Every engineering mission is strictly bound to deterministic task graphs, filesystem containment boundaries, dual-key human approvals, authoritative ground-truth verification, bounded recovery budgets, and an immutable forensic evidence ledger.
 
-### End-to-End Pipeline
-```text
-MISSION DIRECTIVE
-   ↓
-UNDERSTANDING & AST EXPLORATION
-   ↓
-PLANNING (DAG Decomposer)
-   ↓
-REPOSITORY INTELLIGENCE (AST & Blast Radius)
-   ↓
-MULTI-AGENT WORKFORCE (SWE, DX, VF, RC)
-   ↓
-PATCH GENERATION (Unified Diffs & SHA-256 Locks)
-   ↓
-HUMAN OVERSIGHT (Clarification, Steering, Approval Gate)
-   ↓
-CONTROLLED EXECUTION (Workspace Containment)
-   ↓
-TESTING (Sandboxed Pytest Runner, shell=False)
-   ↓
-VERIFICATION (Authoritative VerificationEngine Ground Truth)
-   ↓
-SELF-HEALING (Taxonomy Diagnosis, Simulation, Bounded Recovery)
-   ↓
-POLICY ENFORCEMENT (Central Zero-Trust Guardrails)
-   ↓
-EVALUATION (10-Task Standardized SWE Benchmark Suite)
-   ↓
-OBSERVABILITY (Distributed Spans, Quantiles, Token Costing)
-   ↓
-EVIDENCE LEDGER (Claimed / Observed / Verified Epistemic Tiers)
-   ↓
-FINAL CERTIFIED RESULT (Cryptographic Report & Forensic Provenance)
-```
+### Architectural Guarantees
+
+1. **Deterministic Execution Graph:** Code changes follow a 7-stage linear DAG (`INSPECT_REPOSITORY` through `GENERATE_REPORT`).
+2. **Authoritative Verification Authority:** The frontend and models are untrusted; ground-truth acceptance criteria are evaluated strictly by `VerificationEngine`.
+3. **Dual-Key Approval Perimeter:** Code modifications, filesystem writes, and test execution require explicit policy authorization and single-use cryptographic tokens.
+4. **Self-Healing State Machine:** Regressions trigger automated failure classification, non-destructive simulation diffs, and bounded recovery ($\le 3$ retries, $\le 120\text{s}$).
+5. **Zero Third-Party Runtime Dependencies:** Built 100% on the Python 3.12 standard library for reproducible air-gapped deployments.
 
 ---
 
-## 2. Core Technical Observatories
+## 2. Visual Showcase
 
-The ORION Command Center provides a cinematic Obsidian interface unifying 12 technical observatories:
+The ORION Command Center provides a cinematic Void Black (`#05060A`) and Ice Blue (`#7CC4FF`) technical cockpit with local typography (Orbitron and Space Grotesk) and zero third-party font requests.
+
+### 1. Mission Command Center Cockpit
+![Mission Command Center](docs/images/showcase/mission-command-center.png)
+*The central workspace displaying the active 7-stage pipeline flow stepper, task directives, unified diff inspection with AST syntax validation, and optimistic SHA-256 concurrency locking.* `[State: LIVE]`
+
+---
+
+### 2. Autonomous Workforce & Agent Constellation
+![Agent Constellation](docs/images/showcase/agent-constellation.png)
+*Procedural deep-space starfield and signature 14-node agent constellation canvas visualizing interconnected specialist roles (Software Engineer, Diagnostics Investigator, Verification Authority, and Recovery Coordinator).* `[State: LIVE]`
+
+---
+
+### 3. Mission Creation & Task Directives
+![Mission Creation](docs/images/showcase/mission-creation.png)
+*Modal dispatch dialog with repository path binding, natural-language directives, and standardized task templates (off-by-one bug fixes, syntax AST repairs, regression diagnoses, and security guardrail enforcement).* `[State: LIVE]`
+
+---
+
+### 4. Execution Timeline & Time-Travel Replay
+![Execution Timeline](docs/images/showcase/execution-timeline.png)
+*Interactive timeline scrubber bar enabling play, pause, step-forward, and variable speed (1×, 2×, 5×) replay across cached execution event streams.* `[State: LIVE]`
+
+---
+
+### 5. Epistemic Evidence Ledger
+![Verification and Evidence](docs/images/showcase/verification-evidence.png)
+*Forensic audit ledger partitioning claims strictly into Claimed hypotheses, Observed tool outputs, and Verified ground truth with immutable cryptographic hashes.* `[State: LIVE]`
+
+---
+
+### 6. Failure Recovery & Self-Healing Diagnostics
+![Failure Recovery](docs/images/showcase/failure-recovery.png)
+*Automated taxonomy failure classifier, non-destructive pre-flight simulation diff, rollback audit trail, and bounded retry budget gauges.* `[State: LIVE / DEMO]`
+
+---
+
+### 7. System Observatory & Benchmark Evaluation
+![System Observatory](docs/images/showcase/observability.png)
+*Platform telemetry panel showing real-time service health, Pass@1 and recovery benchmark scales, security policy rule evaluations, and distributed trace waterfalls.* `[State: LIVE]`
+
+---
+
+### 8. Dual-Key Security Authorization Gate
+![Security Controls](docs/images/showcase/security-controls.png)
+*High-risk code modification interception modal enforcing dual-key human approvals, blast-radius limits, and single-use cryptographic approval tokens.* `[State: DEMO]`
+
+---
+
+### 9. Cryptographic Mission Summary Report
+![Mission Report](docs/images/showcase/mission-report.png)
+*Authoritative mission certification generated by VerificationEngine, displaying verified exit codes, assertion summaries, and SHA-256 tamper-evident provenance.* `[State: LIVE]`
+
+---
+
+### 10. Responsive Mobile Command Interface
+![Responsive Interface](docs/images/showcase/responsive-interface.png)
+*Fluid mobile layout with adaptive drawer navigation and touch-optimized status monitoring tested down to 360px viewport with zero horizontal overflow.* `[State: LIVE]`
+
+---
+
+## 3. Core Technical Observatories
+
+The ORION Console unifies 12 specialized engineering observatories:
 
 | # | Observatory | Focus & Real-Time Capabilities |
 | :--- | :--- | :--- |
@@ -75,11 +138,117 @@ The ORION Command Center provides a cinematic Obsidian interface unifying 12 tec
 
 ---
 
-## 3. The 20 Non-Negotiable Security Invariants
+## 4. System Architecture
 
-ORION enforces a strict, deterministic security perimeter:
+ORION is engineered with strict separation of concerns, zero circular dependencies, and deterministic policy enforcement:
 
-1. **Frontend is untrusted:** Browser cannot mark stages or tests complete.
+```mermaid
+flowchart TD
+    subgraph Client ["Operator & External Ingress"]
+        UI["Mission Command Center<br/>(Obsidian / Vanilla JS)"]
+        CLI["ORION CLI & REST Client"]
+    end
+
+    subgraph Gateway ["API & Containment Perimeter"]
+        API["HTTP / SSE Gateway<br/>(Pure Python Server)"]
+        SEC["PolicyEngine & ApprovalService<br/>(Dual-Key Authorization)"]
+    end
+
+    subgraph Orchestration ["Orchestration & Workforce"]
+        COORD["Workforce Coordinator"]
+        DAG["TaskGraph & DAG Engine"]
+        SWE["SWE Agent"]
+        DX["Diagnostics Agent"]
+        VF["Verifier Agent"]
+        RC["Recovery Coordinator"]
+    end
+
+    subgraph Tools ["Sandboxed Execution Tools"]
+        AST["AST Analyzer & Diff Applier"]
+        TEST["Sandboxed Pytest Runner<br/>(shell=False)"]
+        FS["Workspace Containment Sandbox"]
+    end
+
+    subgraph Verification ["Authoritative Verification & Forensic Memory"]
+        VENG["VerificationEngine<br/>(Ground Truth Acceptance)"]
+        HEAL["Self-Healing Engine<br/>(Bounded Retry & Rollback)"]
+        LEDGER["Forensic Evidence Ledger<br/>(Claimed / Observed / Verified)"]
+        REP["Cryptographic Report Generator<br/>(SHA-256 Provenance)"]
+    end
+
+    UI --> API
+    CLI --> API
+    API --> SEC
+    SEC --> COORD
+    COORD --> DAG
+    DAG --> SWE
+    DAG --> DX
+    DAG --> VF
+    DAG --> RC
+
+    SWE --> AST
+    DX --> AST
+    SWE --> TEST
+    RC --> HEAL
+
+    AST --> FS
+    TEST --> FS
+
+    TEST --> VENG
+    VENG --> LEDGER
+    VENG --> HEAL
+    HEAL --> COORD
+    VENG --> REP
+    LEDGER --> REP
+    REP --> API
+```
+
+---
+
+## 5. How a Mission Executes (7-Stage Workflow)
+
+Every mission progresses strictly through the 7 canonical stages defined in `src/orion/core/swe/stages.py`:
+
+```mermaid
+flowchart LR
+    S1["1. INSPECT_REPOSITORY<br/>Workspace & AST Discovery"] --> S2["2. ANALYZE_FAILURE<br/>Diagnostics & Blast Radius"]
+    S2 --> S3["3. FORMULATE_FIX<br/>Candidate Patch Planning"]
+    S3 --> S4["4. IMPLEMENT_CHANGE<br/>Unified Diff & SHA-256 Lock"]
+    S4 --> S5["5. RUN_TESTS<br/>Sandboxed Pytest Execution"]
+    S5 --> S6["6. VERIFY<br/>VerificationEngine Authority"]
+    S6 --> S7["7. GENERATE_REPORT<br/>Cryptographic Certification"]
+
+    S6 -.->|"Verification Failure<br/>(Retry Budget <= 3)"| REC["SELF-HEALING RECOVERY<br/>Non-Destructive Rollback"]
+    REC -.-> S3
+```
+
+1. **`INSPECT_REPOSITORY`:** Validates workspace root containment, scans AST syntax tree, indexes file tree, and identifies targeted test suites.
+2. **`ANALYZE_FAILURE`:** Executes initial failing baseline test, extracts exception traceback, and maps symbol dependency graph.
+3. **`FORMULATE_FIX`:** Analyzes blast radius, isolates defective code block, and proposes atomic unified diff.
+4. **`IMPLEMENT_CHANGE`:** Validates AST syntax of modified code, enforces single-use dual-key approval, locks optimistic SHA-256 file hashes, and applies diff safely.
+5. **`RUN_TESTS`:** Executes targeted test suite in sandboxed environment (`shell=False`, timeout cap).
+6. **`VERIFY`:** Authoritative `VerificationEngine` independently inspects test exit codes, regression delta, and assertion verdicts.
+7. **`GENERATE_REPORT`:** Compiles immutable audit summary with forensic evidence signatures, patch statistics, and SHA-256 verification seal.
+
+---
+
+## 6. Epistemic Evidence & Verification Model
+
+ORION distinguishes between what an agent proposes and what has been mathematically or empirically validated:
+
+| Epistemic Tier | Authority | Description | Storage |
+| :--- | :--- | :--- | :--- |
+| **`CLAIMED`** | Agent / LLM | Unverified hypothesis, planned modification, or predicted outcome. | Ephemeral Memory |
+| **`OBSERVED`** | Tool Output | Recorded tool execution result, stdout/stderr stream, or AST parse output. | Append-Only Audit Stream |
+| **`VERIFIED`** | VerificationEngine | Authoritatively certified ground truth; exit code 0, 100% assertions passed. | Cryptographic Ledger |
+
+---
+
+## 7. Security Model & 20 Invariants
+
+ORION enforces 20 non-negotiable security invariants verified by automated regression test suites:
+
+1. **Frontend is untrusted:** The web client cannot mark stages or verification complete.
 2. **Model output is untrusted:** Code changes require AST parse and approval before write.
 3. **Repository contents are untrusted:** Prompt injection defense sanitizes all external text.
 4. **Security decisions are deterministic:** Governed by `PolicyEngine`, not probabilistic models.
@@ -102,7 +271,7 @@ ORION enforces a strict, deterministic security perimeter:
 
 ---
 
-## 4. Quickstart & Installation
+## 8. Installation & Quickstart
 
 ### Prerequisites
 - **Python 3.12** (Built 100% on standard library; zero third-party runtime dependencies)
@@ -111,7 +280,7 @@ ORION enforces a strict, deterministic security perimeter:
 ### Local Installation
 ```bash
 # Clone the repository
-git clone https://github.com/orion-ai/orion.git
+git clone https://github.com/likith98666/ORION.git
 cd ORION
 
 # Create virtual environment
@@ -121,58 +290,151 @@ python -m venv .venv
 
 # Install development & testing tooling
 pip install -e ".[dev]"
-
-# Run full test suite (1,443 tests)
-pytest -q
-
-# Run strict type checking (238 source files)
-mypy src
-
-# Run code linter
-ruff check .
 ```
 
-### Launch the Cockpit
+---
+
+## 9. Running ORION Locally
+
 ```bash
 # Launch server bound to local workspace
 python -m orion --host 127.0.0.1 --port 8000 --workspace .
 ```
 
 Open your browser to:
-- **Mission Command Center UI**: `http://127.0.0.1:8000/`
-- **System Health Endpoint**: `http://127.0.0.1:8000/api/v1/health`
-- **System Readiness Endpoint**: `http://127.0.0.1:8000/api/v1/readiness`
+- **Mission Command Center UI:** `http://127.0.0.1:8000/`
+- **System Health Endpoint:** `http://127.0.0.1:8000/api/v1/health`
+- **System Readiness Endpoint:** `http://127.0.0.1:8000/api/v1/readiness`
 
 ---
 
-## 5. Verified Release Metrics & Quality Gates
+## 10. Running Tests & Quality Gates
 
-| Quality Gate | Requirement | Measured Result | Status |
+```bash
+# Run full test suite (1,443 tests)
+python -m pytest -q
+
+# Run strict static typing check (238 source files)
+mypy src
+
+# Run code linter
+ruff check .
+
+# Run format verification
+ruff format --check .
+
+# Run E2E Chrome smoke test suite
+python -m pytest tests/e2e/test_smoke_controls.py -v
+```
+
+---
+
+## 11. Empirical Benchmarks & Evaluation
+
+All metrics are derived from the standardized 10-task SWE Benchmark suite (`tests/benchmarks/`):
+
+| Evaluation Metric | Target | Measured Result | Verification Method |
 | :--- | :--- | :--- | :--- |
-| **Pytest Full Suite** | 100% Pass Rate | **1,443 passed, 1 skipped, 0 failed** in 116.65s | **PASS** |
-| **Mypy Static Typing** | Strict, 0 Errors | **0 errors across 238 source files** | **PASS** |
-| **Ruff Linter** | Clean | **All checks passed!** | **PASS** |
-| **10-Task SWE Benchmark Pass@1** | $\ge 95\%$ | **100.0%** (30/30 across 3 trials; 0.773s median) | **PASS** |
-| **Unassisted Baseline** | Ground Truth Defect | **0.0%** (0/10 passed without fix) | **PASS** |
-| **Failure-Injection Recovery Suite** | 100% Pass Rate | **4/4 injected failure modes handled cleanly** | **PASS** |
-| **Security Threat Model Suite** | 100% Negative Pass Rate | **8/8 threat vectors blocked** | **PASS** |
-| **Verification Authority Rate** | 100% Ground Truth | **100.0%** (all runs certified by `VerificationEngine`) | **PASS** |
-| **Runtime Dependencies** | Standard Library Only | **0 third-party runtime packages** | **PASS** |
+| **Pass@1 Benchmark Accuracy** | $\ge 95.0\%$ | **100.0%** (30/30 across 3 trials) | Isolated subprocess execution |
+| **Unassisted Baseline Defect Rate** | $0.0\%$ | **0.0%** (0/10 passed without fix) | Physical failure confirmation |
+| **Median Task Resolution Latency** | $< 2.0\text{s}$ | **0.773s** | Distributed trace timer |
+| **Failure-Injection Recovery Rate** | $100\%$ | **4/4 modes resolved** | Synthetic error regression suite |
+| **Security Threat Model Invariance** | $100\%$ | **8/8 threat vectors blocked** | Penetration test suite |
+| **Verification Authority Rate** | $100\%$ | **100.0%** | `VerificationEngine` certificate check |
 
 ---
 
-## 6. Documentation Index
+## 12. REST API & Integration
 
-- [System Architecture](ARCHITECTURE.md)
-- [Security Policy & Invariants](SECURITY.md)
-- [Threat Model Specification](docs/THREAT_MODEL.md)
-- [Empirical Benchmark & Evaluation Report](docs/EVALUATION.md)
-- [Demonstration Walkthrough Guide](docs/DEMO_GUIDE.md)
-- [REST API Reference](docs/API.md)
-- [Changelog](CHANGELOG.md)
+| Route | Method | Purpose |
+| :--- | :--- | :--- |
+| `/api/tasks` | `POST` | Dispatch a new autonomous engineering mission. |
+| `/api/tasks` | `GET` | List all historical and running missions. |
+| `/api/tasks/{id}` | `GET` | Retrieve full mission state, active stage, and metadata. |
+| `/api/tasks/{id}/events` | `GET` | Server-Sent Events (SSE) live forensic event stream. |
+| `/api/tasks/{id}/advance` | `POST` | Advance task to next lifecycle stage. |
+| `/api/tasks/{id}/approve` | `POST` | Submit dual-key operator patch authorization. |
+| `/api/tasks/{id}/changes` | `GET` | Inspect proposed unified diffs and AST parse tree. |
+| `/api/tasks/{id}/tests` | `GET` | Retrieve sandboxed test run outputs and assertion status. |
+| `/api/tasks/{id}/verification`| `GET` | Retrieve authoritative verification certificates. |
+| `/api/tasks/{id}/recovery` | `GET` | Inspect self-healing failure classification and rollback logs. |
+| `/api/v1/health` | `GET` | Real-time system health, uptime, and active mission count. |
+| `/api/v1/evaluation/runs` | `GET` | Benchmark evaluation history and Pass@1 scales. |
+| `/api/v1/policy/rules` | `GET` | Active security guardrails and evaluation decisions. |
 
 ---
 
-## 7. License
+## 13. Project Structure
 
-ORION is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+```text
+ORION/
+├── .github/workflows/          # CI quality gates (lint, format, mypy, pytest)
+├── docs/
+│   ├── images/showcase/        # High-resolution application screenshots
+│   ├── API.md                  # REST API specification
+│   ├── ARCHITECTURE.md         # Full architectural design document
+│   ├── EVALUATION.md           # Benchmark evaluation results
+│   ├── SECURITY.md             # Security policy and 20 invariants
+│   └── THREAT_MODEL.md         # Threat model analysis
+├── src/orion/
+│   ├── api/                    # Pure-Python HTTP server and REST routes
+│   ├── core/
+│   │   ├── agents/workforce/   # Autonomous agents (SWE, DX, Verifier, RC)
+│   │   ├── planning/           # Task graph decomposer and DAG engine
+│   │   ├── policy/             # Central zero-trust PolicyEngine
+│   │   ├── recovery/           # Self-healing failure classifier and rollback
+│   │   ├── security/           # ApprovalService and containment sandbox
+│   │   ├── swe/                # 7-stage workflow, AST tools, evidence ledger
+│   │   └── verification/       # Authoritative VerificationEngine
+│   ├── models/                 # Context optimization, runtime providers
+│   └── ui/static/              # Mission Command Center (HTML/CSS/JS, OFL fonts)
+├── tests/
+│   ├── benchmarks/             # 10-task SWE Benchmark suite
+│   ├── e2e/                    # Chrome DevTools Protocol (CDP) automated journeys
+│   ├── integration/            # Security threat model and recovery injection suites
+│   └── unit/                   # 1,400+ unit tests across all subsystems
+├── LICENSE                     # MIT License
+├── pyproject.toml              # Build specification and dev dependencies
+└── README.md                   # Repository landing page
+```
+
+---
+
+## 14. Limitations & Known Constraints
+
+1. **Windows Symlink Privileges:** Symlink creation requires Developer Mode or elevated privileges on Windows; workspace containment uses strict path resolution fallback when unprivileged.
+2. **Single Workspace Containment:** Each ORION server instance binds to a single declared workspace root boundary; cross-workspace operations require independent server instances.
+3. **Bounded Recovery Cap:** Self-healing is strictly bounded ($\le 3$ retries, $\le 120\text{s}$) to prevent infinite LLM loops; unresolved failures terminate closed.
+
+---
+
+## 15. Engineering Roadmap
+
+- [x] **Phase 1:** Core Architecture & Workspace Containment Sandbox
+- [x] **Phase 2:** Multi-Agent Workforce & Task Graph Coordination
+- [x] **Phase 3:** Self-Healing State Machine & Bounded Recovery
+- [x] **Phase 4:** Cinematic Void Black Technical Interface & 7-View Cockpit
+- [x] **Phase 5:** Production Hardening, Quality Gates, and v1.0.0 GA
+- [ ] **Phase 6:** Distributed Multi-Repository Coordination & Cross-Repo Blast Radius
+- [ ] **Phase 7:** Fine-Tuned Local LLM Inference Adapter (vLLM / llama.cpp)
+- [ ] **Phase 8:** Formal Symbolic Execution & Verification Theorem Prover Bridge
+
+---
+
+## 16. Contributing
+
+1. Fork the repository on GitHub.
+2. Create your feature branch (`git checkout -b feat/quantum-routing`).
+3. Ensure all quality gates pass:
+   ```bash
+   ruff check . && ruff format --check . && mypy src && pytest -q
+   ```
+4. Commit your changes with conventional commit syntax (`git commit -m 'feat: add quantum routing'`).
+5. Push to the branch (`git push origin feat/quantum-routing`).
+6. Open a Pull Request.
+
+---
+
+## 17. License
+
+ORION is released under the [MIT License](LICENSE).
