@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import queue
 import threading
 import time
@@ -95,6 +96,7 @@ from orion.core.swe.cognitive.patch_approval import PatchApprovalPackage
 from orion.core.swe.coordinator import STAGE_ORDER, SWEWorkflowCoordinator
 from orion.core.swe.evidence import (
     EvidenceCategory,
+    EvidenceItem,
     EvidenceLevel,
     SWEReport,
 )
@@ -178,6 +180,7 @@ class MissionAPIService:
         self,
         default_workspace_path: Path | str | None = None,
         config: AppConfig | None = None,
+        data_dir: Path | str | None = None,
     ) -> None:
         self._missions: dict[UUID, MissionRecord] = {}
         self._start_time = time.time()
@@ -185,6 +188,11 @@ class MissionAPIService:
             Path(default_workspace_path).resolve() if default_workspace_path else None
         )
         self._config = config or AppConfig.from_env(argv_workspace=self._default_workspace_path)
+        self._data_dir: Path | None = (
+            Path(data_dir).resolve()
+            if data_dir is not None
+            else self._config.data_dir
+        )
         self._redaction_engine = RedactionEngine(secrets=self._config.known_secrets)
         self._is_shutting_down: bool = False
         self._mission_plans: dict[UUID, tuple[MissionPlan, MissionTaskGraph]] = {}
@@ -198,6 +206,159 @@ class MissionAPIService:
         self._policy_engine = PolicyEngine()
         self._tracer = DistributedTracer()
         self._system_optimizer = SystemOptimizer(self._tracer)
+        self._load_persisted_missions()
+
+    def _save_mission(self, record: MissionRecord) -> None:
+        """Persist mission state, timeline, evidence, and report to disk if configured."""
+        if not self._data_dir:
+            return
+        try:
+            missions_dir = self._data_dir / "missions"
+            missions_dir.mkdir(parents=True, exist_ok=True)
+            file_path = missions_dir / f"{record.mission_id}.json"
+
+            evidence_items = []
+            if record.coordinator and hasattr(record.coordinator, "ledger"):
+                evidence_items = [
+                    item.to_dict() for item in record.coordinator.ledger.get_items()
+                ]
+
+            payload: dict[str, Any] = {
+                "mission_id": str(record.mission_id),
+                "task_id": str(record.task_id),
+                "execution_id": str(record.execution_id),
+                "objective": record.objective,
+                "workspace_path": record.workspace_path,
+                "execution_mode": record.execution_mode,
+                "status": record.status,
+                "lifecycle_state": record.lifecycle_state,
+                "summary": record.summary,
+                "created_at": record.created_at.isoformat(),
+                "timeline": [e.to_dict() for e in record.timeline],
+                "evidence": evidence_items,
+                "report": record.report.to_dict() if record.report else None,
+                "cancelled": record.cancelled,
+                "last_error": record.last_error,
+            }
+            tmp_path = file_path.with_suffix(".tmp")
+            tmp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            tmp_path.replace(file_path)
+        except Exception:
+            pass
+
+    def _load_persisted_missions(self) -> None:
+        """Restore missions from data_dir if configured."""
+        if not self._data_dir:
+            return
+        missions_dir = self._data_dir / "missions"
+        if not missions_dir.exists():
+            return
+        for file_path in sorted(missions_dir.glob("*.json")):
+            try:
+                data = json.loads(file_path.read_text(encoding="utf-8"))
+                m_id = UUID(data["mission_id"])
+                t_id = UUID(data.get("task_id", str(uuid4())))
+                e_id = UUID(data.get("execution_id", str(uuid4())))
+                ws_path = data.get("workspace_path", ".")
+                p = Path(ws_path).resolve()
+                if not (p.exists() and p.is_dir()):
+                    p = Path(".").resolve()
+
+                ws = Workspace(repository_root=p, task_id=t_id, execution_id=e_id)
+                tool_reg = InMemoryToolRegistry()
+                register_repository_tools(tool_reg, ws)
+                app_repo = InMemoryApprovalRepository()
+                app_svc = ApprovalService(repository=app_repo)
+                tool_exec = ToolExecutor(
+                    registry=tool_reg,
+                    approval_service=app_svc,
+                    policy_engine=self._policy_engine,
+                )
+                verif_svc = VerificationService(repository=InMemoryVerificationRepository())
+                verif_eng = VerificationEngine(verification_service=verif_svc)
+                rec_coord = RecoveryCoordinator(recovery_engine=RecoveryEngine())
+
+                coord = SWEWorkflowCoordinator(
+                    workspace=ws,
+                    tool_executor=tool_exec,
+                    verification_engine=verif_eng,
+                    recovery_coordinator=rec_coord,
+                    mission_id=m_id,
+                    task_id=t_id,
+                )
+                for ev_dict in data.get("evidence", []):
+                    try:
+                        coord.ledger._items.append(EvidenceItem.from_dict(ev_dict))
+                    except Exception:
+                        pass
+                timeline = [
+                    TimelineEventDTO(
+                        event_id=tl.get("event_id", str(uuid4())),
+                        stage=tl.get("stage", "INSPECT_REPOSITORY"),
+                        title=tl.get("title", ""),
+                        detail=tl.get("detail", ""),
+                        level=tl.get("level", "INFO"),
+                        timestamp=tl.get("timestamp", datetime.now(UTC).isoformat()),
+                        metadata=tl.get("metadata", {}),
+                    )
+                    for tl in data.get("timeline", [])
+                ]
+                report = None
+                rep_dict = data.get("report")
+                if rep_dict:
+                    report = SWEReport(
+                        mission_id=m_id,
+                        task_id=t_id,
+                        workspace_root=str(p),
+                        status=rep_dict.get("status", "completed"),
+                        claimed_evidence=coord.ledger.get_items(level=EvidenceLevel.CLAIMED),
+                        observed_evidence=coord.ledger.get_items(level=EvidenceLevel.OBSERVED),
+                        verified_evidence=coord.ledger.get_items(level=EvidenceLevel.VERIFIED),
+                        summary=rep_dict.get("summary", ""),
+                        files_modified=tuple(rep_dict.get("files_modified", ())),
+                    )
+                agent = Agent.create(
+                    name="Orion-SWE-Engineer",
+                    description=(
+                        "Autonomous SWE workforce agent with repository inspection and repair"
+                    ),
+                    capabilities=frozenset(
+                        {
+                            AgentCapability.REPOSITORY_ANALYSIS,
+                            AgentCapability.SOFTWARE_DEBUGGING,
+                            AgentCapability.REASONING,
+                            AgentCapability.CODE_MODIFICATION,
+                            AgentCapability.TESTING,
+                            AgentCapability.VERIFICATION,
+                            AgentCapability.WRITING,
+                        }
+                    ),
+                )
+                record = MissionRecord(
+                    mission_id=m_id,
+                    task_id=t_id,
+                    execution_id=e_id,
+                    objective=data.get("objective", ""),
+                    workspace_path=str(p),
+                    workspace=ws,
+                    coordinator=coord,
+                    approval_service=app_svc,
+                    agent=agent,
+                    created_at=datetime.fromisoformat(
+                        data.get("created_at", datetime.now(UTC).isoformat())
+                    ),
+                    execution_mode=data.get("execution_mode", "controlled"),
+                    status=data.get("status", "completed"),
+                    lifecycle_state=data.get("lifecycle_state", "COMPLETED"),
+                    summary=data.get("summary", ""),
+                    report=report,
+                    timeline=timeline,
+                    cancelled=data.get("cancelled", False),
+                    last_error=data.get("last_error"),
+                )
+                self._missions[m_id] = record
+            except Exception:
+                pass
 
     @property
     def config(self) -> AppConfig:
@@ -302,6 +463,7 @@ class MissionAPIService:
                 metadata=scrubbed_data,
             )
         )
+        self._save_mission(record)
 
         with record.lock:
             dead_queues = []

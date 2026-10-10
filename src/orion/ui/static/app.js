@@ -64,6 +64,17 @@
     btnRunPipeline: document.getElementById('btnRunPipeline'),
     btnAdvanceStage: document.getElementById('btnAdvanceStage'),
     btnCancelMission: document.getElementById('btnCancelMission'),
+    btnReplayMission: document.getElementById('btnReplayMission'),
+    missionReplayBar: document.getElementById('missionReplayBar'),
+    missionReplayStepCounter: document.getElementById('missionReplayStepCounter'),
+    missionReplaySpeedSelect: document.getElementById('missionReplaySpeedSelect'),
+    btnExitMissionReplay: document.getElementById('btnExitMissionReplay'),
+    btnMissionReplayPrev: document.getElementById('btnMissionReplayPrev'),
+    btnMissionReplayPlayPause: document.getElementById('btnMissionReplayPlayPause'),
+    missionReplayPlayText: document.getElementById('missionReplayPlayText'),
+    btnMissionReplayNext: document.getElementById('btnMissionReplayNext'),
+    missionReplayScrubber: document.getElementById('missionReplayScrubber'),
+    timelineModeBadge: document.getElementById('timelineModeBadge'),
     connectionLostBanner: document.getElementById('connectionLostBanner'),
     btnReconnectNow: document.getElementById('btnReconnectNow'),
     stepperFill: document.getElementById('stepperFill'),
@@ -1714,12 +1725,52 @@ Verification: VERIFIED_SUCCESS`,
   }
 
   // -------------------------------------------------------------
-  // Timeline Replay Scrubber Engine
+  // Timeline Replay Scrubber Engine (Deterministic & Real Events Only)
   // -------------------------------------------------------------
   let recordedTimelineEvents = [];
   let isReplayModeActive = false;
+  let replayPlayTimer = null;
+  let isReplayPlaying = false;
+  let currentReplayStep = 0;
 
   function initTimelineReplay() {
+    // Mission Detail Replay Bar
+    if (dom.btnReplayMission) {
+      dom.btnReplayMission.addEventListener('click', toggleMissionReplay);
+    }
+    if (dom.btnExitMissionReplay) {
+      dom.btnExitMissionReplay.addEventListener('click', exitMissionReplay);
+    }
+    if (dom.missionReplayScrubber) {
+      dom.missionReplayScrubber.addEventListener('input', (e) => {
+        pauseMissionReplay();
+        setReplayStep(parseInt(e.target.value, 10));
+      });
+    }
+    if (dom.btnMissionReplayPrev) {
+      dom.btnMissionReplayPrev.addEventListener('click', () => {
+        pauseMissionReplay();
+        setReplayStep(Math.max(0, currentReplayStep - 1));
+      });
+    }
+    if (dom.btnMissionReplayNext) {
+      dom.btnMissionReplayNext.addEventListener('click', () => {
+        pauseMissionReplay();
+        setReplayStep(Math.min(recordedTimelineEvents.length - 1, currentReplayStep + 1));
+      });
+    }
+    if (dom.btnMissionReplayPlayPause) {
+      dom.btnMissionReplayPlayPause.addEventListener('click', togglePlayPauseMissionReplay);
+    }
+    if (dom.missionReplaySpeedSelect) {
+      dom.missionReplaySpeedSelect.addEventListener('change', () => {
+        if (isReplayPlaying) {
+          startMissionReplayLoop();
+        }
+      });
+    }
+
+    // Modal Demo scrubber backward compatibility
     if (dom.timelineReplayScrubber) {
       dom.timelineReplayScrubber.addEventListener('input', (e) => {
         handleReplayScrub(parseInt(e.target.value, 10));
@@ -1747,6 +1798,140 @@ Verification: VERIFIED_SUCCESS`,
     if (dom.btnReplayLive) {
       dom.btnReplayLive.addEventListener('click', returnToLiveStream);
     }
+  }
+
+  async function toggleMissionReplay() {
+    if (isReplayModeActive) {
+      exitMissionReplay();
+      return;
+    }
+    if (recordedTimelineEvents.length === 0 && currentMissionId) {
+      try {
+        const resp = await fetch(`/api/v1/missions/${currentMissionId}/timeline`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && Array.isArray(data.timeline)) {
+            recordedTimelineEvents = [...data.timeline];
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch timeline for replay', err);
+      }
+    }
+    if (recordedTimelineEvents.length === 0) {
+      showToast('Replay Unavailable', 'No recorded timeline events exist for this mission yet.', 'warning');
+      return;
+    }
+    isReplayModeActive = true;
+    if (dom.missionReplayBar) dom.missionReplayBar.style.display = 'flex';
+    if (dom.timelineModeBadge) {
+      dom.timelineModeBadge.textContent = 'REPLAY ACTIVE';
+      dom.timelineModeBadge.className = 'badge badge-cyan';
+    }
+    if (dom.btnReplayMission) {
+      dom.btnReplayMission.textContent = 'Exit Replay';
+      dom.btnReplayMission.classList.add('btn-primary');
+      dom.btnReplayMission.classList.remove('btn-secondary');
+    }
+    if (dom.missionReplayScrubber) {
+      dom.missionReplayScrubber.max = Math.max(0, recordedTimelineEvents.length - 1);
+      dom.missionReplayScrubber.value = 0;
+    }
+    setReplayStep(0);
+  }
+
+  function exitMissionReplay() {
+    pauseMissionReplay();
+    isReplayModeActive = false;
+    if (dom.missionReplayBar) dom.missionReplayBar.style.display = 'none';
+    if (dom.timelineModeBadge) {
+      dom.timelineModeBadge.textContent = 'LIVE STREAM';
+      dom.timelineModeBadge.className = 'badge badge-outline';
+    }
+    if (dom.btnReplayMission) {
+      dom.btnReplayMission.textContent = 'Replay';
+      dom.btnReplayMission.classList.remove('btn-primary');
+      dom.btnReplayMission.classList.add('btn-secondary');
+    }
+    renderTimeline(recordedTimelineEvents);
+    if (currentMissionState) {
+      updateMissionView(currentMissionState);
+    }
+  }
+
+  function setReplayStep(stepIndex) {
+    if (recordedTimelineEvents.length === 0) return;
+    currentReplayStep = Math.max(0, Math.min(recordedTimelineEvents.length - 1, stepIndex));
+    if (dom.missionReplayScrubber) {
+      dom.missionReplayScrubber.value = currentReplayStep;
+    }
+    if (dom.missionReplayStepCounter) {
+      dom.missionReplayStepCounter.textContent = `Step ${currentReplayStep + 1}/${recordedTimelineEvents.length}`;
+    }
+    const currentEvent = recordedTimelineEvents[currentReplayStep];
+    const sliced = recordedTimelineEvents.slice(0, currentReplayStep + 1);
+
+    dom.timelineStream.innerHTML = sliced.slice().reverse().map((e, idx) => `
+      <div class="timeline-entry ${idx === 0 ? 'replay-entry-highlight' : ''}">
+        <span class="entry-time">${formatTime(e.timestamp)}</span>
+        <div class="entry-body">
+          <div class="entry-title">${escapeHtml(e.title || '')}</div>
+          <div class="entry-detail">${escapeHtml(e.detail || '')}</div>
+        </div>
+      </div>
+    `).join('');
+
+    if (currentEvent && currentEvent.stage) {
+      highlightReplayStage(currentEvent.stage);
+    }
+  }
+
+  function highlightReplayStage(stageName) {
+    const stageKey = (stageName || '').toLowerCase();
+    const stageNodes = document.querySelectorAll('.stepper-node');
+    stageNodes.forEach(node => {
+      const stepId = (node.id || '').replace('step-', '').toLowerCase();
+      if (stepId === stageKey) {
+        node.classList.add('active');
+        node.classList.remove('completed');
+      }
+    });
+  }
+
+  function togglePlayPauseMissionReplay() {
+    if (isReplayPlaying) {
+      pauseMissionReplay();
+    } else {
+      startMissionReplayLoop();
+    }
+  }
+
+  function startMissionReplayLoop() {
+    pauseMissionReplay();
+    isReplayPlaying = true;
+    if (dom.missionReplayPlayText) dom.missionReplayPlayText.textContent = 'Pause';
+    if (currentReplayStep >= recordedTimelineEvents.length - 1) {
+      setReplayStep(0);
+    }
+    const speedMultiplier = parseFloat(dom.missionReplaySpeedSelect?.value || '1');
+    const intervalMs = Math.max(150, Math.floor(1000 / speedMultiplier));
+
+    replayPlayTimer = setInterval(() => {
+      if (currentReplayStep < recordedTimelineEvents.length - 1) {
+        setReplayStep(currentReplayStep + 1);
+      } else {
+        pauseMissionReplay();
+      }
+    }, intervalMs);
+  }
+
+  function pauseMissionReplay() {
+    if (replayPlayTimer) {
+      clearInterval(replayPlayTimer);
+      replayPlayTimer = null;
+    }
+    isReplayPlaying = false;
+    if (dom.missionReplayPlayText) dom.missionReplayPlayText.textContent = 'Play';
   }
 
   function handleReplayScrub(stepIndex) {

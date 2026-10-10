@@ -760,8 +760,34 @@
                 </div>
 
                 <div class="panel-divider" style="height: 1px; background: var(--border-subtle); margin: 14px 0;"></div>
-                <div class="panel-header" style="padding-top: 0.25rem;">
+                <div class="panel-header" style="padding-top: 0.25rem; display: flex; justify-content: space-between; align-items: center;">
                   <span class="panel-title">TIMELINE EVENTS</span>
+                  <span class="badge badge-outline" id="timelineModeBadge">LIVE STREAM</span>
+                </div>
+                <div class="mission-replay-bar" id="missionReplayBar" style="display: none;">
+                  <div class="mission-replay-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="mission-replay-badge">REPLAY MODE</span>
+                      <span class="badge badge-cyan" id="missionReplayStepCounter">Step 0/0</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+                      <span class="text-dim">Speed:</span>
+                      <select id="missionReplaySpeedSelect" class="form-select form-select-xs" style="padding: 2px 6px; font-size: 11px;">
+                        <option value="1">1x</option>
+                        <option value="2">2x</option>
+                        <option value="4">4x</option>
+                      </select>
+                      <button type="button" class="btn btn-secondary btn-xs" id="btnExitMissionReplay">Live Stream</button>
+                    </div>
+                  </div>
+                  <div class="mission-replay-controls">
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnMissionReplayPrev" title="Previous event">&larr; Prev</button>
+                    <button type="button" class="btn btn-primary btn-xs" id="btnMissionReplayPlayPause">
+                      <span id="missionReplayPlayText">Play</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnMissionReplayNext" title="Next event">Next &rarr;</button>
+                    <input type="range" class="mission-replay-scrubber" id="missionReplayScrubber" min="0" max="0" value="0">
+                  </div>
                 </div>
                 <div class="timeline-stream-box" id="timelineStream">
                   <div class="empty-state">No events recorded.</div>

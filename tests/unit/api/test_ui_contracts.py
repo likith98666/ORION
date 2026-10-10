@@ -82,6 +82,9 @@ def test_ui_html_structure_and_identifiers():
     assert 'id="tab-workforce"' in index_html
     assert 'id="workforceCardsGrid"' in index_html
     assert 'id="btnCancelMission"' in index_html
+    assert 'id="btnReplayMission"' in index_html
+    assert 'id="missionReplayBar"' in index_html
+    assert 'id="missionReplayScrubber"' in index_html
     assert 'id="connectionLostBanner"' in index_html
 
     # Screen 1: Quick Interventions

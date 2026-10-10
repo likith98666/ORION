@@ -26,6 +26,8 @@ class AppConfig:
     enable_cors: bool = True
     cors_allowed_origins: tuple[str, ...] = ("*",)
     shutdown_timeout_seconds: float = 10.0
+    api_token: str | None = None
+    data_dir: Path | None = None
 
     def __post_init__(self) -> None:
         if not self.host or not self.host.strip():
@@ -140,6 +142,13 @@ class AppConfig:
             if any(kw in k.upper() for kw in secret_keywords) and v and len(v) >= 4:
                 known_secrets_list.append(v)
 
+        # Explicit API token (optional on loopback, required on non-loopback)
+        api_token = source_env.get("ORION_API_TOKEN") or source_env.get("ORION_API_KEY")
+
+        # Explicit data directory for persistent missions
+        data_dir_env = source_env.get("ORION_DATA_DIR")
+        data_dir = Path(data_dir_env).resolve() if data_dir_env else None
+
         return cls(
             host=host,
             port=port,
@@ -151,4 +160,6 @@ class AppConfig:
             mission_rate_limit_per_minute=mission_rate_limit_per_minute,
             redaction_enabled=redaction_enabled,
             known_secrets=tuple(known_secrets_list),
+            api_token=api_token,
+            data_dir=data_dir,
         )

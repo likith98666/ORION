@@ -62,6 +62,58 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def _check_auth(self) -> bool:
+        """Verify API token authentication if configured or if binding to non-loopback host."""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # Health/Readiness probes and static UI assets are exempt from token authentication
+        if (
+            path in (
+                "/api/v1/health",
+                "/api/health",
+                "/api/v1/readiness",
+                "/api/readiness",
+                "/",
+                "/index.html",
+                "/favicon.ico",
+                "/favicon.svg",
+            )
+            or path.startswith("/static/")
+        ):
+            return True
+
+        config = self.service.config
+        client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
+        is_loopback = (
+            client_ip in ("127.0.0.1", "::1", "localhost")
+            and config.host in ("127.0.0.1", "localhost", "::1")
+        )
+
+        # Token is required if config.api_token is set, OR if binding non-loopback and not testing
+        token_required = bool(config.api_token) or (not is_loopback and not config.is_testing)
+        if not token_required:
+            return True
+
+        expected_token = config.api_token or ""
+        auth_header = self.headers.get("Authorization", "")
+        api_key_header = self.headers.get("X-API-Key", "")
+        token = ""
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        elif api_key_header:
+            token = api_key_header.strip()
+
+        if not token or token != expected_token:
+            self._send_error_json(
+                HTTPStatus.UNAUTHORIZED,
+                "API token authentication required or invalid token provided.",
+                code="UNAUTHORIZED",
+            )
+            return False
+
+        return True
+
     def do_GET(self) -> None:
         """Route GET requests to API endpoints, event streams, or static assets."""
         parsed = urlparse(self.path)
@@ -79,6 +131,10 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
         # Check rate limit for general API requests
         if not self._check_rate_limit(is_submission=False):
+            return
+
+        # Check API token authentication
+        if not self._check_auth():
             return
 
         # Collection endpoints: list missions/tasks
@@ -231,6 +287,10 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         """Route POST requests to API action endpoints."""
         parsed = urlparse(self.path)
         path = parsed.path
+
+        # Check API token authentication
+        if not self._check_auth():
+            return
 
         # Check rate limit (stricter limit for mission submission)
         is_sub = path in ("/api/tasks", "/api/v1/tasks", "/api/v1/missions")
@@ -1358,10 +1418,31 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         # Enforce maximum body size cap
         max_bytes = self.service.config.max_request_body_bytes
         if content_length > max_bytes:
+            try:
+                self.rfile.read(min(content_length, 65536))
+            except Exception:
+                pass
             self._send_error_json(
                 HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
                 f"Request payload ({content_length} bytes) exceeds limit of {max_bytes} bytes.",
                 code="PAYLOAD_TOO_LARGE",
+            )
+            return None
+
+        # Strict Content-Type enforcement for non-empty JSON bodies
+        content_type = self.headers.get("Content-Type", "")
+        if content_type and not (
+            content_type.lower().startswith("application/json")
+            or "json" in content_type.lower()
+        ):
+            try:
+                self.rfile.read(min(content_length, 65536))
+            except Exception:
+                pass
+            self._send_error_json(
+                HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                f"Unsupported Content-Type '{content_type}'. Must be 'application/json'.",
+                code="UNSUPPORTED_MEDIA_TYPE",
             )
             return None
 

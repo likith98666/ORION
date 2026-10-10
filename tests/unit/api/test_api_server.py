@@ -1,7 +1,7 @@
 import json
 import threading
 from http import HTTPStatus
-from http.server import HTTPServer
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -18,13 +18,14 @@ def running_server(tmp_path: Path):
     repo = tmp_path / "server_test_repo"
     repo.mkdir(parents=True, exist_ok=True)
     (repo / "file.py").write_text("print('test')", encoding="utf-8")
+    (repo / "test_sample.py").write_text("def test_ok(): pass\n", encoding="utf-8")
 
     test_service = MissionAPIService()
 
     class CustomHandler(OrionAPIHandler):
         service = test_service
 
-    server = HTTPServer(("127.0.0.1", 0), CustomHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), CustomHandler)
     port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -166,3 +167,390 @@ def test_api_serves_static_ui(running_server):
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         urlopen(f"{base_url}/static/../../pyproject.toml")
     assert exc_info.value.code in (HTTPStatus.FORBIDDEN, HTTPStatus.NOT_FOUND)
+
+
+def _post_json(url: str, payload: dict, headers: dict | None = None) -> tuple[int, dict]:
+    """Helper to send JSON POST and return status code and parsed body."""
+    import urllib.error
+
+    data = json.dumps(payload).encode("utf-8")
+    req_headers = {"Content-Type": "application/json"}
+    if headers:
+        req_headers.update(headers)
+    req = Request(url, data=data, headers=req_headers, method="POST")
+    try:
+        with urlopen(req) as resp:
+            return resp.status, json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8")
+        try:
+            parsed = json.loads(body)
+        except Exception:
+            parsed = {"raw": body}
+        return exc.code, parsed
+
+
+def test_api_advance_stage_valid_and_errors(running_server):
+    """Verify POST /api/v1/missions/{id}/advance valid and 4xx error paths."""
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "Advance test", "workspace": str(repo), "execution_mode": "controlled"},
+    )
+    mission_id = create_res["mission_id"]
+
+    # 1. Valid advance
+    status, adv_res = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/advance",
+        {"stage": "inspect_repository"},
+    )
+    assert status == HTTPStatus.OK
+    assert "inspect_repository" in adv_res["status"]
+
+    # 2. 400 Bad Request: missing 'stage'
+    status_bad, _ = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/advance",
+        {},
+    )
+    assert status_bad == HTTPStatus.BAD_REQUEST
+
+    # 3. 404 Not Found: nonexistent mission
+    status_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/advance",
+        {"stage": "inspect_repository"},
+    )
+    assert status_404 == HTTPStatus.NOT_FOUND
+
+
+def test_api_execute_tool_valid_and_errors(running_server):
+    """Verify POST /api/v1/missions/{id}/tool valid and 4xx error paths."""
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "Tool test", "workspace": str(repo), "execution_mode": "controlled"},
+    )
+    mission_id = create_res["mission_id"]
+
+    # 1. Valid tool execution
+    status, tool_res = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/tool",
+        {
+            "stage": "inspect_repository",
+            "tool_name": "list_files",
+            "arguments": {},
+        },
+    )
+    assert status == HTTPStatus.OK
+    assert tool_res["tool_name"] == "list_files"
+
+    # 2. 400 Bad Request: missing tool_name or stage
+    status_bad, _ = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/tool",
+        {"stage": "inspect_repository"},
+    )
+    assert status_bad == HTTPStatus.BAD_REQUEST
+
+    # 3. 404 Not Found: nonexistent mission
+    status_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/tool",
+        {"stage": "inspect_repository", "tool_name": "list_files"},
+    )
+    assert status_404 == HTTPStatus.NOT_FOUND
+
+
+def test_api_complete_stage_valid_and_errors(running_server):
+    """Verify POST /api/v1/missions/{id}/complete-stage valid and 4xx error paths."""
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "Complete stage test", "workspace": str(repo), "execution_mode": "controlled"},
+    )
+    mission_id = create_res["mission_id"]
+
+    # Advance first
+    _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/advance",
+        {"stage": "inspect_repository"},
+    )
+
+    # 1. Valid complete stage
+    status, comp_res = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/complete-stage",
+        {"stage": "inspect_repository"},
+    )
+    assert status == HTTPStatus.OK
+    assert "mission_id" in comp_res
+
+    # 2. 400 Bad Request: missing 'stage'
+    status_bad, _ = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/complete-stage",
+        {},
+    )
+    assert status_bad == HTTPStatus.BAD_REQUEST
+
+    # 3. 404 Not Found: nonexistent mission
+    status_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/complete-stage",
+        {"stage": "inspect_repository"},
+    )
+    assert status_404 == HTTPStatus.NOT_FOUND
+
+
+def test_api_generate_report_valid_and_errors(running_server):
+    """Verify POST /api/v1/missions/{id}/report valid and 4xx error paths."""
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "Report test", "workspace": str(repo), "execution_mode": "controlled"},
+    )
+    mission_id = create_res["mission_id"]
+
+    # Run pipeline to complete execution
+    _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/run",
+        {"auto_approve": True, "background": False},
+    )
+
+    # 1. Valid report generation
+    status, rep_res = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/report",
+        {"summary": "Automated report test summary"},
+    )
+    assert status == HTTPStatus.OK
+    assert "mission" in rep_res or "final_outcome" in rep_res or "evaluation" in rep_res
+
+    # 2. 404 Not Found: nonexistent mission
+    status_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/report",
+        {"summary": "Test"},
+    )
+    assert status_404 == HTTPStatus.NOT_FOUND
+
+
+def test_api_approve_and_cancel_valid_and_errors(running_server):
+    """Verify approve and cancel endpoints with valid payloads and 4xx errors."""
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "Approve cancel test", "workspace": str(repo), "execution_mode": "controlled"},
+    )
+    mission_id = create_res["mission_id"]
+
+    # 1. Valid cancel
+    status, cancel_res = _post_json(
+        f"{base_url}/api/v1/missions/{mission_id}/cancel",
+        {"reason": "Testing operator cancellation"},
+    )
+    assert status == HTTPStatus.OK
+    assert cancel_res["status"] == "cancelled"
+
+    # 2. 404 cancel for nonexistent mission
+    status_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/cancel",
+        {"reason": "Testing"},
+    )
+    assert status_404 == HTTPStatus.NOT_FOUND
+
+    # 3. 404 approve for nonexistent mission
+    status_app_404, _ = _post_json(
+        f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/approve",
+        {"decision": "approve"},
+    )
+    assert status_app_404 == HTTPStatus.NOT_FOUND
+
+
+def test_api_server_restart_persistence(tmp_path: Path):
+    """Verify missions, evidence, timeline, and reports survive a server restart."""
+    repo = tmp_path / "persist_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    (repo / "source.py").write_text("x = 1\n", encoding="utf-8")
+    data_dir = tmp_path / "persisted_data"
+
+    # 1. Start Server Instance 1
+    service_1 = MissionAPIService(data_dir=data_dir)
+
+    class Handler1(OrionAPIHandler):
+        service = service_1
+
+    server_1 = ThreadingHTTPServer(("127.0.0.1", 0), Handler1)
+    port_1 = server_1.server_address[1]
+    t1 = threading.Thread(target=server_1.serve_forever, daemon=True)
+    t1.start()
+
+    base_url_1 = f"http://127.0.0.1:{port_1}"
+    _, res_create = _post_json(
+        f"{base_url_1}/api/v1/missions",
+        {"task": "Persistence across restart test", "workspace": str(repo)},
+    )
+    mission_id = res_create["mission_id"]
+
+    # Advance stage on Server 1
+    _post_json(
+        f"{base_url_1}/api/v1/missions/{mission_id}/advance",
+        {"stage": "inspect_repository"},
+    )
+
+    # Shutdown Server 1
+    server_1.shutdown()
+    server_1.server_close()
+
+    # 2. Start Server Instance 2 with the same data_dir (Simulating restart)
+    service_2 = MissionAPIService(data_dir=data_dir)
+
+    class Handler2(OrionAPIHandler):
+        service = service_2
+
+    server_2 = ThreadingHTTPServer(("127.0.0.1", 0), Handler2)
+    port_2 = server_2.server_address[1]
+    t2 = threading.Thread(target=server_2.serve_forever, daemon=True)
+    t2.start()
+
+    base_url_2 = f"http://127.0.0.1:{port_2}"
+
+    # 3. Verify mission survived restart
+    with urlopen(f"{base_url_2}/api/v1/missions/{mission_id}") as resp:
+        assert resp.status == HTTPStatus.OK
+        data = json.loads(resp.read().decode())
+        assert data["mission_id"] == mission_id
+        assert data["objective"] == "Persistence across restart test"
+
+    # 4. Verify timeline survived restart
+    with urlopen(f"{base_url_2}/api/v1/missions/{mission_id}/timeline") as resp:
+        assert resp.status == HTTPStatus.OK
+        tl_data = json.loads(resp.read().decode())
+        assert len(tl_data["timeline"]) >= 2
+
+    server_2.shutdown()
+    server_2.server_close()
+
+
+def test_api_sse_reconnection(running_server):
+    """Verify Server-Sent Events (SSE) reconnects gracefully after a disconnect."""
+    import socket
+
+    base_url, _, repo = running_server
+    _, create_res = _post_json(
+        f"{base_url}/api/v1/missions",
+        {"task": "SSE reconnect test", "workspace": str(repo)},
+    )
+    mission_id = create_res["mission_id"]
+    port = int(base_url.split(":")[-1])
+
+    # 1. Connect first time
+    s1 = socket.create_connection(("127.0.0.1", port), timeout=5)
+    s1.sendall(
+        f"GET /api/v1/missions/{mission_id}/events HTTP/1.1\r\nHost: localhost\r\n\r\n".encode()
+    )
+    buf1 = ""
+    for _ in range(5):
+        chunk = s1.recv(1024).decode("utf-8", errors="ignore")
+        buf1 += chunk
+        if "CONNECTED" in buf1:
+            break
+    assert "200 OK" in buf1
+    assert "CONNECTED" in buf1
+
+    # Simulate network drop by abruptly closing socket
+    s1.close()
+
+    # 2. Reconnect (Simulate browser EventSource auto-reconnect)
+    s2 = socket.create_connection(("127.0.0.1", port), timeout=5)
+    s2.sendall(
+        f"GET /api/v1/missions/{mission_id}/events HTTP/1.1\r\nHost: localhost\r\n\r\n".encode()
+    )
+    buf2 = ""
+    for _ in range(5):
+        chunk = s2.recv(1024).decode("utf-8", errors="ignore")
+        buf2 += chunk
+        if "CONNECTED" in buf2:
+            break
+    assert "200 OK" in buf2
+    assert "CONNECTED" in buf2
+    s2.close()
+
+
+def test_api_documentation_drift_and_endpoint_count():
+    """Verify docs/API.md matches the router registry table and reflects the true endpoint count."""
+    from orion.api.routes import ROUTE_REGISTRY, STATIC_ROUTES, generate_api_markdown
+
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
+    api_doc_path = repo_root / "docs" / "API.md"
+
+    assert api_doc_path.exists(), "docs/API.md must exist."
+    generated_md = generate_api_markdown()
+    disk_md = api_doc_path.read_text(encoding="utf-8")
+
+    assert (
+        disk_md == generated_md
+    ), "docs/API.md has drifted from router registry in server.py/routes.py."
+
+    # Verify true endpoint count is 61 REST endpoints + 3 static routes = 64
+    assert len(ROUTE_REGISTRY) == 61
+    assert len(STATIC_ROUTES) == 3
+
+
+def test_api_security_auth_and_content_type(tmp_path: Path):
+    """Verify token authentication and Content-Type enforcement."""
+    from orion.config.app_config import AppConfig
+
+    repo = tmp_path / "auth_repo"
+    repo.mkdir(parents=True, exist_ok=True)
+    cfg = AppConfig(
+        api_token="secure-orion-token-1234",
+        environment="development",
+    )
+    test_svc = MissionAPIService(config=cfg)
+
+    class AuthHandler(OrionAPIHandler):
+        service = test_svc
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), AuthHandler)
+    port = server.server_address[1]
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+    base_url = f"http://127.0.0.1:{port}"
+
+    try:
+        # 1. Missing token -> 401
+        status_no_auth, _ = _post_json(
+            f"{base_url}/api/v1/missions",
+            {"task": "No auth", "workspace": str(repo)},
+        )
+        assert status_no_auth == HTTPStatus.UNAUTHORIZED
+
+        # 2. Invalid token -> 401
+        status_bad_auth, _ = _post_json(
+            f"{base_url}/api/v1/missions",
+            {"task": "Bad auth", "workspace": str(repo)},
+            headers={"Authorization": "Bearer wrong-token"},
+        )
+        assert status_bad_auth == HTTPStatus.UNAUTHORIZED
+
+        # 3. Valid token -> 201
+        status_ok, _ = _post_json(
+            f"{base_url}/api/v1/missions",
+            {"task": "Valid auth", "workspace": str(repo)},
+            headers={"Authorization": "Bearer secure-orion-token-1234"},
+        )
+        assert status_ok == HTTPStatus.CREATED
+
+        # 4. Invalid Content-Type -> 415
+        import urllib.error
+
+        req = Request(
+            f"{base_url}/api/v1/missions",
+            data=b"raw text",
+            headers={
+                "Content-Type": "text/plain",
+                "Authorization": "Bearer secure-orion-token-1234",
+            },
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urlopen(req)
+        assert exc_info.value.code == HTTPStatus.UNSUPPORTED_MEDIA_TYPE
+
+    finally:
+        server.shutdown()
+        server.server_close()
+
