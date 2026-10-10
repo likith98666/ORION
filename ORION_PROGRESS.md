@@ -150,3 +150,50 @@ Success: no issues found in 235 source files
 - **Phase 1 Commit**: `8f65f42` (`Phase 1: Functional completeness, timeline replay, real browser E2E, API tests, and docs parity`)
 - **Remaining Blockers**: None. Phase 1 complete and fully verified. Ready for Phase 2.
 
+---
+
+## PHASE 2: SECURITY AND ROBUSTNESS
+
+### 1. Threat Model Documentation (`docs/THREAT_MODEL.md`)
+- Comprehensive threat model covering the 8 critical vectors:
+  1. **Workspace Escape**: Canonical path containment via `is_relative_to(repository_root)`.
+  2. **Symlink and Junction Traversal**: Follows links to physical disk targets; rejects cross-boundary targets.
+  3. **Secret Leakage**: High-entropy regex patterns and dynamic secret scrubbing to `[REDACTED]`.
+  4. **Prompt / Instruction Injection**: Multi-pattern injection scanner and Policy Engine directive isolation.
+  5. **Runaway Execution**: Hard step budgets, tool execution timeouts, and execution loop detectors.
+  6. **Approval-Token Replay**: Single-use token consumption state machine; second use raises `PermissionError`.
+  7. **API Path Traversal**: Percent-decoding normalization and `relative_to(STATIC_DIR)` boundary enforcement (403 Forbidden).
+  8. **Oversized Requests & DoS**: Pre-read Content-Length caps (413), strict JSON MIME enforcement (415), and TokenBucket rate limiting (429).
+
+### 2. API Security Hardening
+- **Token Authentication**: Enforced when binding to non-loopback hosts or when `api_token` configured (`Bearer` / `X-API-Key`).
+- **Body Size Caps**: Enforces `max_request_body_bytes` (10MB default) and safely drains sockets on Windows to prevent `WinError 10053` resets.
+- **Content-Type Checks**: Rejects non-JSON bodies on mutating endpoints with `415 Unsupported Media Type`.
+- **CORS Defaults**: Allowed headers include `Content-Type, Authorization, X-API-Key`.
+- **Static File Traversal**: `urllib.parse.unquote` decoding before path normalization; returns `403 FORBIDDEN_PATH`.
+
+### 3. Threat Model Negative Test Suite (`tests/integration/test_security_threat_model.py`)
+| Threat ID | Threat Vector | Negative Test | Result |
+|---|---|---|---|
+| **TM-01** | Workspace Escape (`../`) | `test_threat_tm01_workspace_escape_blocked` | **PASSED** |
+| **TM-02** | Symlink / Junction Traversal | `test_threat_tm02_symlink_traversal_blocked` | **PASSED** |
+| **TM-03** | Secret Leakage | `test_threat_tm03_secret_leakage_blocked` | **PASSED** |
+| **TM-04** | Prompt / Instruction Injection | `test_threat_tm04_prompt_injection_blocked` | **PASSED** |
+| **TM-05** | Runaway Execution | `test_threat_tm05_runaway_execution_blocked` | **PASSED** |
+| **TM-06** | Approval Token Replay | `test_threat_tm06_approval_token_replay_blocked` | **PASSED** |
+| **TM-07** | API Path Traversal | `test_threat_tm07_api_path_traversal_blocked` | **PASSED** |
+| **TM-08** | Oversized & Malformed Requests | `test_threat_tm08_oversized_and_malformed_requests_blocked` | **PASSED** |
+
+### 4. Static Security Scans & Subprocess Audit
+- **Secret Scanner Output**: `Potential hardcoded secret matches in src: 0`
+- **Shell Execution**: `0` occurrences of `shell=True` across the entire codebase.
+- **Subprocess Calls**: All subprocess invocations use explicit argument sequences (`list[str]`), non-zero timeouts, and sanitized environment dictionaries.
+
+### 5. Quality Gate Evidence
+- `pytest -q`: `1433 passed, 1 skipped in 117.02s`
+- `ruff check .`: `All checks passed!`
+- `mypy src`: `Success: no issues found in 236 source files`
+- **Phase 2 Commit**: `12f6e1a` (`Phase 2: Security threat model, negative verification suite, and API hardening`)
+- **Remaining Blockers**: None. Phase 2 complete and fully verified. Ready for Phase 3.
+
+
