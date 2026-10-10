@@ -55,8 +55,7 @@ TASK_TYPE_ERROR = BenchmarkTask(
     ),
     workspace_files={
         "src/network.py": (
-            "def format_address(host: str, port: int) -> str:\n"
-            "    return host + ':' + port\n"
+            "def format_address(host: str, port: int) -> str:\n    return host + ':' + port\n"
         )
     },
     test_files={
@@ -83,8 +82,7 @@ TASK_MISSING_NONE = BenchmarkTask(
     ),
     workspace_files={
         "src/headers.py": (
-            "def clean_header(val: str | None) -> str:\n"
-            "    return val.strip().lower()\n"
+            "def clean_header(val: str | None) -> str:\n    return val.strip().lower()\n"
         )
     },
     test_files={
@@ -316,8 +314,7 @@ TASK_FLOAT_ROUNDING = BenchmarkTask(
     ),
     workspace_files={
         "src/ledger.py": (
-            "def calculate_total(amounts: list[float]) -> float:\n"
-            "    return sum(amounts)\n"
+            "def calculate_total(amounts: list[float]) -> float:\n    return sum(amounts)\n"
         )
     },
     test_files={
@@ -357,8 +354,7 @@ BENCHMARK_REPAIRS: dict[str, dict[str, str]] = {
     },
     "BM-TYPE-ERROR": {
         "src/network.py": (
-            "def format_address(host: str, port: int) -> str:\n"
-            "    return f'{host}:{port}'\n"
+            "def format_address(host: str, port: int) -> str:\n    return f'{host}:{port}'\n"
         )
     },
     "BM-MISSING-NONE": {

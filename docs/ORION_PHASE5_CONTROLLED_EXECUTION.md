@@ -177,9 +177,12 @@ with lock_manager.acquire(workspace_id, execution_id):
     # 5. Apply mutations sequentially:
     try:
         for op in operations:
-            if op.CREATE_FILE: target.write_text(op.new_content)
-            elif op.MODIFY_FILE: target.write_text(op.new_content)
-            elif op.DELETE_FILE: target.unlink()
+            if op.CREATE_FILE:
+                target.write_text(op.new_content)
+            elif op.MODIFY_FILE:
+                target.write_text(op.new_content)
+            elif op.DELETE_FILE:
+                target.unlink()
             record_operation(op)
     except Exception as exc:
         restore_snapshot(recovery_point)

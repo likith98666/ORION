@@ -1385,10 +1385,7 @@ ORION may provide an experiment runner.
 Conceptually:
 
 ```python
-experiment.run(
-    configuration=...,
-    dataset=...
-)
+experiment.run(configuration=..., dataset=...)
 ```
 
 ---

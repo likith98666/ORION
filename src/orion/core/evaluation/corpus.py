@@ -279,7 +279,5 @@ def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ..
     if normalized in ("v1", "benchmarks", "expanded", "ten"):
         return BENCHMARK_TASKS
     raise KeyError(
-        f"Unknown benchmark suite '{suite_name}'. "
-        "Available: 'standard', 'smoke', 'taxonomy', 'v1'."
+        f"Unknown benchmark suite '{suite_name}'. Available: 'standard', 'smoke', 'taxonomy', 'v1'."
     )
-

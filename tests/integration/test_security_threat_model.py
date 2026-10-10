@@ -168,9 +168,7 @@ def test_threat_tm03_secret_leakage_blocked() -> None:
     engine = RedactionEngine((known_api_key, known_db_pass))
 
     # Test string redaction
-    log_message = (
-        f"Connecting to database with {known_db_pass} and API key {known_api_key}"
-    )
+    log_message = f"Connecting to database with {known_db_pass} and API key {known_api_key}"
     redacted = engine.redact(log_message)
     assert known_api_key not in redacted
     assert known_db_pass not in redacted

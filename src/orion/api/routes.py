@@ -731,23 +731,25 @@ def generate_api_markdown() -> str:
         codes_str = ", ".join(str(c) for c in s.status_codes)
         lines.append(f"| {s.tag} | `{s.method}` | `{s.path}` | {s.summary} | `{codes_str}` |")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 2. Authentication, Security & Invariants",
-        "",
-        "1. **API Token Authentication**: Configured via `ORION_API_KEY` / `ORION_API_TOKEN` in `AppConfig`. Optional on local loopback (`127.0.0.1`), strictly required when binding to non-loopback network interfaces.",  # noqa: E501
-        "2. **Strict Content-Type**: POST requests with non-empty payloads require `Content-Type: application/json`.",  # noqa: E501
-        "3. **Bounded Request Payloads**: Request bodies are capped at `max_request_body_bytes` (default 10 MB) to prevent denial of service.",  # noqa: E501
-        "4. **Path Traversal Protection**: Static asset serving strictly contains paths within `src/orion/ui/static` and rejects directory traversal (`..`).",  # noqa: E501
-        "5. **Single-Use Approval Tokens**: Approval gates require cryptographically isolated single-use tokens to prevent replay attacks.",  # noqa: E501
-        "",
-        "---",
-        "",
-        "## 3. Detailed Endpoint Specifications",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 2. Authentication, Security & Invariants",
+            "",
+            "1. **API Token Authentication**: Configured via `ORION_API_KEY` / `ORION_API_TOKEN` in `AppConfig`. Optional on local loopback (`127.0.0.1`), strictly required when binding to non-loopback network interfaces.",  # noqa: E501
+            "2. **Strict Content-Type**: POST requests with non-empty payloads require `Content-Type: application/json`.",  # noqa: E501
+            "3. **Bounded Request Payloads**: Request bodies are capped at `max_request_body_bytes` (default 10 MB) to prevent denial of service.",  # noqa: E501
+            "4. **Path Traversal Protection**: Static asset serving strictly contains paths within `src/orion/ui/static` and rejects directory traversal (`..`).",  # noqa: E501
+            "5. **Single-Use Approval Tokens**: Approval gates require cryptographically isolated single-use tokens to prevent replay attacks.",  # noqa: E501
+            "",
+            "---",
+            "",
+            "## 3. Detailed Endpoint Specifications",
+            "",
+        ]
+    )
 
     current_tag = ""
     for idx, r in enumerate(ROUTE_REGISTRY, 1):
@@ -755,24 +757,30 @@ def generate_api_markdown() -> str:
             current_tag = r.tag
             lines.extend([f"### Category: {current_tag}", ""])
 
-        lines.extend([
-            f"#### {idx}. `{r.method} {r.path}` — {r.summary}",
-            f"- **Description**: {r.description}",
-            f"- **Status Codes**: {', '.join(str(c) for c in r.status_codes)}",
-        ])
+        lines.extend(
+            [
+                f"#### {idx}. `{r.method} {r.path}` — {r.summary}",
+                f"- **Description**: {r.description}",
+                f"- **Status Codes**: {', '.join(str(c) for c in r.status_codes)}",
+            ]
+        )
         if r.request_body:
-            lines.extend([
-                "- **Request Body**:",
+            lines.extend(
+                [
+                    "- **Request Body**:",
+                    "```json",
+                    r.request_body,
+                    "```",
+                ]
+            )
+        lines.extend(
+            [
+                "- **Response Body**:",
                 "```json",
-                r.request_body,
+                r.response_body,
                 "```",
-            ])
-        lines.extend([
-            "- **Response Body**:",
-            "```json",
-            r.response_body,
-            "```",
-            "",
-        ])
+                "",
+            ]
+        )
 
     return "\n".join(lines) + "\n"

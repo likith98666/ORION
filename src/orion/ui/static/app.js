@@ -3567,6 +3567,8 @@ Verification: VERIFIED_SUCCESS`,
 
       const created = await res.json();
       currentTaskId = created.task_id || created.mission_id;
+      window.currentTaskId = currentTaskId;
+      window.currentMissionId = currentTaskId;
       closeModal('newMissionModal');
       switchView('mission-detail');
       showToast('Mission Launched', `Mission ${currentTaskId.slice(0, 8)} started in ${execution_mode} mode.`, 'success');

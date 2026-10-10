@@ -41,9 +41,14 @@ dist/
 build/
 *.egg-info/
 
-# Logs
+# Logs and errors
 *.log
+*.err
+
+# UI Snapshots & Scratch outputs
+ui_snapshot/
 
 # Temporary files
 tmp/
 temp/
+

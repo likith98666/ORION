@@ -94,8 +94,16 @@ During in-depth inspection and static/runtime auditing, 7 substantive issues wer
      ```python
      raw_stdout = exc.stdout if exc.stdout is not None else ""
      raw_stderr = exc.stderr if exc.stderr is not None else ""
-     stdout_str = raw_stdout.decode("utf-8", errors="replace") if isinstance(raw_stdout, bytes) else str(raw_stdout)
-     stderr_str = raw_stderr.decode("utf-8", errors="replace") if isinstance(raw_stderr, bytes) else str(raw_stderr)
+     stdout_str = (
+         raw_stdout.decode("utf-8", errors="replace")
+         if isinstance(raw_stdout, bytes)
+         else str(raw_stdout)
+     )
+     stderr_str = (
+         raw_stderr.decode("utf-8", errors="replace")
+         if isinstance(raw_stderr, bytes)
+         else str(raw_stderr)
+     )
      ```
 3. **`src/orion/core/swe/cognitive/patch_contracts.py`:**
    - Added `@property def is_valid(self) -> bool` to `PatchProposal`:

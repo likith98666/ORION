@@ -787,8 +787,7 @@ Python type hints should be used extensively.
 Example:
 
 ```python
-def execute_task(task_id: str) -> TaskResult:
-    ...
+def execute_task(task_id: str) -> TaskResult: ...
 ```
 
 Type checking helps detect errors before runtime.

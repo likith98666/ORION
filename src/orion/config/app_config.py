@@ -19,7 +19,7 @@ class AppConfig:
     environment: EnvironmentType = "development"
     max_request_body_bytes: int = 10 * 1024 * 1024  # 10 MB default cap
     rate_limit_enabled: bool = True
-    rate_limit_per_minute: int = 120
+    rate_limit_per_minute: int = 600
     mission_rate_limit_per_minute: int = 20
     redaction_enabled: bool = True
     known_secrets: tuple[str, ...] = ()
@@ -124,11 +124,11 @@ class AppConfig:
             "1",
             "yes",
         )
-        rate_limit_str = source_env.get("ORION_RATE_LIMIT_PER_MINUTE", "120")
+        rate_limit_str = source_env.get("ORION_RATE_LIMIT_PER_MINUTE", "600")
         try:
             rate_limit_per_minute = int(rate_limit_str)
         except ValueError:
-            rate_limit_per_minute = 120
+            rate_limit_per_minute = 600
 
         mission_limit_str = source_env.get("ORION_MISSION_RATE_LIMIT_PER_MINUTE", "20")
         try:

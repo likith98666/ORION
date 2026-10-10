@@ -1211,10 +1211,7 @@ If both are incompatible, the system must define deterministic behavior or rejec
 Conceptually:
 
 ```python
-enabled = feature_flags.is_enabled(
-    "ENABLE_RERANKING",
-    context
-)
+enabled = feature_flags.is_enabled("ENABLE_RERANKING", context)
 ```
 
 ---

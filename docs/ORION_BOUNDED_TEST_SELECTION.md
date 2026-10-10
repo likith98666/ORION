@@ -191,8 +191,7 @@ def run_tests(
     self,
     target: str | Sequence[str] = "",
     test_type: TestType = TestType.UNIT,
-) -> TestExecutionResult:
-    ...
+) -> TestExecutionResult: ...
 ```
 Each target in the sequence is individually checked against path traversal and workspace boundary rules before being appended to the `pytest` arguments list.
 

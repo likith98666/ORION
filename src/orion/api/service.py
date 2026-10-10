@@ -189,9 +189,7 @@ class MissionAPIService:
         )
         self._config = config or AppConfig.from_env(argv_workspace=self._default_workspace_path)
         self._data_dir: Path | None = (
-            Path(data_dir).resolve()
-            if data_dir is not None
-            else self._config.data_dir
+            Path(data_dir).resolve() if data_dir is not None else self._config.data_dir
         )
         self._redaction_engine = RedactionEngine(secrets=self._config.known_secrets)
         self._is_shutting_down: bool = False
@@ -219,9 +217,7 @@ class MissionAPIService:
 
             evidence_items = []
             if record.coordinator and hasattr(record.coordinator, "ledger"):
-                evidence_items = [
-                    item.to_dict() for item in record.coordinator.ledger.get_items()
-                ]
+                evidence_items = [item.to_dict() for item in record.coordinator.ledger.get_items()]
 
             payload: dict[str, Any] = {
                 "mission_id": str(record.mission_id),
