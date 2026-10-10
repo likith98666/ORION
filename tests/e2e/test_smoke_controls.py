@@ -242,15 +242,19 @@ def test_real_chrome_smoke_suite_all_controls(browser_server):
                 net_err = len(client.network_failures) > 0
                 verdict = "PASS" if clicked and is_visible and not has_err else "FAIL"
 
-                results_table.append({
-                    "view": view_name,
-                    "control": nav_id,
-                    "expected": f"Switch active view to {target_selector}",
-                    "actual": "View switched and marked active" if is_visible else "Failed to switch",  # noqa: E501
-                    "console_error": str(len(client.console_errors)),
-                    "network_status": "200 OK" if not net_err else "Failed calls",
-                    "verdict": verdict,
-                })
+                results_table.append(
+                    {
+                        "view": view_name,
+                        "control": nav_id,
+                        "expected": f"Switch active view to {target_selector}",
+                        "actual": "View switched and marked active"
+                        if is_visible
+                        else "Failed to switch",  # noqa: E501
+                        "console_error": str(len(client.console_errors)),
+                        "network_status": "200 OK" if not net_err else "Failed calls",
+                        "verdict": verdict,
+                    }
+                )
                 assert verdict == "PASS", f"Nav control {nav_id} failed"
 
             # 2. Return to Active Mission & Test Cockpit Tabs
@@ -276,15 +280,17 @@ def test_real_chrome_smoke_suite_all_controls(browser_server):
                 has_err = len(client.console_errors) > 0
                 verdict = "PASS" if clicked and is_active and not has_err else "FAIL"
 
-                results_table.append({
-                    "view": "Cockpit Tab",
-                    "control": tab_btn_id,
-                    "expected": f"Show {tab_label} panel",
-                    "actual": "Tab panel activated" if is_active else "Tab not activated",
-                    "console_error": str(len(client.console_errors)),
-                    "network_status": "200 OK",
-                    "verdict": verdict,
-                })
+                results_table.append(
+                    {
+                        "view": "Cockpit Tab",
+                        "control": tab_btn_id,
+                        "expected": f"Show {tab_label} panel",
+                        "actual": "Tab panel activated" if is_active else "Tab not activated",
+                        "console_error": str(len(client.console_errors)),
+                        "network_status": "200 OK",
+                        "verdict": verdict,
+                    }
+                )
                 assert verdict == "PASS", f"Cockpit tab {tab_btn_id} failed"
 
             # 3. Test Shell & Topbar Controls
@@ -312,25 +318,36 @@ def test_real_chrome_smoke_suite_all_controls(browser_server):
                 has_err = len(client.console_errors) > 0
                 verdict = "PASS" if not has_err else "FAIL"
 
-                results_table.append({
-                    "view": "Cockpit / Shell",
-                    "control": ctrl_id,
-                    "expected": desc,
-                    "actual": "Action completed without error",
-                    "console_error": str(len(client.console_errors)),
-                    "network_status": "200 OK",
-                    "verdict": verdict,
-                })
+                results_table.append(
+                    {
+                        "view": "Cockpit / Shell",
+                        "control": ctrl_id,
+                        "expected": desc,
+                        "actual": "Action completed without error",
+                        "console_error": str(len(client.console_errors)),
+                        "network_status": "200 OK",
+                        "verdict": verdict,
+                    }
+                )
                 assert verdict == "PASS", f"Control #{ctrl_id} triggered error"
 
             # Print formatted audit markdown table
             print("\n### Real Browser Smoke Test Results Table (Chrome Headless CDP)")
-            print("| View | Control | Expected | Actual | Console Error | Network Status | Verdict |")  # noqa: E501
+            print(
+                "| View | Control | Expected | Actual | Console Error | Network Status | Verdict |"
+            )  # noqa: E501
             print("|---|---|---|---|---|---|---|")
             for r in results_table:
-                print(f"| {r['view']} | `{r['control']}` | {r['expected']} | {r['actual']} | {r['console_error']} | {r['network_status']} | **{r['verdict']}** |")  # noqa: E501
+                row_str = (
+                    f"| {r['view']} | `{r['control']}` | {r['expected']} | "
+                    f"{r['actual']} | {r['console_error']} | "
+                    f"{r['network_status']} | **{r['verdict']}** |"
+                )
+                print(row_str)
 
-            assert len(client.console_errors) == 0, f"Encountered console errors: {client.console_errors}"  # noqa: E501
+            assert len(client.console_errors) == 0, (
+                f"Encountered console errors: {client.console_errors}"
+            )  # noqa: E501
 
         finally:
             client.close()
@@ -404,7 +421,11 @@ def test_real_chrome_full_user_journey_and_failure_recovery(browser_server, tmp_
             mid = res_submit["mission_id"]
 
             # Load mission in UI
-            client.eval_js(f"window.activeMissionId = '{mid}'; if (window.loadMissionDetail) window.loadMissionDetail('{mid}');")  # noqa: E501
+            load_script = (
+                f"window.activeMissionId = '{mid}'; "
+                f"if (window.loadMissionDetail) window.loadMissionDetail('{mid}');"
+            )
+            client.eval_js(load_script)
             time.sleep(0.8)
 
             # Advance mission stages
@@ -422,7 +443,13 @@ def test_real_chrome_full_user_journey_and_failure_recovery(browser_server, tmp_
             time.sleep(0.5)
 
             # Open all tabs and inspect elements
-            for tab_id in ["tabBtnChanges", "tabBtnTests", "tabBtnVerification", "tabBtnRecovery", "tabBtnGraph"]:  # noqa: E501
+            for tab_id in [
+                "tabBtnChanges",
+                "tabBtnTests",
+                "tabBtnVerification",
+                "tabBtnRecovery",
+                "tabBtnGraph",
+            ]:  # noqa: E501
                 client.eval_js(f"document.getElementById('{tab_id}').click()")
                 time.sleep(0.2)
 

@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1%2C438%20passed%20%7C%201%20skipped%20%7C%200%20failed-emerald.svg)]()
+[![Tests](https://img.shields.io/badge/tests-1%2C442%20passed%20%7C%201%20skipped%20%7C%200%20failed-emerald.svg)]()
 [![Type Checking](https://img.shields.io/badge/mypy-strict%20%7C%20238%20files%20clean-blue.svg)]()
 [![Code Quality](https://img.shields.io/badge/ruff-clean-green.svg)]()
 [![Runtime Dependencies](https://img.shields.io/badge/dependencies-0%20third--party%20runtime-purple.svg)]()
@@ -122,7 +122,7 @@ python -m venv .venv
 # Install development & testing tooling
 pip install -e ".[dev]"
 
-# Run full test suite (1,438 tests)
+# Run full test suite (1,442 tests)
 pytest -q
 
 # Run strict type checking (238 source files)
@@ -149,7 +149,7 @@ Open your browser to:
 
 | Quality Gate | Requirement | Measured Result | Status |
 | :--- | :--- | :--- | :--- |
-| **Pytest Full Suite** | 100% Pass Rate | **1,438 passed, 1 skipped, 0 failed** in 104.65s | **PASS** |
+| **Pytest Full Suite** | 100% Pass Rate | **1,442 passed, 1 skipped, 0 failed** in 131.81s | **PASS** |
 | **Mypy Static Typing** | Strict, 0 Errors | **0 errors across 238 source files** | **PASS** |
 | **Ruff Linter** | Clean | **All checks passed!** | **PASS** |
 | **10-Task SWE Benchmark Pass@1** | $\ge 95\%$ | **100.0%** (30/30 across 3 trials; 0.773s median) | **PASS** |
