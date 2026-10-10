@@ -1,28 +1,96 @@
 /* ==========================================================================
+   0. LOCAL FONTS (@font-face with OFL Licenses)
+   ========================================================================== */
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/orbitron-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/static/fonts/orbitron-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/orbitron-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/orbitron-latin-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/static/fonts/orbitron-latin-800.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin-700.woff2') format('woff2');
+}
+
+/* ==========================================================================
    ORION // CERTIFIED AI SOFTWARE ENGINEER CONSOLE
    Design Direction: Exact Premium Classic Enterprise AI Product
-   Palette Authority: Dark Navy / Blue-Black Foundation (#020A13)
+   Palette Authority: Approved ORION Deep Space Void (#05060A) & Ice Blue (#7CC4FF)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. DESIGN SYSTEM VARIABLES & PALETTE
    -------------------------------------------------------------------------- */
 :root {
-  /* Backgrounds & Obsidian Surfaces */
-  --bg-page: #080A0C;
-  --bg-void: #080A0C;
-  --bg-deep: #111519;
-  --bg-panel: #171C20;
-  --surface-primary: #111519;
-  --surface-secondary: #171C20;
-  --surface-elevated: #1E242B;
-  --surface-overlay: rgba(8, 10, 12, 0.88);
+  /* Backgrounds & Void Surfaces (Approved ORION Void Black #05060A) */
+  --bg-page: #05060A;
+  --bg-void: #05060A;
+  --bg-deep: #0B0E14;
+  --bg-panel: #11151F;
+  --surface-primary: #0B0E14;
+  --surface-secondary: #11151F;
+  --surface-elevated: #171E2B;
+  --surface-overlay: rgba(5, 6, 10, 0.88);
 
   /* Precise Engineering Fine Borders */
-  --border-main: #293137;
-  --border-subtle: rgba(41, 49, 55, 0.65);
-  --border-accent: rgba(179, 154, 112, 0.38);
-  --border-focus: #B39A70;
+  --border-main: #1D2633;
+  --border-subtle: rgba(29, 38, 51, 0.65);
+  --border-accent: rgba(124, 196, 255, 0.38);
+  --border-focus: #7CC4FF;
 
   /* Typography Colors: Warm Ivory Primary & Muted Slate Secondary */
   --text-primary: #EEECE5;
@@ -30,12 +98,15 @@
   --text-muted: #6C7680;
   --text-dim: #464F58;
 
-  /* Brand Accents: Antique Bronze & Atmospheric Earth Blue */
+  /* Brand Accents: Approved Ice Blue (#7CC4FF) & Bronze Secondary */
+  --color-accent: #7CC4FF;
+  --color-accent-bright: #A5D7FF;
+  --color-accent-subtle: rgba(124, 196, 255, 0.14);
   --color-bronze: #B39A70;
   --color-bronze-bright: #D1B88D;
   --color-bronze-subtle: rgba(179, 154, 112, 0.12);
-  --color-earth-blue: #527E9C;
-  --color-earth-subtle: rgba(82, 126, 156, 0.14);
+  --color-earth-blue: #7CC4FF;
+  --color-earth-subtle: rgba(124, 196, 255, 0.14);
 
   /* Restrained Engineering Status Colors */
   --color-success: #77A88C;
@@ -46,21 +117,22 @@
   --color-failure-subtle: rgba(199, 123, 118, 0.12);
 
   /* Legacy Contract Compatible Tokens */
-  --color-blue: #527E9C;
-  --color-blue-bright: #709CB8;
-  --color-blue-subtle: rgba(82, 126, 156, 0.14);
+  --color-blue: #7CC4FF;
+  --color-blue-bright: #A5D7FF;
+  --color-blue-subtle: rgba(124, 196, 255, 0.14);
   --color-green: #77A88C;
   --color-green-subtle: rgba(119, 168, 140, 0.12);
   --color-purple: #B39A70;
   --color-purple-subtle: rgba(179, 154, 112, 0.12);
-  --accent-cyan: #527E9C;
+  --accent-cyan: #7CC4FF;
   --accent-emerald: #77A88C;
   --accent-amber: #C5A36A;
   --accent-rose: #C77B76;
 
-  /* Disciplined Typographic System */
+  /* Disciplined Typographic System with Orbitron for Headings */
+  --font-heading: 'Orbitron', 'Cinzel', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: 'Orbitron', 'Cinzel', Georgia, Cambria, serif;
   --font-sans: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: 'Cinzel', 'Playfair Display', Georgia, Cambria, serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
   /* Geometry & Layout: Precise Rectangles with Deliberate 2-4px Radii */
@@ -616,14 +688,14 @@ input, textarea, select {
   position: relative;
   background-color: var(--bg-void);
   background-image: 
-    radial-gradient(circle at 85% 25%, rgba(124, 196, 255, 0.12) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(8, 10, 12, 0.4) 0%, rgba(8, 10, 12, 0.85) 60%, #080A0C 100%),
-    linear-gradient(90deg, rgba(8, 10, 12, 0.95) 0%, rgba(8, 10, 12, 0.8) 50%, rgba(8, 10, 12, 0.4) 100%);
+    radial-gradient(circle at 85% 25%, rgba(124, 196, 255, 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(5, 6, 10, 0.4) 0%, rgba(5, 6, 10, 0.85) 60%, #05060A 100%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.95) 0%, rgba(5, 6, 10, 0.8) 50%, rgba(5, 6, 10, 0.4) 100%);
   border: 1px solid var(--border-main);
   border-radius: var(--radius-sm);
   padding: 44px 38px 36px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), inset 0 0 80px rgba(8, 10, 12, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), inset 0 0 80px rgba(5, 6, 10, 0.5);
 }
 
 .hero-space-canvas {
@@ -641,8 +713,8 @@ input, textarea, select {
   inset: 0;
   pointer-events: none;
   background: 
-    radial-gradient(ellipse 65% 40% at 75% 20%, rgba(82, 126, 156, 0.22) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(82, 126, 156, 0.09) 0%, transparent 45%);
+    radial-gradient(ellipse 65% 40% at 75% 20%, rgba(124, 196, 255, 0.22) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(124, 196, 255, 0.09) 0%, transparent 45%);
 }
 
 .hero-orbital-telemetry {
@@ -707,10 +779,10 @@ input, textarea, select {
 }
 
 .hero-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-heading);
   font-size: 54px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   color: var(--text-primary);
   line-height: 1.05;
   margin: 2px 0 6px;
@@ -758,7 +830,7 @@ input, textarea, select {
 
 .btn-primary {
   background: var(--color-bronze);
-  color: #080A0C;
+  color: #05060A;
   font-weight: 600;
   border: 1px solid var(--color-bronze);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -767,7 +839,7 @@ input, textarea, select {
 .btn-primary:hover {
   background: var(--color-bronze-bright);
   border-color: var(--color-bronze-bright);
-  color: #080A0C;
+  color: #05060A;
   box-shadow: 0 2px 6px rgba(179, 154, 112, 0.25);
 }
 
@@ -801,7 +873,7 @@ input, textarea, select {
 
 .btn-danger:hover {
   background: var(--color-failure);
-  color: #080A0C;
+  color: #05060A;
 }
 
 /* --------------------------------------------------------------------------
@@ -2132,8 +2204,8 @@ input, textarea, select {
   background-color: var(--bg-void);
   background-image: 
     radial-gradient(circle at 82% 20%, rgba(124, 196, 255, 0.14) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(8, 10, 12, 0.3) 0%, rgba(8, 10, 12, 0.85) 60%, #080A0C 100%),
-    linear-gradient(90deg, rgba(8, 10, 12, 0.95) 0%, rgba(8, 10, 12, 0.78) 45%, rgba(8, 10, 12, 0.35) 100%);
+    linear-gradient(180deg, rgba(5, 6, 10, 0.3) 0%, rgba(5, 6, 10, 0.85) 60%, #05060A 100%),
+    linear-gradient(90deg, rgba(5, 6, 10, 0.95) 0%, rgba(5, 6, 10, 0.78) 45%, rgba(5, 6, 10, 0.35) 100%);
   border-radius: var(--radius-sm);
   padding: 56px 40px;
   margin-bottom: 24px;
@@ -2172,11 +2244,11 @@ input, textarea, select {
 
 .landing-hero-title {
   font-size: 38px;
-  font-family: var(--font-serif);
+  font-family: var(--font-heading);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.22;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.03em;
   margin: 0 0 16px;
 }
 

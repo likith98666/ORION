@@ -71,9 +71,10 @@ def test_ui_html_structure_and_identifiers():
     assert 'id="evidenceFilterGroup"' in index_html
     assert 'id="evidenceFeed"' in index_html
 
-    # Authoritative Verification
+    # Authoritative Verification & Forensic Report
     assert 'id="tab-verification"' in index_html
     assert 'id="verifStatusBox"' in index_html
+    assert 'id="tab-report"' in index_html
 
     # Execution Graph (DAG) & Workforce Observatory
     assert 'id="tab-graph"' in index_html
@@ -447,18 +448,16 @@ def test_premium_website_redesign_contracts():
     assert 'id="btnResetSettings"' in index_html
     assert ".settings-container" in app_css
 
-    # 10. Obsidian & Antique Bronze Design System Palette Tokens
-    assert "#080A0C" in app_css  # Obsidian background
-    assert "#111519" in app_css  # Graphite surface
-    assert "#171C20" in app_css  # Elevated charcoal
+    # 10. Approved ORION Void Black (#05060A) & Ice Blue (#7CC4FF) Theme Tokens
+    assert "#05060A" in app_css  # Approved void black background
     assert "#EEECE5" in app_css  # Warm ivory primary text
     assert "#929BA3" in app_css  # Muted slate secondary text
     assert "#B39A70" in app_css  # Antique bronze accent
-    assert "#527E9C" in app_css  # Atmospheric Earth blue
-    assert "#293137" in app_css  # Fine border
+    assert "#7CC4FF" in app_css  # Approved ice blue accent
     assert "#77A88C" in app_css  # Restrained success
     assert "#C5A36A" in app_css  # Restrained warning
     assert "#C77B76" in app_css  # Restrained error
+    assert "Orbitron" in app_css  # Headings font family
 
     # 11. Strictly Prohibited Elements Verification (No emojis)
     assert not any(ord(c) > 0x25FF for c in index_html)
@@ -501,3 +500,14 @@ def test_forbidden_ui_strings_and_negative_hygiene():
     assert "prefersReducedMotion" in app_js
     assert "document.hidden" in app_js
 
+    # 7. Zero external resources (no Google Fonts or external CDN links anywhere)
+    for name, content in [("index.html", index_html), ("app.css", app_css), ("app.js", app_js)]:
+        assert "fonts.googleapis.com" not in content, f"Found fonts.googleapis.com in {name}"
+        assert "fonts.gstatic.com" not in content, f"Found fonts.gstatic.com in {name}"
+
+    import re
+
+    external_refs = re.findall(
+        r'<(?:link|script)[^>]*(?:href|src)=["\']https?://[^"\']*["\']', index_html
+    )
+    assert not external_refs, f"Found external resource tags: {external_refs}"

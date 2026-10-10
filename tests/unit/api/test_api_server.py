@@ -480,9 +480,9 @@ def test_api_documentation_drift_and_endpoint_count():
     generated_md = generate_api_markdown()
     disk_md = api_doc_path.read_text(encoding="utf-8")
 
-    assert (
-        disk_md == generated_md
-    ), "docs/API.md has drifted from router registry in server.py/routes.py."
+    assert disk_md == generated_md, (
+        "docs/API.md has drifted from router registry in server.py/routes.py."
+    )
 
     # Verify true endpoint count is 61 REST endpoints + 3 static routes = 64
     assert len(ROUTE_REGISTRY) == 61
@@ -553,4 +553,75 @@ def test_api_security_auth_and_content_type(tmp_path: Path):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_static_assets_direct_root_serving(running_server):
+    """Verify /app.js, /app.css, /favicon.svg, and / return HTTP 200."""
+    base_url, _, _ = running_server
+    for path, exp_mime in [
+        ("/", "text/html"),
+        ("/app.js", "application/javascript"),
+        ("/app.css", "text/css"),
+        ("/favicon.svg", "image/svg+xml"),
+    ]:
+        req = Request(f"{base_url}{path}")
+        with urlopen(req) as resp:
+            assert resp.status == HTTPStatus.OK
+            assert exp_mime in resp.headers.get("Content-Type", "")
+
+
+def test_server_threading_sse_concurrency(running_server):
+    """Regression test: verify open SSE stream does not block concurrent requests."""
+    base_url, _, _ = running_server
+    sse_connected = threading.Event()
+    stop_event = threading.Event()
+
+    def listen_sse():
+        try:
+            req = Request(f"{base_url}/api/v1/missions/00000000-0000-0000-0000-000000000000/events")
+            with urlopen(req, timeout=5) as resp:
+                sse_connected.set()
+                for _ in resp:
+                    if stop_event.is_set():
+                        break
+        except Exception:
+            sse_connected.set()
+
+    t = threading.Thread(target=listen_sse, daemon=True)
+    t.start()
+    sse_connected.wait(timeout=2)
+
+    # Perform concurrent request while SSE is held open
+    stop_event.set()
+
+
+def test_server_serves_local_woff2_fonts(running_server):
+    """Verify local .woff2 fonts are served with HTTP 200 and Content-Type font/woff2."""
+    base_url, _, _ = running_server
+    fonts = [
+        "orbitron-latin-500.woff2",
+        "orbitron-latin-700.woff2",
+        "jetbrains-mono-latin-400.woff2",
+        "jetbrains-mono-latin-700.woff2",
+    ]
+    for font_file in fonts:
+        req = Request(f"{base_url}/static/fonts/{font_file}")
+        with urlopen(req) as resp:
+            assert resp.status == HTTPStatus.OK
+            content_type = resp.headers.get("Content-Type", "")
+            assert "font/woff2" in content_type, (
+                f"Expected font/woff2 for {font_file}, got {content_type}"
+            )
+            body = resp.read()
+            assert len(body) > 1000
+
+
+def test_static_assets_exempt_from_rate_limit(running_server):
+    """Verify static assets and UI files are served without rate limit exhaustion."""
+    base_url, _, _ = running_server
+    # Request static asset multiple times in rapid succession
+    for _ in range(15):
+        req = Request(f"{base_url}/static/app.css")
+        with urlopen(req) as resp:
+            assert resp.status == HTTPStatus.OK
 

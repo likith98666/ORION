@@ -23,6 +23,10 @@ from orion.core.security.rate_limiter import TokenBucketRateLimiter
 ORION_VERSION = "1.0.0"
 STATIC_DIR = Path(__file__).resolve().parent.parent / "ui" / "static"
 
+# Register font MIME types for standards compliance across platforms
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
+
 
 class OrionAPIHandler(BaseHTTPRequestHandler):
     """HTTP Request Handler providing REST API, SSE streams, and UI static assets."""
@@ -68,26 +72,24 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         path = parsed.path
 
         # Health/Readiness probes and static UI assets are exempt from token authentication
-        if (
-            path in (
-                "/api/v1/health",
-                "/api/health",
-                "/api/v1/readiness",
-                "/api/readiness",
-                "/",
-                "/index.html",
-                "/favicon.ico",
-                "/favicon.svg",
-            )
-            or path.startswith("/static/")
-        ):
+        if path in (
+            "/api/v1/health",
+            "/api/health",
+            "/api/v1/readiness",
+            "/api/readiness",
+            "/",
+            "/index.html",
+            "/favicon.ico",
+            "/favicon.svg",
+        ) or path.startswith("/static/"):
             return True
 
         config = self.service.config
         client_ip = self.client_address[0] if self.client_address else "127.0.0.1"
-        is_loopback = (
-            client_ip in ("127.0.0.1", "::1", "localhost")
-            and config.host in ("127.0.0.1", "localhost", "::1")
+        is_loopback = client_ip in ("127.0.0.1", "::1", "localhost") and config.host in (
+            "127.0.0.1",
+            "localhost",
+            "::1",
         )
 
         # Token is required if config.api_token is set, OR if binding non-loopback and not testing
@@ -119,6 +121,24 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+
+        # Serve UI HTML / Static files directly (exempt from rate limiting and token auth)
+        if path == "/" or path == "/index.html":
+            self._serve_static_file("index.html", "text/html; charset=utf-8")
+            return
+        elif path in ("/favicon.ico", "/favicon.svg"):
+            self._serve_static_file("favicon.svg", "image/svg+xml")
+            return
+        elif path in ("/app.js", "/static/app.js"):
+            self._serve_static_file("app.js", "application/javascript; charset=utf-8")
+            return
+        elif path in ("/app.css", "/static/app.css"):
+            self._serve_static_file("app.css", "text/css; charset=utf-8")
+            return
+        elif path.startswith("/static/"):
+            rel_file = path[len("/static/") :]
+            self._serve_static_file(rel_file)
+            return
 
         # Health & Readiness probes are exempt from rate limiting to prevent probe flapping
         if path in ("/api/v1/health", "/api/health"):
@@ -267,18 +287,6 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 self._handle_get_mission_memory(resource_id)
             else:
                 self._send_error_json(HTTPStatus.NOT_FOUND, f"Resource '{sub_resource}' not found.")
-            return
-
-        # Serve UI HTML / Static files
-        if path == "/" or path == "/index.html":
-            self._serve_static_file("index.html", "text/html; charset=utf-8")
-            return
-        elif path in ("/favicon.ico", "/favicon.svg"):
-            self._serve_static_file("favicon.svg", "image/svg+xml")
-            return
-        elif path.startswith("/static/"):
-            rel_file = path[len("/static/") :]
-            self._serve_static_file(rel_file)
             return
 
         self._send_error_json(HTTPStatus.NOT_FOUND, "Endpoint not found.")
@@ -1432,8 +1440,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         # Strict Content-Type enforcement for non-empty JSON bodies
         content_type = self.headers.get("Content-Type", "")
         if content_type and not (
-            content_type.lower().startswith("application/json")
-            or "json" in content_type.lower()
+            content_type.lower().startswith("application/json") or "json" in content_type.lower()
         ):
             try:
                 self.rfile.read(min(content_length, 65536))
@@ -1518,6 +1525,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
+            "font-src 'self'; "
             "img-src 'self' data:; "
             "connect-src 'self'"
         )
@@ -1543,7 +1551,17 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             )
             return
 
-        mime = content_type or mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
+        if file_path.suffix.lower() == ".woff2":
+            mime = "font/woff2"
+        elif file_path.suffix.lower() == ".woff":
+            mime = "font/woff"
+        else:
+            mime = (
+                content_type
+                or mimetypes.guess_type(str(file_path))[0]
+                or "application/octet-stream"
+            )
+
         content = file_path.read_bytes()
 
         self.send_response(HTTPStatus.OK)
