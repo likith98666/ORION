@@ -59,6 +59,13 @@ class AppConfig:
             if not self.workspace.exists():
                 raise ValueError(f"In production, workspace directory must exist: {self.workspace}")
 
+        # Non-loopback binding requires api_token unless in testing
+        is_loopback_host = self.host in ("127.0.0.1", "localhost", "::1")
+        if not is_loopback_host and not self.is_testing and not self.api_token:
+            raise ValueError(
+                f"Binding to non-loopback host '{self.host}' requires configuring 'api_token'."
+            )
+
     @property
     def is_production(self) -> bool:
         return self.environment == "production"

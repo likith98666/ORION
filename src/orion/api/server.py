@@ -1506,7 +1506,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         """Include standard CORS headers."""
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
 
     def _send_security_headers(self) -> None:
         """Send production HTTP security headers."""
@@ -1525,7 +1525,10 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
     def _serve_static_file(self, filename: str, content_type: str | None = None) -> None:
         """Serve static file from the static asset directory."""
-        file_path = (STATIC_DIR / filename).resolve()
+        from urllib.parse import unquote
+
+        decoded_name = unquote(filename).lstrip("/\\")
+        file_path = (STATIC_DIR / decoded_name).resolve()
 
         # Prevent directory traversal
         try:
