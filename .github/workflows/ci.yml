@@ -37,6 +37,7 @@ jobs:
       - name: Quality Gate 1 - Ruff Linter
         run: |
           ruff check .
+          ruff format --check .
 
       - name: Quality Gate 2 - Mypy Strict Type Check
         run: |

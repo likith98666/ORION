@@ -1967,7 +1967,8 @@ Verification: VERIFIED_SUCCESS`,
   }
 
   // -------------------------------------------------------------
-  // Procedural Deep-Space Canvas Visuals
+  // Procedural Deep-Space Canvas Visuals (ORION Constellation & Starfield)
+  // Reference Visual Specification: Portfolio Theme Demos.html (ORION Theme)
   // -------------------------------------------------------------
   function initHeroSpaceVisuals() {
     const canvasIds = ['heroSpaceCanvas', 'landingSpaceCanvas'];
@@ -1981,9 +1982,33 @@ Verification: VERIFIED_SUCCESS`,
       const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       let width = 0;
       let height = 0;
+      let t0 = performance.now();
 
-      const starCount = 80;
-      const stars = [];
+      const R = (i) => {
+        const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+
+      const G = (c, x, y, r, col, a) => {
+        const g = c.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, col);
+        g.addColorStop(1, 'rgba(124, 196, 255, 0)');
+        c.globalAlpha = a;
+        c.fillStyle = g;
+        c.fillRect(x - r, y - r, r * 2, r * 2);
+        c.globalAlpha = 1;
+      };
+
+      const L = (c, a, b, col, al, w) => {
+        c.globalAlpha = al;
+        c.strokeStyle = col;
+        c.lineWidth = w || 1;
+        c.beginPath();
+        c.moveTo(a[0], a[1]);
+        c.lineTo(b[0], b[1]);
+        c.stroke();
+        c.globalAlpha = 1;
+      };
 
       function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -1992,72 +2017,69 @@ Verification: VERIFIED_SUCCESS`,
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = Math.floor(width * dpr);
         canvas.height = Math.floor(height * dpr);
-        ctx.scale(dpr, dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        if (stars.length === 0) {
-          for (let i = 0; i < starCount; i++) {
-            stars.push({
-              x: (Math.sin(i * 12.9898) * 0.5 + 0.5),
-              y: (Math.cos(i * 78.233) * 0.5 + 0.5),
-              radius: (i % 5 === 0) ? 1.5 : (i % 2 === 0 ? 1.0 : 0.6),
-              baseAlpha: 0.25 + ((i * 17) % 65) / 100,
-              speed: 0.0003 + ((i * 3) % 7) * 0.0001,
-              phase: (i * 0.4)
-            });
-          }
+        if (prefersReducedMotion) {
+          draw(5.0);
         }
-        draw(0);
       }
 
-      function draw(timeMs) {
+      function draw(t) {
         ctx.clearRect(0, 0, width, height);
 
-        const earthCx = width * 1.15;
-        const earthCy = height * 1.45;
-        const earthRadius = Math.max(width, height) * 1.1;
+        const isWide = width > 700;
+        const cx = isWide ? width * 0.68 : width * 0.5;
+        const cy = isWide ? height * 0.42 : height * 0.35;
+        const accent = '#7CC4FF';
 
-        const glowGrad = ctx.createRadialGradient(
-          earthCx, earthCy, earthRadius * 0.85,
-          earthCx, earthCy, earthRadius * 1.08
-        );
-        glowGrad.addColorStop(0, 'rgba(82, 126, 156, 0.22)');
-        glowGrad.addColorStop(0.5, 'rgba(124, 196, 255, 0.12)');
-        glowGrad.addColorStop(0.85, 'rgba(82, 126, 156, 0.03)');
-        glowGrad.addColorStop(1, 'rgba(5, 6, 10, 0)');
+        // 1. Procedural deep-space starfield (110 stars drifting and twinkling)
+        for (let i = 0; i < 110; i++) {
+          const x = (R(i) * width + t * (4 + R(i + 9) * 14)) % width;
+          const y = R(i + 3) * height;
+          ctx.globalAlpha = 0.25 + 0.65 * Math.abs(Math.sin(t * 0.8 + i));
+          ctx.fillStyle = '#EAF4FF';
+          const s = R(i + 5) * 1.8 + 0.4;
+          ctx.fillRect(x, y, s, s);
+        }
+        ctx.globalAlpha = 1;
 
-        ctx.fillStyle = glowGrad;
-        ctx.beginPath();
-        ctx.arc(earthCx, earthCy, earthRadius * 1.08, 0, Math.PI * 2);
-        ctx.fill();
+        // 2. ORION Signature 14-Node Agent Constellation
+        const P = [];
+        for (let i = 0; i < 14; i++) {
+          const a = (i / 14) * 6.283 + t * 0.12 * (i % 2 ? 1 : -1);
+          const r = 60 + (i % 4) * 40 + Math.min(width, height) * 0.1;
+          P.push([cx + Math.cos(a) * r * 1.3, cy + Math.sin(a) * r * 0.8]);
+        }
 
-        ctx.strokeStyle = 'rgba(124, 196, 255, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(earthCx, earthCy, earthRadius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        stars.forEach(s => {
-          let alpha = s.baseAlpha;
-          if (!prefersReducedMotion && timeMs) {
-            alpha += Math.sin(timeMs * s.speed + s.phase) * 0.2;
-            alpha = Math.max(0.1, Math.min(1.0, alpha));
+        // 3. Constellation Links & Light Pulse Packets
+        for (let i = 0; i < 14; i++) {
+          for (let j = i + 1; j < 14; j++) {
+            const d = Math.hypot(P[i][0] - P[j][0], P[i][1] - P[j][1]);
+            if (d < 190) {
+              L(ctx, P[i], P[j], accent, (1 - d / 190) * 0.5);
+              const q = (t * 0.4 + i * 0.13) % 1;
+              ctx.fillStyle = '#EAF4FF';
+              ctx.fillRect(P[i][0] + (P[j][0] - P[i][0]) * q - 1.5, P[i][1] + (P[j][1] - P[i][1]) * q - 1.5, 3, 3);
+            }
           }
-          const sx = s.x * width;
-          const sy = s.y * height;
-          ctx.fillStyle = (s.radius > 1.2)
-            ? `rgba(124, 196, 255, ${alpha})`
-            : `rgba(238, 236, 229, ${alpha})`;
+        }
+
+        // 4. Constellation Agent Nodes
+        P.forEach(p => {
+          ctx.fillStyle = accent;
           ctx.beginPath();
-          ctx.arc(sx, sy, s.radius, 0, Math.PI * 2);
+          ctx.arc(p[0], p[1], 4, 0, Math.PI * 2);
           ctx.fill();
         });
+
+        // 5. Restrained Core Glow
+        G(ctx, cx, cy, 120, accent, 0.22 + 0.08 * Math.sin(t * 2));
       }
 
-      function loop(t) {
-        if (!document.hidden) {
+      function loop() {
+        if (!document.hidden && !prefersReducedMotion) {
+          const t = (performance.now() - t0) / 1000;
           draw(t);
-        }
-        if (!prefersReducedMotion) {
           requestAnimationFrame(loop);
         }
       }

@@ -284,6 +284,7 @@ def main():
                         all_loaded: list.every(f => f.status === 'loaded'),
                         orbitron_check: document.fonts.check("16px Orbitron"),
                         jetbrains_check: document.fonts.check("14px 'JetBrains Mono'"),
+                        space_grotesk_check: document.fonts.check("14px 'Space Grotesk'"),
                         fonts: list
                     };
                 })
@@ -293,6 +294,7 @@ def main():
             print(f"document.fonts status: {f_status}, count: {f_count}")
             print(f"Orbitron font check: {fonts_info.get('orbitron_check')}")
             print(f"JetBrains Mono font check: {fonts_info.get('jetbrains_check')}")
+            print(f"Space Grotesk font check: {fonts_info.get('space_grotesk_check')}")
             print(f"All declared fonts loaded: {fonts_info.get('all_loaded')}")
             for f in fonts_info.get("fonts", []):
                 fam, wt = f.get("family"), f.get("weight")
@@ -308,6 +310,9 @@ def main():
             )
             assert fonts_info.get("jetbrains_check") is True, (
                 "JetBrains Mono font must be loaded in document.fonts"
+            )
+            assert fonts_info.get("space_grotesk_check") is True, (
+                "Space Grotesk font must be loaded in document.fonts"
             )
             assert len(external_requests) == 0, f"Found external requests: {external_requests}"
             assert len(console_errors) == 0, f"Found console errors: {console_errors}"
