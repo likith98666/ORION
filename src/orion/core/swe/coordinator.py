@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from orion.core.agents.executions import AgentExecution
@@ -10,7 +10,9 @@ from orion.core.agents.models import Agent
 from orion.core.observability.context import TelemetryContext
 from orion.core.recovery.recovery_coordinator import RecoveryCoordinator, RecoveryResult
 from orion.core.recovery.recovery_execution_context import RecoveryExecutionContext
-from orion.core.recovery.recovery_service import RecoveryService
+
+if TYPE_CHECKING:
+    from orion.core.recovery.recovery_service import RecoveryService
 from orion.core.swe.cognitive import (
     CognitiveModelUnavailableError,
     FailureAnalysisProposal,

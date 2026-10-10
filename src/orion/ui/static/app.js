@@ -380,26 +380,27 @@
   };
 
   const COMMAND_PALETTE_ITEMS = [
-    { id: 'tab-overview', title: 'Mission Command Center', category: 'Operations', icon: '⚡' },
-    { id: 'tab-demo', title: 'Interactive Demo Center & Player', category: 'Operations', icon: '▶️' },
-    { id: 'tab-graph', title: 'Execution Graph (DAG Topology)', category: 'Operations', icon: '☍' },
-    { id: 'tab-workforce', title: 'Workforce Roster & Work Units', category: 'Operations', icon: '👥' },
-    { id: 'tab-repo', title: 'Repository Intelligence & Impact', category: 'Engineering', icon: '📁' },
-    { id: 'tab-changes', title: 'Patch Intelligence & Diff Inspector', category: 'Engineering', icon: '📝' },
-    { id: 'tab-tests', title: 'Controlled Tests Execution Runner', category: 'Engineering', icon: '🧪' },
-    { id: 'tab-verification', title: 'Authoritative Verification Authority', category: 'Engineering', icon: '🛡️' },
-    { id: 'tab-recovery', title: 'Bounded Self-Healing Recovery Forensic', category: 'Engineering', icon: '🔄' },
-    { id: 'tab-hitl', title: 'Human Oversight & Interventions (HITL)', category: 'Governance', icon: '👁️' },
-    { id: 'tab-policy', title: 'Policy Engine & Guardrail Rules', category: 'Governance', icon: '🔒' },
-    { id: 'tab-evidence', title: 'Evidence Provenance Ledger Explorer', category: 'Governance', icon: '📜' },
-    { id: 'tab-eval', title: 'Evaluation Lab & Benchmark Matrix', category: 'Intelligence', icon: '📊' },
-    { id: 'tab-observability', title: 'Distributed Tracer & Span Waterfall', category: 'Intelligence', icon: '📈' },
-    { id: 'tab-report', title: 'Certified SWE Mission Final Report', category: 'Intelligence', icon: '📋' },
-    { id: 'action-architecture', title: 'Explore ORION System Architecture', category: 'Intelligence', icon: '🏛️' },
-    { id: 'action-presentation', title: 'Toggle Presentation Mode (Key: P)', category: 'View', icon: '📽️' },
-    { id: 'action-product-tour', title: 'Launch Guided Product Tour', category: 'Help', icon: '🧭' },
-    { id: 'action-new-mission', title: 'Initialize New Autonomous SWE Mission', category: 'Action', icon: '➕' },
-    { id: 'action-sync', title: 'Sync System Telemetry & Health', category: 'Action', icon: '🔄' },
+    { id: 'tab-overview', title: 'Mission Command Center', category: 'Operations', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>' },
+    { id: 'tab-demo', title: 'Interactive Demo Center & Player', category: 'Operations', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>' },
+    { id: 'tab-graph', title: 'Execution Graph (DAG Topology)', category: 'Operations', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>' },
+    { id: 'tab-workforce', title: 'Workforce Roster & Work Units', category: 'Operations', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+    { id: 'tab-repo', title: 'Repository Intelligence & Impact', category: 'Engineering', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>' },
+    { id: 'tab-changes', title: 'Patch Intelligence & Diff Inspector', category: 'Engineering', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>' },
+    { id: 'tab-tests', title: 'Controlled Tests Execution Runner', category: 'Engineering', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>' },
+    { id: 'tab-verification', title: 'Authoritative Verification Authority', category: 'Engineering', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' },
+    { id: 'tab-recovery', title: 'Bounded Self-Healing Recovery Forensic', category: 'Engineering', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>' },
+    { id: 'tab-hitl', title: 'Human Oversight & Interventions (HITL)', category: 'Governance', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>' },
+    { id: 'tab-policy', title: 'Policy Engine & Guardrail Rules', category: 'Governance', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' },
+    { id: 'tab-evidence', title: 'Evidence Provenance Ledger Explorer', category: 'Governance', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' },
+    { id: 'tab-eval', title: 'Evaluation Lab & Benchmark Matrix', category: 'Intelligence', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>' },
+    { id: 'tab-observability', title: 'Distributed Tracer & Span Waterfall', category: 'Intelligence', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>' },
+    { id: 'tab-report', title: 'SWE Mission Verification Report', category: 'Intelligence', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' },
+    { id: 'action-architecture', title: 'Explore ORION System Architecture', category: 'Intelligence', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>' },
+    { id: 'action-presentation', title: 'Toggle Presentation Mode (Key: P)', category: 'View', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>' },
+    { id: 'action-product-tour', title: 'Launch Guided Product Tour', category: 'Help', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>' },
+    { id: 'action-new-mission', title: 'Initialize New Engineering Mission', category: 'Action', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' },
+    { id: 'action-sync', title: 'Sync System Telemetry & Health', category: 'Action', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>' },
+    { id: 'view-settings', title: 'Settings & Platform Configuration', category: 'Settings', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>' }
   ];
 
   const TAB_METADATA = {
@@ -607,6 +608,8 @@
       togglePresentationMode();
     } else if (id === 'action-product-tour') {
       startProductTour();
+    } else if (id === 'view-settings') {
+      switchView('settings');
     }
   }
 
@@ -1777,6 +1780,111 @@ Verification: VERIFIED_SUCCESS`,
   }
 
   // -------------------------------------------------------------
+  // Procedural Deep-Space Canvas Visuals
+  // -------------------------------------------------------------
+  function initHeroSpaceVisuals() {
+    const canvasIds = ['heroSpaceCanvas', 'landingSpaceCanvas'];
+    const canvases = canvasIds.map(id => document.getElementById(id)).filter(Boolean);
+    if (canvases.length === 0) return;
+
+    canvases.forEach(canvas => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let width = 0;
+      let height = 0;
+
+      const starCount = 80;
+      const stars = [];
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        width = rect.width || canvas.offsetWidth || 800;
+        height = rect.height || canvas.offsetHeight || 300;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.scale(dpr, dpr);
+
+        if (stars.length === 0) {
+          for (let i = 0; i < starCount; i++) {
+            stars.push({
+              x: (Math.sin(i * 12.9898) * 0.5 + 0.5),
+              y: (Math.cos(i * 78.233) * 0.5 + 0.5),
+              radius: (i % 5 === 0) ? 1.5 : (i % 2 === 0 ? 1.0 : 0.6),
+              baseAlpha: 0.25 + ((i * 17) % 65) / 100,
+              speed: 0.0003 + ((i * 3) % 7) * 0.0001,
+              phase: (i * 0.4)
+            });
+          }
+        }
+        draw(0);
+      }
+
+      function draw(timeMs) {
+        ctx.clearRect(0, 0, width, height);
+
+        const earthCx = width * 1.15;
+        const earthCy = height * 1.45;
+        const earthRadius = Math.max(width, height) * 1.1;
+
+        const glowGrad = ctx.createRadialGradient(
+          earthCx, earthCy, earthRadius * 0.85,
+          earthCx, earthCy, earthRadius * 1.08
+        );
+        glowGrad.addColorStop(0, 'rgba(82, 126, 156, 0.22)');
+        glowGrad.addColorStop(0.5, 'rgba(124, 196, 255, 0.12)');
+        glowGrad.addColorStop(0.85, 'rgba(82, 126, 156, 0.03)');
+        glowGrad.addColorStop(1, 'rgba(5, 6, 10, 0)');
+
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(earthCx, earthCy, earthRadius * 1.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(124, 196, 255, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(earthCx, earthCy, earthRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        stars.forEach(s => {
+          let alpha = s.baseAlpha;
+          if (!prefersReducedMotion && timeMs) {
+            alpha += Math.sin(timeMs * s.speed + s.phase) * 0.2;
+            alpha = Math.max(0.1, Math.min(1.0, alpha));
+          }
+          const sx = s.x * width;
+          const sy = s.y * height;
+          ctx.fillStyle = (s.radius > 1.2)
+            ? `rgba(124, 196, 255, ${alpha})`
+            : `rgba(238, 236, 229, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function loop(t) {
+        if (!document.hidden) {
+          draw(t);
+        }
+        if (!prefersReducedMotion) {
+          requestAnimationFrame(loop);
+        }
+      }
+
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      if (!prefersReducedMotion) {
+        requestAnimationFrame(loop);
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
   // Initialization
   // -------------------------------------------------------------
   async function init() {
@@ -1790,6 +1898,7 @@ Verification: VERIFIED_SUCCESS`,
     initPresentationMode();
     initMissionTemplates();
     initTimelineReplay();
+    initHeroSpaceVisuals();
     await syncHealth();
     await loadInitialTasks();
     await loadPolicyData();
@@ -2294,6 +2403,24 @@ Verification: VERIFIED_SUCCESS`,
     return 'pending';
   }
 
+  function updateRailPipeline(completedStages = [], currentStage = null) {
+    STAGES.forEach((stage, idx) => {
+      const item = document.getElementById(`railStage-${stage}`);
+      if (!item) return;
+      item.classList.remove('completed', 'active');
+      const dot = item.querySelector('.stage-dot');
+      if (completedStages.includes(stage)) {
+        item.classList.add('completed');
+        if (dot) dot.innerHTML = '&#10003;';
+      } else if (stage === currentStage) {
+        item.classList.add('active');
+        if (dot) dot.innerHTML = String(idx + 1);
+      } else {
+        if (dot) dot.innerHTML = String(idx + 1);
+      }
+    });
+  }
+
   function renderRecentMissions(list) {
     const tbody = document.getElementById('recentMissionsTbody');
     if (!tbody) return;
@@ -2307,18 +2434,23 @@ Verification: VERIFIED_SUCCESS`,
       const shortId = tid.slice(0, 8);
       const obj = t.objective || t.prompt || 'Autonomous SWE task';
       const stat = (t.status || 'PENDING').toUpperCase();
-      const stage = (t.current_stage || 'INSPECT_REPOSITORY').toUpperCase();
       const dur = formatDuration(t);
       const created = t.created_at ? formatTime(t.created_at) : 'Recently';
+
+      let pillClass = 'pending';
+      if (['VERIFIED', 'SUCCESS'].includes(stat)) pillClass = 'verified';
+      else if (['COMPLETED'].includes(stat)) pillClass = 'completed';
+      else if (['RUNNING', 'IN_PROGRESS'].includes(stat)) pillClass = 'running';
+      else if (['FAILED', 'CANCELLED', 'ERROR'].includes(stat)) pillClass = 'failed';
 
       return `
         <tr class="clickable-mission-row" data-task-id="${escapeHtml(tid)}">
           <td><span class="code-font text-blue">${escapeHtml(shortId)}</span></td>
           <td class="cell-truncate">${escapeHtml(obj)}</td>
-          <td><span class="badge ${getStatusBadge(stat)}"><span class="status-dot ${getStatusDotClass(stat)}"></span>${escapeHtml(stat)}</span></td>
-          <td><span class="badge badge-outline">${escapeHtml(stage)}</span></td>
+          <td><span class="status-pill ${pillClass}"><span class="status-dot ${getStatusDotClass(stat)}"></span>${escapeHtml(stat)}</span></td>
           <td class="text-dim">${escapeHtml(dur)}</td>
           <td class="text-dim">${escapeHtml(created)}</td>
+          <td style="text-align: right; color: var(--text-muted); font-size: 16px;">&rsaquo;</td>
         </tr>
       `;
     }).join('');
@@ -2397,6 +2529,12 @@ Verification: VERIFIED_SUCCESS`,
       if (noActive) noActive.style.display = 'flex';
       if (activeContent) activeContent.style.display = 'none';
       if (pill) pill.style.display = 'none';
+      const ovStatus = document.getElementById('ovActiveStatus');
+      if (ovStatus) {
+        ovStatus.textContent = 'STANDBY';
+        ovStatus.className = 'status-pill pending';
+      }
+      updateRailPipeline([], null);
       return;
     }
 
@@ -2421,29 +2559,42 @@ Verification: VERIFIED_SUCCESS`,
     const ovStageLabel = document.getElementById('ovActiveStageLabel');
     const ovStagePct = document.getElementById('ovActiveStagePct');
     const ovProgressFill = document.getElementById('ovActiveProgressFill');
+    const ovStarted = document.getElementById('ovActiveStarted');
+    const ovDuration = document.getElementById('ovActiveDuration');
 
     const stat = (task.status || 'PENDING').toUpperCase();
+    let pillClass = 'pending';
+    if (['VERIFIED', 'SUCCESS'].includes(stat)) pillClass = 'verified';
+    else if (['COMPLETED'].includes(stat)) pillClass = 'completed';
+    else if (['RUNNING', 'IN_PROGRESS'].includes(stat)) pillClass = 'running';
+    else if (['FAILED', 'CANCELLED', 'ERROR'].includes(stat)) pillClass = 'failed';
+
     if (ovStatus) {
       ovStatus.textContent = stat;
-      ovStatus.className = `badge ${getStatusBadge(stat)}`;
+      ovStatus.className = `status-pill ${pillClass}`;
     }
     if (ovId) ovId.textContent = (task.task_id || '').slice(0, 8);
     if (ovObj) ovObj.textContent = task.objective || task.prompt || 'Autonomous SWE task';
+    if (ovStarted) ovStarted.textContent = task.created_at ? formatTime(task.created_at) : 'Just now';
+    if (ovDuration) ovDuration.textContent = formatDuration(task);
 
     const completed = task.stages_completed_count || 0;
     const total = task.stages_total || 7;
     const currentStage = task.current_stage || 'inspect_repository';
-    if (ovStageLabel) ovStageLabel.textContent = `STAGE: ${currentStage.toUpperCase()}`;
-    if (ovStagePct) ovStagePct.textContent = `${completed}/${total}`;
+    if (ovStageLabel) ovStageLabel.textContent = task.current_stage ? task.current_stage.toUpperCase().replace(/_/g, ' ') : '1. INSPECT REPOSITORY';
+    if (ovStagePct) ovStagePct.textContent = `${completed} / ${total}`;
     if (ovProgressFill) {
       ovProgressFill.style.width = `${Math.min(100, Math.round((completed / total) * 100))}%`;
     }
 
+    // Update Right Rail Vertical Pipeline
+    updateRailPipeline(task.completed_stages || [], task.current_stage);
+
     // System Status Row
     const statExec = document.getElementById('statusExecVal');
     const statVer = document.getElementById('statusVerifVal');
-    if (statExec) statExec.textContent = isRunning ? 'RUNNING' : 'READY';
-    if (statVer) statVer.textContent = task.verification_status === 'VERIFIED' ? 'VERIFIED' : 'READY';
+    if (statExec) statExec.textContent = isRunning ? 'Running' : 'Ready';
+    if (statVer) statVer.textContent = task.verification_status === 'VERIFIED' ? 'Verified' : 'Ready';
   }
 
   async function selectTask(taskId) {
@@ -2808,7 +2959,7 @@ Verification: VERIFIED_SUCCESS`,
             item.className = 'target-path-item';
             const icon = document.createElement('span');
             icon.className = 'target-path-icon';
-            icon.textContent = '📄';
+            icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
             const text = document.createElement('span');
             text.className = 'target-path-text code-val';
             text.textContent = String(tgt);
@@ -4347,7 +4498,12 @@ Verification: VERIFIED_SUCCESS`,
       'missions-history': 'viewMissionsAll',
       'agents': 'viewAgents',
       'evidence': 'viewEvidence',
-      'system': 'viewSystem'
+      'system': 'viewSystem',
+      'landing': 'viewLanding',
+      'docs': 'viewDocs',
+      'privacy': 'viewPrivacy',
+      'terms': 'viewTerms',
+      'settings': 'viewSettings'
     };
 
     const targetPageId = pages[viewName] || 'viewOverview';
@@ -4375,6 +4531,16 @@ Verification: VERIFIED_SUCCESS`,
     if (bc) {
       if (viewName === 'overview') {
         bc.textContent = 'Overview';
+      } else if (viewName === 'landing') {
+        bc.textContent = 'Platform / Overview';
+      } else if (viewName === 'docs') {
+        bc.textContent = 'Documentation';
+      } else if (viewName === 'privacy') {
+        bc.textContent = 'Legal / Privacy Policy';
+      } else if (viewName === 'terms') {
+        bc.textContent = 'Legal / Terms & Conditions';
+      } else if (viewName === 'settings') {
+        bc.textContent = 'Settings / Platform Configuration';
       } else if (viewName === 'mission-detail') {
         const idTail = currentTaskId ? currentTaskId.slice(0, 8) : 'Detail';
         bc.textContent = `Missions / ${idTail}`;
@@ -4458,7 +4624,113 @@ Verification: VERIFIED_SUCCESS`,
       if (activeSub === 'security') loadPolicyData();
       if (activeSub === 'eval') loadEvalData();
       if (activeSub === 'obs') loadObsData(currentTaskId);
+    } else if (viewName === 'settings') {
+      window.location.hash = 'settings';
+      loadSettingsPreferences();
     }
+  }
+
+  function loadSettingsPreferences() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('orion_settings') || '{}');
+      const wsInput = document.getElementById('cfgWorkspaceRoot');
+      const modeSelect = document.getElementById('cfgDefaultExecMode');
+      const presCheck = document.getElementById('cfgTogglePresentation');
+      const motionCheck = document.getElementById('cfgToggleReducedMotion');
+      const denseCheck = document.getElementById('cfgToggleDenseTables');
+
+      if (wsInput && saved.workspace) wsInput.value = saved.workspace;
+      if (modeSelect && saved.execMode) modeSelect.value = saved.execMode;
+      if (presCheck && saved.presentation) presCheck.checked = true;
+      if (motionCheck && saved.reducedMotion) {
+        motionCheck.checked = true;
+        document.body.classList.add('reduced-motion');
+      }
+      if (denseCheck && saved.denseTables) {
+        denseCheck.checked = true;
+        document.body.classList.add('dense-tables');
+      }
+    } catch (_) {}
+  }
+
+  function saveSettingsPreferences() {
+    try {
+      const wsInput = document.getElementById('cfgWorkspaceRoot');
+      const modeSelect = document.getElementById('cfgDefaultExecMode');
+      const presCheck = document.getElementById('cfgTogglePresentation');
+      const motionCheck = document.getElementById('cfgToggleReducedMotion');
+      const denseCheck = document.getElementById('cfgToggleDenseTables');
+
+      const settings = {
+        workspace: wsInput ? wsInput.value.trim() : '.',
+        execMode: modeSelect ? modeSelect.value : 'controlled',
+        presentation: !!(presCheck && presCheck.checked),
+        reducedMotion: !!(motionCheck && motionCheck.checked),
+        denseTables: !!(denseCheck && denseCheck.checked)
+      };
+      localStorage.setItem('orion_settings', JSON.stringify(settings));
+
+      const mainWs = document.getElementById('workspaceInputPath');
+      const mainMode = document.getElementById('executionModeSelect');
+      if (mainWs && settings.workspace) mainWs.value = settings.workspace;
+      if (mainMode && settings.execMode) mainMode.value = settings.execMode;
+
+      if (settings.presentation) {
+        togglePresentationMode();
+      } else {
+        exitPresentationMode();
+      }
+      document.body.classList.toggle('reduced-motion', settings.reducedMotion);
+      document.body.classList.toggle('dense-tables', settings.denseTables);
+
+      showToast('Settings preferences saved successfully.', 'success');
+    } catch (_) {
+      showToast('Failed to save settings preferences.', 'error');
+    }
+  }
+
+  function resetSettingsPreferences() {
+    try {
+      localStorage.removeItem('orion_settings');
+      const wsInput = document.getElementById('cfgWorkspaceRoot');
+      const modeSelect = document.getElementById('cfgDefaultExecMode');
+      const presCheck = document.getElementById('cfgTogglePresentation');
+      const motionCheck = document.getElementById('cfgToggleReducedMotion');
+      const denseCheck = document.getElementById('cfgToggleDenseTables');
+
+      if (wsInput) wsInput.value = '.';
+      if (modeSelect) modeSelect.value = 'controlled';
+      if (presCheck) presCheck.checked = false;
+      if (motionCheck) motionCheck.checked = false;
+      if (denseCheck) denseCheck.checked = false;
+
+      exitPresentationMode();
+      document.body.classList.remove('reduced-motion');
+      document.body.classList.remove('dense-tables');
+
+      showToast('Settings reset to system defaults.', 'info');
+    } catch (_) {}
+  }
+
+  function checkServiceHealthDirect() {
+    const badge = document.getElementById('cfgServiceHealthBadge');
+    const text = document.getElementById('cfgServiceHealthText');
+    if (text) text.textContent = 'Checking...';
+    fetch('/api/tasks').then(r => {
+      if (r.ok) {
+        if (text) text.textContent = 'Healthy (200 OK)';
+        if (badge) badge.className = 'status-pill status-pill-success';
+        showToast('Service health verified: 200 OK', 'success');
+      } else {
+        if (text) text.textContent = `Degraded (${r.status})`;
+        if (badge) badge.className = 'status-pill status-pill-warning';
+        showToast(`Service returned status ${r.status}`, 'warning');
+      }
+    }).catch(() => {
+      if (text) text.textContent = 'Offline';
+      if (badge) badge.className = 'status-pill status-pill-error';
+      showToast('Service unreachable.', 'error');
+    });
   }
 
   // =============================================================
@@ -4523,7 +4795,7 @@ Verification: VERIFIED_SUCCESS`,
     const btnCmd = document.getElementById('btnOpenCommandPalette');
     if (btnCmd) btnCmd.addEventListener('click', () => openModal('commandPaletteBackdrop'));
 
-    // 3. Overview Shortcuts
+    // 3. Overview Shortcuts & Right Rail Wiring
     const btnOvJump = document.getElementById('btnOvJumpMission');
     if (btnOvJump) btnOvJump.addEventListener('click', () => switchView('mission-detail'));
 
@@ -4535,6 +4807,141 @@ Verification: VERIFIED_SUCCESS`,
 
     const btnMisEv = document.getElementById('btnMissionViewEvidence');
     if (btnMisEv) btnMisEv.addEventListener('click', () => switchView('evidence'));
+
+    const btnHeroArch = document.getElementById('btnHeroArch');
+    if (btnHeroArch) btnHeroArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const btnSbDemoPromo = document.getElementById('btnSidebarDemoPromo');
+    if (btnSbDemoPromo) btnSbDemoPromo.addEventListener('click', () => openModal('demoToolsModal'));
+
+    const btnSbTour = document.getElementById('btnSidebarTour');
+    if (btnSbTour) btnSbTour.addEventListener('click', () => startProductTour());
+
+    const railDemo = document.getElementById('railQuickDemo');
+    if (railDemo) railDemo.addEventListener('click', () => openModal('demoToolsModal'));
+
+    const railTemplates = document.getElementById('railQuickTemplates');
+    if (railTemplates) railTemplates.addEventListener('click', () => openModal('newMissionModal'));
+
+    const railArch = document.getElementById('railQuickArch');
+    if (railArch) railArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const railTour = document.getElementById('railQuickTour');
+    if (railTour) railTour.addEventListener('click', () => startProductTour());
+
+    const btnTopNotif = document.getElementById('btnTopbarNotifications');
+    if (btnTopNotif) btnTopNotif.addEventListener('click', () => showToast('System Telemetry', 'All autonomous subsystems and policy invariants operational.'));
+
+    const btnTopUser = document.getElementById('btnTopbarUser');
+    if (btnTopUser) btnTopUser.addEventListener('click', () => showToast('Operator Profile', 'Authenticated as Likith (Principal Autonomous SWE)'));
+
+    // Landing Page, Docs & Legal Buttons (Zero Dead Buttons)
+    const btnLandingLaunch = document.getElementById('btnLandingLaunchApp');
+    if (btnLandingLaunch) btnLandingLaunch.addEventListener('click', () => switchView('overview'));
+
+    const btnLandingArch = document.getElementById('btnLandingViewArch');
+    if (btnLandingArch) btnLandingArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const btnLandingDocs = document.getElementById('btnLandingOpenDocs');
+    if (btnLandingDocs) btnLandingDocs.addEventListener('click', () => switchView('docs'));
+
+    const btnLandingFrame = document.getElementById('btnLandingFrameOpen');
+    if (btnLandingFrame) btnLandingFrame.addEventListener('click', () => switchView('overview'));
+
+    const btnFootLaunch = document.getElementById('btnFootLaunch');
+    if (btnFootLaunch) btnFootLaunch.addEventListener('click', () => switchView('overview'));
+
+    const btnFootArch = document.getElementById('btnFootArch');
+    if (btnFootArch) btnFootArch.addEventListener('click', () => openModal('architectureModal'));
+
+    const btnFootDemo = document.getElementById('btnFootDemo');
+    if (btnFootDemo) btnFootDemo.addEventListener('click', () => openModal('demoToolsModal'));
+
+    const btnFootTour = document.getElementById('btnFootTour');
+    if (btnFootTour) btnFootTour.addEventListener('click', () => startProductTour());
+
+    const btnFootDocs = document.getElementById('btnFootDocs');
+    if (btnFootDocs) btnFootDocs.addEventListener('click', () => switchView('docs'));
+
+    const btnFootPriv = document.getElementById('btnFootPrivacy');
+    if (btnFootPriv) btnFootPriv.addEventListener('click', () => switchView('privacy'));
+
+    const btnFootTerms = document.getElementById('btnFootTerms');
+    if (btnFootTerms) btnFootTerms.addEventListener('click', () => switchView('terms'));
+
+    const btnDocsCockpit = document.getElementById('btnDocsOpenCockpit');
+    if (btnDocsCockpit) btnDocsCockpit.addEventListener('click', () => switchView('overview'));
+
+    const btnPrivCockpit = document.getElementById('btnPrivBackCockpit');
+    if (btnPrivCockpit) btnPrivCockpit.addEventListener('click', () => switchView('overview'));
+
+    const btnPrivDocs = document.getElementById('btnPrivDocs');
+    if (btnPrivDocs) btnPrivDocs.addEventListener('click', () => switchView('docs'));
+
+    const btnTermsCockpit = document.getElementById('btnTermsBackCockpit');
+    if (btnTermsCockpit) btnTermsCockpit.addEventListener('click', () => switchView('overview'));
+
+    const btnTermsDocs = document.getElementById('btnTermsDocs');
+    if (btnTermsDocs) btnTermsDocs.addEventListener('click', () => switchView('docs'));
+
+    const btnSbDocs = document.getElementById('btnSidebarDocs');
+    if (btnSbDocs) btnSbDocs.addEventListener('click', () => switchView('docs'));
+
+    const btnSbLegal = document.getElementById('btnSidebarLegal');
+    if (btnSbLegal) btnSbLegal.addEventListener('click', () => switchView('privacy'));
+
+    const linkViewAll = document.getElementById('linkViewAllMissions');
+    if (linkViewAll) linkViewAll.addEventListener('click', () => switchView('missions-all'));
+
+    const navLanding = document.getElementById('navLanding');
+    if (navLanding) navLanding.addEventListener('click', () => switchView('landing'));
+
+    const navDocs = document.getElementById('navSystemDocs');
+    if (navDocs) navDocs.addEventListener('click', () => switchView('docs'));
+
+    const navSettings = document.getElementById('navSettings');
+    if (navSettings) navSettings.addEventListener('click', () => switchView('settings'));
+
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+    if (btnSaveSettings) btnSaveSettings.addEventListener('click', saveSettingsPreferences);
+
+    const btnResetSettings = document.getElementById('btnResetSettings');
+    if (btnResetSettings) btnResetSettings.addEventListener('click', resetSettingsPreferences);
+
+    const btnCheckHealth = document.getElementById('btnCheckServiceHealth');
+    if (btnCheckHealth) btnCheckHealth.addEventListener('click', checkServiceHealthDirect);
+
+    const cfgPres = document.getElementById('cfgTogglePresentation');
+    if (cfgPres) cfgPres.addEventListener('change', () => {
+      if (cfgPres.checked) togglePresentationMode();
+      else exitPresentationMode();
+    });
+
+    const cfgMotion = document.getElementById('cfgToggleReducedMotion');
+    if (cfgMotion) cfgMotion.addEventListener('change', () => {
+      document.body.classList.toggle('reduced-motion', cfgMotion.checked);
+    });
+
+    const cfgDense = document.getElementById('cfgToggleDenseTables');
+    if (cfgDense) cfgDense.addEventListener('change', () => {
+      document.body.classList.toggle('dense-tables', cfgDense.checked);
+    });
+
+    // Wire up vertical rail stage items & system health card
+    document.querySelectorAll('#railPipelineList .vertical-stage-item').forEach(stageItem => {
+      stageItem.style.cursor = 'pointer';
+      stageItem.addEventListener('click', () => {
+        switchView('mission-detail', 'pipeline');
+      });
+    });
+
+    const sysHealthCard = document.querySelector('.system-health-card');
+    if (sysHealthCard) {
+      sysHealthCard.style.cursor = 'pointer';
+      sysHealthCard.addEventListener('click', () => {
+        switchView('system', 'health');
+      });
+    }
 
     // 4. Modal Close Triggers
     const btnNewClose = document.getElementById('btnNewMissionClose');
@@ -4654,7 +5061,17 @@ Verification: VERIFIED_SUCCESS`,
 
     // 10. Check Initial Hash on page load
     const hash = window.location.hash.replace('#', '');
-    if (hash === 'missions') {
+    if (hash === 'landing') {
+      switchView('landing');
+    } else if (hash === 'docs' || hash === 'documentation') {
+      switchView('docs');
+    } else if (hash === 'privacy') {
+      switchView('privacy');
+    } else if (hash === 'terms') {
+      switchView('terms');
+    } else if (hash === 'settings') {
+      switchView('settings');
+    } else if (hash === 'missions') {
       switchView('missions-all');
     } else if (hash === 'history') {
       switchView('missions-history');

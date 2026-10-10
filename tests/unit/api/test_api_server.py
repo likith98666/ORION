@@ -150,8 +150,20 @@ def test_api_serves_static_ui(running_server):
         js_content = resp.read().decode("utf-8")
         assert "refreshMissionData" in js_content
 
-    # 4. Path traversal attempt should be blocked (403 or 404)
+    # 4. GET /favicon.svg & /favicon.ico
+    req_fav = Request(f"{base_url}/favicon.svg")
+    with urlopen(req_fav) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert "svg" in resp.headers.get("Content-Type", "")
+
+    req_fav_ico = Request(f"{base_url}/favicon.ico")
+    with urlopen(req_fav_ico) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert "svg" in resp.headers.get("Content-Type", "")
+
+    # 5. Path traversal attempt should be blocked (403 or 404)
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         urlopen(f"{base_url}/static/../../pyproject.toml")
     assert exc_info.value.code in (HTTPStatus.FORBIDDEN, HTTPStatus.NOT_FOUND)
+
 

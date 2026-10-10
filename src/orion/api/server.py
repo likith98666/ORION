@@ -217,6 +217,9 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         if path == "/" or path == "/index.html":
             self._serve_static_file("index.html", "text/html; charset=utf-8")
             return
+        elif path in ("/favicon.ico", "/favicon.svg"):
+            self._serve_static_file("favicon.svg", "image/svg+xml")
+            return
         elif path.startswith("/static/"):
             rel_file = path[len("/static/"):]
             self._serve_static_file(rel_file)

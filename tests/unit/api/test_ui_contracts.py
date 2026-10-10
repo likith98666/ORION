@@ -362,3 +362,103 @@ def test_product_console_information_architecture():
     assert "switchView" in app_js
     assert "initProductConsole" in app_js
     assert "openModal" in app_js
+
+
+def test_premium_website_redesign_contracts():
+    """Verify contracts for Landing page, Documentation, Privacy, Terms,
+    Favicon, and zero dead buttons.
+    """
+    index_html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    app_css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+    app_js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+    favicon_svg = (STATIC_DIR / "favicon.svg").read_text(encoding="utf-8")
+
+    # 1. Custom SVG Favicon & Metadata
+    assert "<svg" in favicon_svg
+    assert 'rel="icon"' in index_html
+    assert 'href="/static/favicon.svg"' in index_html
+    assert "Mission Command Center" in index_html
+
+    # 2. Pages: Landing, Documentation, Privacy, Terms
+    assert 'id="viewLanding"' in index_html
+    assert 'id="viewDocs"' in index_html
+    assert 'id="viewPrivacy"' in index_html
+    assert 'id="viewTerms"' in index_html
+
+    # 3. Landing Hero & Call to Actions
+    assert 'id="btnLandingLaunchApp"' in index_html
+    assert 'id="btnLandingViewArch"' in index_html
+    assert 'id="btnLandingOpenDocs"' in index_html
+    assert 'id="btnLandingFrameOpen"' in index_html
+
+    # 4. Landing Footer & Documentation Links
+    assert 'id="btnFootLaunch"' in index_html
+    assert 'id="btnFootArch"' in index_html
+    assert 'id="btnFootDemo"' in index_html
+    assert 'id="btnFootDocs"' in index_html
+    assert 'id="btnFootPrivacy"' in index_html
+    assert 'id="btnFootTerms"' in index_html
+
+    # 5. Zero Dead Buttons: No placeholder href="#"
+    assert 'href="#"' not in index_html
+    assert 'id="btnDocsOpenCockpit"' in index_html
+    assert 'id="btnPrivBackCockpit"' in index_html
+    assert 'id="btnTermsBackCockpit"' in index_html
+
+    # 6. CSS Design System Classes for Redesign
+    assert ".landing-hero-section" in app_css
+    assert ".landing-badge-chip" in app_css
+    assert ".cockpit-preview-frame" in app_css
+    assert ".workflow-cards-grid" in app_css
+    assert ".docs-container" in app_css
+    assert ".legal-container" in app_css
+
+    # 7. JS Router & Event Wiring for all views
+    assert "'landing': 'viewLanding'" in app_js
+    assert "'docs': 'viewDocs'" in app_js
+    assert "'privacy': 'viewPrivacy'" in app_js
+    assert "'terms': 'viewTerms'" in app_js
+    assert "'settings': 'viewSettings'" in app_js
+    assert "btnLandingLaunchApp" in app_js
+    assert "btnFootLaunch" in app_js
+
+    # 8. Cinematic Deep-Space & Orbital Canvas Visuals
+    assert (STATIC_DIR / "favicon.svg").exists()
+    assert (STATIC_DIR / "favicon.svg").stat().st_size > 100
+    assert 'id="heroSpaceCanvas"' in index_html
+    assert ".hero-space-canvas" in app_css
+    assert "initHeroSpaceVisuals" in app_js
+    assert "Autonomous AI Workforce" in index_html
+    assert "Engineering missions, under control." in index_html
+    assert (
+        "Plan, execute, inspect, and verify software engineering work with traceable evidence."
+        in index_html
+    )
+
+    # 9. Screen I: Settings View & Navigation
+    assert 'id="viewSettings"' in index_html
+    assert 'id="navSettings"' in index_html
+    assert 'id="cfgWorkspaceRoot"' in index_html
+    assert 'id="cfgDefaultExecMode"' in index_html
+    assert 'id="btnSaveSettings"' in index_html
+    assert 'id="btnResetSettings"' in index_html
+    assert ".settings-container" in app_css
+
+    # 10. Obsidian & Antique Bronze Design System Palette Tokens
+    assert "#080A0C" in app_css  # Obsidian background
+    assert "#111519" in app_css  # Graphite surface
+    assert "#171C20" in app_css  # Elevated charcoal
+    assert "#EEECE5" in app_css  # Warm ivory primary text
+    assert "#929BA3" in app_css  # Muted slate secondary text
+    assert "#B39A70" in app_css  # Antique bronze accent
+    assert "#527E9C" in app_css  # Atmospheric Earth blue
+    assert "#293137" in app_css  # Fine border
+    assert "#77A88C" in app_css  # Restrained success
+    assert "#C5A36A" in app_css  # Restrained warning
+    assert "#C77B76" in app_css  # Restrained error
+
+    # 11. Strictly Prohibited Elements Verification (No emojis)
+    assert not any(ord(c) > 0x25FF for c in index_html)
+    assert not any(ord(c) > 0x25FF for c in app_js)
+
+

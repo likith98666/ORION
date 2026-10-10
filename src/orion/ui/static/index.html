@@ -3,26 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ORION — Certified Autonomous AI Software Engineering Console">
-  <title>ORION // Certified AI Software Engineer</title>
+  <meta name="description" content="ORION — Mission Command Center & Certified Autonomous AI Software Engineering Console">
+  <title>ORION // Mission Command Center — Certified AI Software Engineer</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body class="orion-shell">
 
   <!-- =========================================================================
-       1. TOP APP BAR (CALM, RESTRAINED, SYSTEM TELEMETRY & ACTIONS)
+       1. TOP APP BAR (64px, RESTRAINED, SYSTEM TELEMETRY & PROFILE)
        ========================================================================= -->
   <header class="app-topbar" id="mainNavbar">
     <div class="topbar-left">
-      <div class="topbar-brand" id="brandLogoTrigger" title="ORION Certified SWE Console">
-        <svg class="topbar-logo" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" stroke="#2563EB" fill="rgba(37, 99, 235, 0.12)"></polygon>
-          <circle cx="12" cy="12" r="2.5" fill="#2563EB"></circle>
+      <div class="topbar-brand" id="brandLogoTrigger" title="ORION — Autonomous AI Workforce Platform">
+        <svg class="orion-brand-star" width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="3" fill="#080A0C" stroke="#293137" stroke-width="1"/>
+          <ellipse cx="16" cy="16" rx="11" ry="5" transform="rotate(-28 16 16)" stroke="#527E9C" stroke-width="1.2" opacity="0.85"/>
+          <circle cx="16" cy="16" r="9" stroke="#293137" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
+          <line x1="16" y1="4" x2="16" y2="7" stroke="#B39A70" stroke-width="1"/>
+          <line x1="16" y1="25" x2="16" y2="28" stroke="#B39A70" stroke-width="1"/>
+          <circle cx="24.8" cy="11.5" r="1.3" fill="#527E9C"/>
+          <path d="M16 9L18.2 13.8L23 16L18.2 18.2L16 23L13.8 18.2L9 16L13.8 13.8Z" fill="#B39A70" stroke="#EEECE5" stroke-width="0.75" stroke-linejoin="round"/>
+          <circle cx="16" cy="16" r="1.8" fill="#EEECE5"/>
         </svg>
-        <span class="topbar-title">ORION</span>
+        <div class="brand-text-wrap">
+          <span class="brand-title">ORION</span>
+          <span class="brand-badge">Autonomous AI Workforce</span>
+        </div>
       </div>
       <div class="topbar-divider">/</div>
       <div class="topbar-breadcrumb" id="topbarBreadcrumb">Overview</div>
@@ -30,42 +39,59 @@
 
     <!-- Center Search Bar (Linear / Raycast Style) -->
     <div class="topbar-center">
-      <div class="topbar-search-bar" id="btnOpenCommandPalette" title="Search or jump to (Ctrl+K)">
-        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="topbar-search-bar" id="btnOpenCommandPalette" title="Search missions, files, or documentation (Ctrl+K)">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span class="search-placeholder">Search missions, evidence, tools...</span>
+        <span class="search-placeholder">Search missions, files, or documentation...</span>
         <kbd class="kbd-chip">Ctrl+K</kbd>
       </div>
     </div>
 
-    <!-- Restrained Right Actions & Status -->
+    <!-- Right System Status, Notifications & User Profile -->
     <div class="topbar-right">
-      <!-- Active Mission Context (Only shown when mission is running) -->
+      <!-- Active Mission Context (shown when mission is running) -->
       <div class="mission-context-chip" id="navMissionPill" style="display: none;" title="Active Mission Context">
-        <span class="status-dot pulsing" id="navMissionDot"></span>
+        <span class="status-dot pulsing online" id="navMissionDot"></span>
         <span class="context-id code-font" id="navMissionId">STANDBY</span>
         <span class="context-sep">&bull;</span>
         <span class="context-stage" id="navMissionStage">STAGE: IDLE</span>
       </div>
 
-      <!-- Single Restrained System Status -->
-      <div class="topbar-status-indicator" title="System Status: Healthy">
+      <!-- System Online Indicator -->
+      <div class="topbar-system-status" title="ORION Autonomous Subsystems: Online">
         <span class="status-dot online"></span>
-        <span class="status-label">System Healthy</span>
+        <span>System Online</span>
       </div>
 
-      <button type="button" class="btn btn-primary btn-sm" id="btnNewMission" title="Initialize new autonomous SWE task">
-        <svg class="btn-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        <span>New Mission</span>
+      <div class="topbar-vsep"></div>
+
+      <!-- Notifications Bell -->
+      <button type="button" class="topbar-icon-btn" id="btnTopbarNotifications" title="System Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
       </button>
 
-      <!-- Auxiliary / hidden contract action triggers -->
+      <div class="topbar-vsep"></div>
+
+      <!-- User Profile -->
+      <div class="topbar-user-profile" id="btnTopbarUser" title="Likith Profile">
+        <div class="user-avatar">L</div>
+        <span class="user-name">Likith</span>
+        <svg class="chevron-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+
+      <!-- Retained auxiliary contract buttons for headless triggers -->
       <div style="display: none;">
         <span class="status-dot online" id="coreStatusDot"></span>
         <span class="telemetry-text" id="coreStatusText">API: HEALTHY</span>
         <span class="status-dot online" id="sseStatusDot"></span>
         <span class="telemetry-text" id="sseStatusText">SSE LIVE</span>
+        <button id="btnNewMission"></button>
         <button id="btnOpenDemoTools"></button>
         <button id="btnRefresh"></button>
         <button id="btnOpenArchitecture"></button>
@@ -80,101 +106,106 @@
        ========================================================================= -->
   <div class="app-shell-body">
 
-    <!-- COMPACT, STABLE SIDEBAR -->
+    <!-- LEFT SIDEBAR (240px) -->
     <aside class="app-sidebar" id="appSidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-title">ORION</div>
-        <div class="sidebar-subtitle">CERTIFIED SWE CONSOLE</div>
-      </div>
-
       <nav class="sidebar-nav" id="sidebarNav">
         <!-- GROUP 1: OVERVIEW -->
         <div class="nav-section-label">OVERVIEW</div>
         <a class="nav-item active" data-view="overview" id="navOverview">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           <span>Overview</span>
+        </a>
+        <a class="nav-item" data-view="landing" id="navLanding">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span>Platform</span>
         </a>
 
         <!-- GROUP 2: MISSIONS -->
         <div class="nav-section-label">MISSIONS</div>
-        <a class="nav-item" data-view="mission-detail" id="navMissionActive">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-          <span>Active Mission</span>
-        </a>
         <a class="nav-item" data-view="missions-all" id="navMissionsAll">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           <span>All Missions</span>
         </a>
+        <a class="nav-item" data-view="mission-detail" id="navMissionActive">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+          <span>Active</span>
+        </a>
         <a class="nav-item" data-view="missions-history" id="navMissionsHistory">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span>History</span>
         </a>
 
         <!-- GROUP 3: EXECUTION -->
         <div class="nav-section-label">EXECUTION</div>
         <a class="nav-item" data-view="mission-detail" data-sub="pipeline" id="navExecPipeline">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
           <span>Pipeline</span>
         </a>
         <a class="nav-item" data-view="mission-detail" data-sub="testscope" id="navExecTestScope">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10"></rect></svg>
           <span>Test Scope</span>
         </a>
-        <a class="nav-item" data-view="mission-detail" data-sub="changes" id="navExecChanges">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-          <span>Code Changes</span>
-        </a>
         <a class="nav-item" data-view="mission-detail" data-sub="recovery" id="navExecRecovery">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
           <span>Recovery</span>
+        </a>
+        <a class="nav-item" data-view="mission-detail" data-sub="changes" id="navExecChanges" style="display: none;">
+          <span>Code Changes</span>
         </a>
 
         <!-- GROUP 4: EVIDENCE -->
         <div class="nav-section-label">EVIDENCE</div>
         <a class="nav-item" data-view="evidence" id="navEvidenceLedger">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           <span>Evidence Ledger</span>
         </a>
         <a class="nav-item" data-view="mission-detail" data-sub="verification" id="navEvidenceVerification">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
           <span>Verification</span>
         </a>
 
         <!-- GROUP 5: SYSTEM -->
         <div class="nav-section-label">SYSTEM</div>
-        <a class="nav-item" data-view="agents" id="navSystemWorkforce">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          <span>Workforce</span>
-        </a>
-        <a class="nav-item" data-view="system" data-sub="security" id="navSystemSecurity">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <span>Security &amp; Policy</span>
-        </a>
-        <a class="nav-item" data-view="system" data-sub="eval" id="navSystemEval">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-          <span>Evaluation Lab</span>
-        </a>
-        <a class="nav-item" data-view="system" data-sub="obs" id="navSystemObs">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          <span>Observability</span>
-        </a>
         <a class="nav-item" data-view="system" data-sub="health" id="navSystemHealth">
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
           <span>Health</span>
         </a>
+        <a class="nav-item" data-view="system" data-sub="security" id="navSystemSecurity">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Security</span>
+        </a>
+        <a class="nav-item" data-view="agents" id="navSystemWorkforce">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>Workforce</span>
+        </a>
+        <a class="nav-item" data-view="docs" id="navSystemDocs">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Documentation</span>
+        </a>
+        <a class="nav-item" data-view="settings" id="navSettings">
+          <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Settings</span>
+        </a>
+        <a class="nav-item" data-view="system" data-sub="eval" id="navSystemEval" style="display: none;"><span>Eval</span></a>
+        <a class="nav-item" data-view="system" data-sub="obs" id="navSystemObs" style="display: none;"><span>Obs</span></a>
       </nav>
 
-      <!-- Sidebar Footer Info -->
-      <div class="sidebar-footer">
-        <div class="sidebar-version-row">
-          <span class="version-label">BUILD</span>
-          <span class="version-tag">V10.0.0-RC1</span>
-        </div>
-        <div class="sidebar-links-row">
-          <button type="button" class="sidebar-footer-link" id="btnSidebarArch">Architecture</button>
-          <span class="sep">&bull;</span>
-          <button type="button" class="sidebar-footer-link" id="btnSidebarDemo">Demo Center</button>
-        </div>
+      <!-- Sidebar Promo Card: DEMO & PRESENTATION -->
+      <div class="sidebar-promo-card">
+        <div class="promo-label">DEMO &amp; PRESENTATION</div>
+        <p class="promo-desc">Explore ORION's capabilities with guided demos, templates and more.</p>
+        <button type="button" class="btn btn-promo" id="btnSidebarDemoPromo">Open Demo Center</button>
+      </div>
+
+      <!-- Sidebar Secondary Links -->
+      <div class="sidebar-secondary-links">
+        <button type="button" class="sidebar-link-btn" id="btnSidebarArch">Architecture</button>
+        <span class="sep">&bull;</span>
+        <button type="button" class="sidebar-link-btn" id="btnSidebarDemo">Demo</button>
+        <span class="sep">&bull;</span>
+        <button type="button" class="sidebar-link-btn" id="btnSidebarDocs">Docs</button>
+        <span class="sep">&bull;</span>
+        <button type="button" class="sidebar-link-btn" id="btnSidebarLegal">Legal</button>
       </div>
     </aside>
 
@@ -182,149 +213,356 @@
     <main class="app-main" id="appMainViewport">
 
       <!-- =====================================================================
-           PAGE 1: OVERVIEW PAGE
+           PAGE 1: OVERVIEW PAGE (2-COLUMN SHELL)
            ===================================================================== -->
       <div class="view-page active" id="viewOverview">
         <div class="page-container">
-          <!-- Overview Header -->
-          <div class="overview-header" id="overviewHeader">
-            <div class="overview-title-block">
-              <h1 class="page-title">ORION</h1>
-              <div class="page-subtitle-badge">Certified AI Software Engineer</div>
-              <p class="page-description">Autonomous repository analysis, controlled implementation, testing and evidence-based verification.</p>
-            </div>
-            <div class="overview-actions">
-              <button type="button" class="btn btn-primary" id="btnOverviewNewMission">
-                <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>New Mission</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 1. System Status (Compact Row) -->
-          <div class="system-status-row" id="systemStatusRow">
-            <div class="status-cell">
-              <span class="status-indicator online"></span>
-              <div class="status-info">
-                <span class="status-key">API</span>
-                <span class="status-val text-emerald" id="statusApiVal">HEALTHY</span>
-              </div>
-            </div>
-            <div class="status-cell">
-              <span class="status-indicator online"></span>
-              <div class="status-info">
-                <span class="status-key">EXECUTION</span>
-                <span class="status-val text-cyan" id="statusExecVal">READY</span>
-              </div>
-            </div>
-            <div class="status-cell">
-              <span class="status-indicator online"></span>
-              <div class="status-info">
-                <span class="status-key">VERIFICATION</span>
-                <span class="status-val text-emerald" id="statusVerifVal">READY</span>
-              </div>
-            </div>
-            <div class="status-cell">
-              <span class="status-indicator online"></span>
-              <div class="status-info">
-                <span class="status-key">SECURITY</span>
-                <span class="status-val text-purple" id="statusSecVal">ENFORCED</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Active Mission Section -->
-          <div class="overview-section">
-            <div class="section-title-bar">
-              <h3 class="section-heading">ACTIVE MISSION</h3>
-            </div>
-            <div class="active-mission-card panel" id="activeMissionCard">
-              <div class="empty-state" id="noActiveMissionState">
-                <div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div>
-                <div class="empty-text-wrap">
-                  <div class="empty-title">No active mission</div>
-                  <div class="empty-desc">ORION is standing by. Create a new mission or load a template to begin.</div>
-                </div>
-                <div class="empty-actions">
-                  <button type="button" class="btn btn-secondary btn-sm" id="btnOverviewQuickTemplate">Quick Templates &rarr;</button>
-                </div>
-              </div>
-
-              <!-- Populated when mission active -->
-              <div class="active-mission-content" id="activeMissionContent" style="display: none;">
-                <div class="active-mission-meta">
-                  <div class="meta-left">
-                    <span class="badge badge-cyan" id="ovActiveStatus">RUNNING</span>
-                    <span class="mission-id-link code-font" id="ovActiveId">109ab6cf</span>
+          <div class="overview-shell-grid">
+            
+            <!-- MAIN COLUMN (68%) -->
+            <div class="overview-main-col">
+              
+              <!-- 1. Hero Section -->
+              <section class="hero-section reticle-panel">
+                <canvas id="heroSpaceCanvas" class="hero-space-canvas"></canvas>
+                <div class="hero-atmosphere"></div>
+                <div class="hero-content">
+                  <div class="hero-eyebrow">AUTONOMOUS AI WORKFORCE</div>
+                  <h1 class="hero-title">Engineering missions, under control.</h1>
+                  <p class="hero-description">Plan, execute, inspect, and verify software engineering work with traceable evidence.</p>
+                  <div class="hero-orbital-telemetry">
+                    <span class="telemetry-pill">
+                      <span class="telemetry-dot"></span>
+                      <span class="telemetry-label">ORBIT</span>
+                      <span class="telemetry-val">LEO 418 KM</span>
+                    </span>
+                    <span class="telemetry-sep">/</span>
+                    <span class="telemetry-pill">
+                      <span class="telemetry-label">HORIZON</span>
+                      <span class="telemetry-val">TERMINATOR TRACKING</span>
+                    </span>
+                    <span class="telemetry-sep">/</span>
+                    <span class="telemetry-pill">
+                      <span class="telemetry-label">TELEMETRY</span>
+                      <span class="telemetry-val text-success">NOMINAL</span>
+                    </span>
                   </div>
-                  <div class="meta-right">
-                    <button type="button" class="btn btn-secondary btn-xs" id="btnOvJumpMission">View Mission Details &rarr;</button>
+                  <div class="hero-actions">
+                    <button type="button" class="btn btn-primary" id="btnOverviewNewMission">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      <span>New Mission</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnHeroArch">
+                      <span>View Architecture</span>
+                    </button>
                   </div>
                 </div>
-                <div class="active-mission-objective" id="ovActiveObjective">Repository repair directive</div>
-                <div class="active-mission-progress">
-                  <div class="progress-label">
-                    <span id="ovActiveStageLabel">STAGE: IMPLEMENT</span>
-                    <span class="progress-pct" id="ovActiveStagePct">4/7</span>
+              </section>
+
+              <!-- 2. System Status Horizontal Panel -->
+              <section class="overview-section">
+                <div class="section-header-bar">
+                  <span class="section-title-label">SYSTEM STATUS</span>
+                  <span class="status-summary-pill">
+                    <span class="status-dot online"></span>
+                    <span>All systems operational</span>
+                  </span>
+                </div>
+                <div class="system-status-control-surface" id="systemStatusRow">
+                  <div class="status-col">
+                    <div class="status-col-label">API</div>
+                    <div class="status-col-value">
+                      <span class="status-dot online" id="statusApiDot"></span>
+                      <span id="statusApiVal">Healthy</span>
+                    </div>
                   </div>
-                  <div class="progress-bar-track">
-                    <div class="progress-bar-fill" id="ovActiveProgressFill" style="width: 57%;"></div>
+                  <div class="status-vsep"></div>
+                  <div class="status-col">
+                    <div class="status-col-label">Execution</div>
+                    <div class="status-col-value">
+                      <span class="status-dot online" id="statusExecDot"></span>
+                      <span id="statusExecVal">Ready</span>
+                    </div>
+                  </div>
+                  <div class="status-vsep"></div>
+                  <div class="status-col">
+                    <div class="status-col-label">Verification</div>
+                    <div class="status-col-value">
+                      <span class="status-dot online" id="statusVerifDot"></span>
+                      <span id="statusVerifVal">Ready</span>
+                    </div>
+                  </div>
+                  <div class="status-vsep"></div>
+                  <div class="status-col">
+                    <div class="status-col-label">Security</div>
+                    <div class="status-col-value">
+                      <span class="status-dot online" id="statusSecDot"></span>
+                      <span id="statusSecVal">Enforced</span>
+                    </div>
+                  </div>
+                  <div class="status-vsep"></div>
+                  <div class="status-col">
+                    <div class="status-col-label">Evidence</div>
+                    <div class="status-col-value">
+                      <span class="status-dot online" id="statusEvDot"></span>
+                      <span id="statusEvVal">Active</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </section>
 
-          <!-- 3. Recent Missions Section -->
-          <div class="overview-section">
-            <div class="section-title-bar">
-              <h3 class="section-heading">RECENT MISSIONS</h3>
-              <a class="section-action-link" id="linkViewAllMissions" href="#">View all &rarr;</a>
-            </div>
-            <div class="panel-table-wrap panel">
-              <table class="data-table" id="recentMissionsTable">
-                <thead>
-                  <tr>
-                    <th style="width: 120px;">Mission</th>
-                    <th>Objective</th>
-                    <th style="width: 120px;">Status</th>
-                    <th style="width: 130px;">Stage</th>
-                    <th style="width: 90px;">Duration</th>
-                    <th style="width: 130px;">Created</th>
-                  </tr>
-                </thead>
-                <tbody id="recentMissionsTbody">
-                  <tr>
-                    <td colspan="6" class="table-empty">Loading mission history...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+              <!-- 3. Active Mission Panel -->
+              <section class="overview-section">
+                <div class="section-header-bar">
+                  <div class="section-header-left">
+                    <span class="section-title-label">ACTIVE MISSION</span>
+                    <span class="badge badge-status" id="ovActiveStatusPill">
+                      <span class="status-dot online" id="ovActiveStatusDot"></span>
+                      <span id="ovActiveStatus">RUNNING</span>
+                    </span>
+                  </div>
+                  <button type="button" class="section-header-link" id="btnOvJumpMission">View Details &rarr;</button>
+                </div>
+                <div class="active-mission-surface reticle-panel" id="activeMissionCard">
+                  <!-- Empty State -->
+                  <div class="active-mission-empty" id="noActiveMissionState">
+                    <div class="empty-icon-wrap">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline>
+                      </svg>
+                    </div>
+                    <div class="empty-text">
+                      <div class="empty-title">No active mission running</div>
+                      <div class="empty-desc">ORION is standing by. Create a new autonomous mission or launch a demonstration template.</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnOverviewQuickTemplate">+ Initialize Mission</button>
+                  </div>
 
-          <!-- 4. Evidence & System Summary -->
-          <div class="overview-section">
-            <div class="section-title-bar">
-              <h3 class="section-heading">EVIDENCE PROVENANCE</h3>
-              <a class="section-action-link" id="linkViewEvidenceLedger" href="#">Open ledger &rarr;</a>
+                  <!-- Populated Active Mission State -->
+                  <div class="active-mission-details" id="activeMissionContent" style="display: none;">
+                    <div class="active-mission-grid">
+                      <div class="meta-field">
+                        <span class="field-label">Mission ID</span>
+                        <span class="field-val code-font text-blue" id="ovActiveId">--</span>
+                      </div>
+                      <div class="meta-field field-wide">
+                        <span class="field-label">Objective</span>
+                        <span class="field-val text-primary" id="ovActiveObjective">--</span>
+                      </div>
+                      <div class="meta-field">
+                        <span class="field-label">Started</span>
+                        <span class="field-val" id="ovActiveStarted">--</span>
+                      </div>
+                      <div class="meta-field">
+                        <span class="field-label">Current Stage</span>
+                        <span class="field-val text-primary" id="ovActiveStageLabel">--</span>
+                      </div>
+                      <div class="meta-field">
+                        <span class="field-label">Duration</span>
+                        <span class="field-val" id="ovActiveDuration">--</span>
+                      </div>
+                    </div>
+                    <div class="active-mission-progress-bar">
+                      <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="ovActiveProgressFill" style="width: 0%;"></div>
+                      </div>
+                      <div class="progress-bar-ratio" id="ovActiveStagePct">0 / 7</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 4. Recent Missions Table -->
+              <section class="overview-section">
+                <div class="section-header-bar">
+                  <span class="section-title-label">RECENT MISSIONS</span>
+                  <button type="button" class="section-header-link" id="linkViewAllMissions">View All &rarr;</button>
+                </div>
+                <div class="table-surface">
+                  <table class="data-table" id="recentMissionsTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 140px;">MISSION ID</th>
+                        <th>OBJECTIVE</th>
+                        <th style="width: 140px;">STATUS</th>
+                        <th style="width: 110px;">DURATION</th>
+                        <th style="width: 130px;">CREATED</th>
+                        <th style="width: 30px;"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentMissionsTbody">
+                      <tr>
+                        <td colspan="6" class="table-empty">Loading mission history...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <!-- Auxiliary summary strip for contract elements -->
+              <div style="display: none;">
+                <span id="ovVerifiedCount">0</span>
+                <span id="ovObservedCount">0</span>
+                <span id="ovClaimedCount">0</span>
+                <span id="ovInvariantsCount">20/20</span>
+                <a id="linkViewEvidenceLedger" href="#evidence"></a>
+                <div id="overviewHeader"></div>
+              </div>
+
             </div>
-            <div class="evidence-summary-strip panel">
-              <div class="evidence-stat-box">
-                <span class="stat-number text-emerald" id="ovVerifiedCount">0</span>
-                <span class="stat-desc">Verified Claims</span>
-              </div>
-              <div class="evidence-stat-box">
-                <span class="stat-number text-cyan" id="ovObservedCount">0</span>
-                <span class="stat-desc">Observed Outputs</span>
-              </div>
-              <div class="evidence-stat-box">
-                <span class="stat-number text-amber" id="ovClaimedCount">0</span>
-                <span class="stat-desc">Hypotheses Tested</span>
-              </div>
-              <div class="evidence-stat-box">
-                <span class="stat-number text-purple" id="ovInvariantsCount">20/20</span>
-                <span class="stat-desc">Security Invariants Enforced</span>
-              </div>
+
+            <!-- RIGHT RAIL (32%, ~340px) -->
+            <div class="overview-right-rail">
+              
+              <!-- Quick Access Section -->
+              <section class="rail-section">
+                <div class="rail-section-header">QUICK ACCESS</div>
+                <div class="quick-access-list">
+                  <div class="quick-access-item" id="railQuickDemo">
+                    <div class="quick-icon-circle">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    </div>
+                    <div class="quick-item-info">
+                      <div class="quick-item-title">Demo Center</div>
+                      <div class="quick-item-desc">Guided demonstrations</div>
+                    </div>
+                    <div class="quick-chevron">&rsaquo;</div>
+                  </div>
+
+                  <div class="quick-access-item" id="railQuickTemplates">
+                    <div class="quick-icon-circle">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    </div>
+                    <div class="quick-item-info">
+                      <div class="quick-item-title">Mission Templates</div>
+                      <div class="quick-item-desc">Start with a template</div>
+                    </div>
+                    <div class="quick-chevron">&rsaquo;</div>
+                  </div>
+
+                  <div class="quick-access-item" id="railQuickArch">
+                    <div class="quick-icon-circle">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    </div>
+                    <div class="quick-item-info">
+                      <div class="quick-item-title">Architecture Explorer</div>
+                      <div class="quick-item-desc">View system architecture</div>
+                    </div>
+                    <div class="quick-chevron">&rsaquo;</div>
+                  </div>
+
+                  <div class="quick-access-item" id="railQuickTour">
+                    <div class="quick-icon-circle">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                    </div>
+                    <div class="quick-item-info">
+                      <div class="quick-item-title">Product Tour</div>
+                      <div class="quick-item-desc">10 step guided tour</div>
+                    </div>
+                    <div class="quick-chevron">&rsaquo;</div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Current Mission Progress (Vertical 7-stage pipeline) -->
+              <section class="rail-section">
+                <div class="rail-section-header">CURRENT MISSION PROGRESS</div>
+                <div class="vertical-pipeline-card">
+                  <div class="vertical-pipeline-list" id="railPipelineList">
+                    <div class="vertical-stage-item" data-stage="inspect_repository" id="railStage-inspect_repository">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">1</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">1 Inspect Repository</div>
+                        <div class="stage-sub">AST &amp; Workspace</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="analyze_failure" id="railStage-analyze_failure">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">2</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">2 Analyze Failure</div>
+                        <div class="stage-sub">Taxonomy &amp; Blast Radius</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="formulate_fix" id="railStage-formulate_fix">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">3</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">3 Formulate Fix</div>
+                        <div class="stage-sub">Patch Synthesis</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="implement_change" id="railStage-implement_change">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">4</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">4 Implement Change</div>
+                        <div class="stage-sub">Controlled Diff</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="run_tests" id="railStage-run_tests">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">5</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">5 Test</div>
+                        <div class="stage-sub">Bounded Pytest Runner</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="verify" id="railStage-verify">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">6</div>
+                        <div class="stage-vtrack"></div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">6 Verify</div>
+                        <div class="stage-sub">VerificationEngine Ground Truth</div>
+                      </div>
+                    </div>
+
+                    <div class="vertical-stage-item" data-stage="generate_report" id="railStage-generate_report">
+                      <div class="stage-indicator-wrap">
+                        <div class="stage-dot">7</div>
+                      </div>
+                      <div class="stage-text-wrap">
+                        <div class="stage-title">7 Report</div>
+                        <div class="stage-sub">Authoritative Certification</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- System Health Card -->
+              <section class="rail-section">
+                <div class="rail-section-header">SYSTEM HEALTH</div>
+                <div class="system-health-card">
+                  <div class="health-meta-row">
+                    <span class="health-label">Uptime</span>
+                    <span class="health-sub">Last 24h</span>
+                  </div>
+                  <div class="health-metric-val" id="railUptimeVal">99.98%</div>
+                  <div class="health-bar-track">
+                    <div class="health-bar-fill" style="width: 99.98%;"></div>
+                  </div>
+                </div>
+              </section>
+
             </div>
           </div>
         </div>
@@ -345,7 +583,13 @@
           <!-- Dual-Key Human Approval Alert Banner -->
           <div class="approval-alert-banner" id="approvalAlertBanner" style="display: none;">
             <div class="approval-alert-left">
-              <span class="alert-icon">⚠️</span>
+              <span class="alert-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C5A36A" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </span>
               <div>
                 <div class="alert-title">
                   <strong>HUMAN APPROVAL REQUIRED</strong>
@@ -363,7 +607,7 @@
           </div>
 
           <!-- Mission Header -->
-          <div class="mission-detail-header panel">
+          <div class="mission-detail-header">
             <div class="mission-header-top">
               <div class="mission-header-id-group">
                 <span class="badge badge-outline" id="missionStatusBadge">STANDBY</span>
@@ -385,13 +629,13 @@
           </div>
 
           <!-- Mission Pipeline Stepper (7 Stages) -->
-          <div class="pipeline-section panel">
+          <div class="pipeline-section reticle-panel">
             <div class="pipeline-header">
               <span class="pipeline-title">DETERMINISTIC 7-STAGE PIPELINE</span>
               <span class="pipeline-legend">
-                <span class="legend-item"><span class="dot done"></span> Completed</span>
-                <span class="legend-item"><span class="dot running"></span> Running</span>
-                <span class="legend-item"><span class="dot pending"></span> Pending</span>
+                <span class="legend-item"><span class="status-dot online"></span> Completed</span>
+                <span class="legend-item"><span class="status-dot running"></span> Running</span>
+                <span class="legend-item"><span class="status-dot pending"></span> Pending</span>
               </span>
             </div>
             <div class="pipeline-stepper" id="stepperNodes">
@@ -469,8 +713,8 @@
                     <span class="badge badge-outline"><span id="modifiedFilesCount">0</span> Files Modified</span>
                   </div>
                   <div class="diff-stats-chips">
-                    <span class="chip-add">+<span id="diffLinesAdded">0</span></span>
-                    <span class="chip-del">-<span id="diffLinesRemoved">0</span></span>
+                    <span class="badge badge-emerald">+<span id="diffLinesAdded">0</span></span>
+                    <span class="badge badge-rose">-<span id="diffLinesRemoved">0</span></span>
                   </div>
                 </div>
                 <div class="diff-viewer-wrapper">
@@ -487,7 +731,7 @@
                 <div class="metadata-grid">
                   <div class="meta-row">
                     <span class="meta-label">Task ID</span>
-                    <span class="meta-val code-font" id="ovTaskId">-</span>
+                    <span class="meta-val code-font text-blue" id="ovTaskId">-</span>
                   </div>
                   <div class="meta-row">
                     <span class="meta-label">Execution ID</span>
@@ -515,8 +759,8 @@
                   </div>
                 </div>
 
-                <div class="panel-divider"></div>
-                <div class="panel-header" style="padding-top: 0.5rem;">
+                <div class="panel-divider" style="height: 1px; background: var(--border-subtle); margin: 14px 0;"></div>
+                <div class="panel-header" style="padding-top: 0.25rem;">
                   <span class="panel-title">TIMELINE EVENTS</span>
                 </div>
                 <div class="timeline-stream-box" id="timelineStream">
@@ -529,7 +773,7 @@
           <!-- PANEL: TESTS & TEST SCOPE (TAB-TESTS) -->
           <div class="subtab-panel" id="tab-tests">
             <!-- TEST SCOPE SECTION (Integrated bounded test selection) -->
-            <div class="test-scope-card panel" id="testSelectionSection">
+            <div class="test-scope-card panel" id="testSelectionSection" style="margin-bottom: 18px;">
               <div class="panel-header">
                 <div class="panel-header-left">
                   <span class="panel-title">TEST SCOPE SELECTION</span>
@@ -547,16 +791,16 @@
                   <div><span class="text-dim">Scope: </span><span class="code-font" id="testSelectionScopeVal">--</span></div>
                 </div>
                 <div class="scope-reason-box" style="margin-bottom: 0.75rem;">
-                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 0.25rem;">Selection Rationale:</span>
+                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Selection Rationale:</span>
                   <span class="scope-text" id="testSelectionReasonVal" style="font-size: 0.8125rem; color: var(--text-secondary);">Targeted test mapping inferred from AST blast radius. Only tests covering modified functions are scheduled.</span>
                 </div>
                 <div class="scope-targets-box">
-                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 0.25rem;">Selected Test Targets:</span>
+                  <span class="scope-label" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Selected Test Targets:</span>
                   <div class="targets-list" id="testSelectedTargetsList">
                     <div class="empty-targets-state" id="testSelectionEmptyState">No specific test targets identified</div>
                   </div>
                 </div>
-                <div id="testSelectionHistoricalNote" style="display: none; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-dim);">
+                <div id="testSelectionHistoricalNote" style="display: none; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
                   <span id="testSelectionHistoricalText"></span>
                 </div>
               </div>
@@ -569,13 +813,13 @@
                   <span class="panel-title">SANDBOXED SUBPROCESS TEST RUNNER</span>
                   <span class="badge badge-outline">shell=False</span>
                 </div>
-                <div class="test-exit-badge">
-                  <span>Exit Code:</span>
+                <div class="test-exit-badge" style="display: flex; align-items: center; gap: 6px;">
+                  <span class="text-dim">Exit Code:</span>
                   <span class="badge badge-outline code-font" id="testExitCodeBadge">READY</span>
                 </div>
               </div>
-              <div class="test-terminal-output">
-                <pre class="terminal-code" id="testOutputContent">No tests executed yet.</pre>
+              <div class="test-terminal-output" style="background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+                <pre class="terminal-code" id="testOutputContent" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px;">No tests executed yet.</pre>
               </div>
             </div>
           </div>
@@ -605,8 +849,8 @@
                   <span class="verif-val text-cyan" id="verifEvidenceCountVal">6 VERIFIED</span>
                 </div>
               </div>
-              <div class="verif-statement-box">
-                <p class="verif-statement" id="verifStatementText">Authoritative VerificationEngine confirmed: all assertions satisfied, zero regressions, and cryptographic hash matches certified state.</p>
+              <div class="verif-statement-box" style="padding: 12px; background: var(--surface-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <p class="verif-statement" id="verifStatementText" style="color: var(--text-secondary); font-size: 12.5px;">Authoritative VerificationEngine confirmed: all assertions satisfied, zero regressions, and cryptographic hash matches certified state.</p>
               </div>
             </div>
           </div>
@@ -618,36 +862,44 @@
                 <span class="panel-title">BOUNDED SELF-HEALING RECOVERY</span>
                 <span class="badge badge-outline" id="rollbackAuditBadge">ROLLBACK READY</span>
               </div>
-              <div class="recovery-metrics-row">
-                <div class="rec-metric-box">
-                  <span class="rec-label">Failure Category</span>
-                  <span class="rec-val text-amber" id="recFailureCatVal">NONE</span>
+              <div class="recovery-metrics-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0;">
+                <div class="rec-metric-box panel" style="background: var(--surface-secondary);">
+                  <span class="rec-label text-dim">Failure Category</span>
+                  <div class="rec-val text-amber" id="recFailureCatVal" style="font-size: 16px; font-weight: 700; margin-top: 4px;">NONE</div>
                 </div>
-                <div class="rec-metric-box">
-                  <span class="rec-label">Active Strategy</span>
-                  <span class="rec-val text-cyan" id="recStrategyVal">STANDBY</span>
+                <div class="rec-metric-box panel" style="background: var(--surface-secondary);">
+                  <span class="rec-label text-dim">Active Strategy</span>
+                  <div class="rec-val text-cyan" id="recStrategyVal" style="font-size: 16px; font-weight: 700; margin-top: 4px;">STANDBY</div>
                 </div>
-                <div class="rec-metric-box">
-                  <span class="rec-label">Recovery Attempt</span>
-                  <span class="rec-val" id="recAttemptVal">0 / 3</span>
+                <div class="rec-metric-box panel" style="background: var(--surface-secondary);">
+                  <span class="rec-label text-dim">Recovery Attempt</span>
+                  <div class="rec-val" id="recAttemptVal" style="font-size: 16px; font-weight: 700; margin-top: 4px;">0 / 3</div>
                 </div>
               </div>
-              <div class="recovery-budget-bars">
+              <div class="recovery-budget-bars" style="display: flex; flex-direction: column; gap: 10px;">
                 <div class="budget-item">
-                  <div class="budget-head"><span>Attempts Budget (Max 3)</span><span id="budgetTxtAttempts">0/3</span></div>
-                  <div class="budget-track"><div class="budget-fill" id="budgetBarAttempts" style="width: 0%;"></div></div>
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px;">
+                    <span>Attempts Budget (Max 3)</span><span id="budgetTxtAttempts">0/3</span>
+                  </div>
+                  <div class="budget-track" style="height: 5px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;"><div class="budget-fill" id="budgetBarAttempts" style="width: 0%; height: 100%; background: var(--color-blue);"></div></div>
                 </div>
                 <div class="budget-item">
-                  <div class="budget-head"><span>Time Budget (Max 120s)</span><span id="budgetTxtTime">0s/120s</span></div>
-                  <div class="budget-track"><div class="budget-fill" id="budgetBarTime" style="width: 0%;"></div></div>
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px;">
+                    <span>Time Budget (Max 120s)</span><span id="budgetTxtTime">0s/120s</span>
+                  </div>
+                  <div class="budget-track" style="height: 5px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;"><div class="budget-fill" id="budgetBarTime" style="width: 0%; height: 100%; background: var(--color-blue);"></div></div>
                 </div>
                 <div class="budget-item">
-                  <div class="budget-head"><span>Patch Allocations (Max 2)</span><span id="budgetTxtPatch">0/2</span></div>
-                  <div class="budget-track"><div class="budget-fill" id="budgetBarPatch" style="width: 0%;"></div></div>
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px;">
+                    <span>Patch Allocations (Max 2)</span><span id="budgetTxtPatch">0/2</span>
+                  </div>
+                  <div class="budget-track" style="height: 5px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;"><div class="budget-fill" id="budgetBarPatch" style="width: 0%; height: 100%; background: var(--color-blue);"></div></div>
                 </div>
                 <div class="budget-item">
-                  <div class="budget-head"><span>Test Executions (Max 3)</span><span id="budgetTxtTests">0/3</span></div>
-                  <div class="budget-track"><div class="budget-fill" id="budgetBarTests" style="width: 0%;"></div></div>
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 3px;">
+                    <span>Test Executions (Max 3)</span><span id="budgetTxtTests">0/3</span>
+                  </div>
+                  <div class="budget-track" style="height: 5px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;"><div class="budget-fill" id="budgetBarTests" style="width: 0%; height: 100%; background: var(--color-blue);"></div></div>
                 </div>
               </div>
             </div>
@@ -663,11 +915,9 @@
                 </div>
                 <span class="badge badge-cyan" id="graphActiveNodeBadge">Node: inspect_repository</span>
               </div>
-              <div class="dag-nodes-grid" id="dagNodesGrid">
-                <!-- Dynamically populated -->
-              </div>
-              <div class="dag-detail-panel panel" id="dagNodeDetailPanel">
-                <h4 class="dag-detail-title" id="dagDetailNodeTitle">Select a node to inspect</h4>
+              <div class="dag-nodes-grid" id="dagNodesGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;"></div>
+              <div class="dag-detail-panel panel" id="dagNodeDetailPanel" style="background: var(--surface-secondary);">
+                <h4 class="dag-detail-title" id="dagDetailNodeTitle" style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Select a node to inspect</h4>
                 <div class="dag-detail-meta" id="dagDetailMetaGrid"></div>
               </div>
             </div>
@@ -681,12 +931,12 @@
            ===================================================================== -->
       <div class="view-page" id="viewMissionsAll">
         <div class="page-container">
-          <div class="page-header">
+          <div class="section-header-bar" style="margin-bottom: 16px;">
             <div>
-              <h2 class="page-title">Missions History</h2>
-              <p class="page-description">Complete log of autonomous engineering missions, durations, and verification states.</p>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary);">Missions History</h2>
+              <p style="font-size: 12.5px; color: var(--text-muted);">Complete log of autonomous engineering missions, durations, and verification states.</p>
             </div>
-            <div class="missions-filter-tabs" id="missionsFilterGroup">
+            <div class="missions-filter-tabs" id="missionsFilterGroup" style="display: flex; gap: 6px;">
               <button type="button" class="btn btn-secondary btn-xs active" data-filter="all">All</button>
               <button type="button" class="btn btn-secondary btn-xs" data-filter="verified">Verified</button>
               <button type="button" class="btn btn-secondary btn-xs" data-filter="completed">Completed</button>
@@ -694,17 +944,17 @@
             </div>
           </div>
 
-          <div class="panel-table-wrap panel">
+          <div class="table-surface">
             <table class="data-table" id="allMissionsTable">
               <thead>
                 <tr>
-                  <th style="width: 130px;">Mission ID</th>
-                  <th>Directive / Objective</th>
-                  <th style="width: 120px;">Status</th>
-                  <th style="width: 130px;">Stage</th>
-                  <th style="width: 90px;">Duration</th>
-                  <th style="width: 130px;">Created</th>
-                  <th style="width: 80px; text-align: right;">Action</th>
+                  <th style="width: 140px;">MISSION ID</th>
+                  <th>DIRECTIVE / OBJECTIVE</th>
+                  <th style="width: 130px;">STATUS</th>
+                  <th style="width: 130px;">STAGE</th>
+                  <th style="width: 100px;">DURATION</th>
+                  <th style="width: 130px;">CREATED</th>
+                  <th style="width: 90px; text-align: right;">ACTION</th>
                 </tr>
               </thead>
               <tbody id="allMissionsTbody">
@@ -720,31 +970,30 @@
            ===================================================================== -->
       <div class="view-page" id="viewAgents">
         <div class="page-container">
-          <div class="page-header">
+          <div class="section-header-bar" style="margin-bottom: 16px;">
             <div>
-              <h2 class="page-title">Workforce Roster</h2>
-              <p class="page-description">Authoritative multi-agent technical roster with strict permission policies and conflict arbitrator contracts.</p>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary);">Workforce Roster</h2>
+              <p style="font-size: 12.5px; color: var(--text-muted);">Authoritative multi-agent technical roster with strict permission policies and conflict arbitrator contracts.</p>
             </div>
-            <div class="agent-counts">
+            <div style="display: flex; gap: 8px;">
               <span class="badge badge-outline"><span id="workforceTotalBadge">4</span> Total Agents</span>
               <span class="badge badge-emerald"><span id="workforceActiveBadge">4</span> Active</span>
             </div>
           </div>
 
-          <div class="panel-table-wrap panel" id="tab-workforce">
+          <div class="table-surface" id="tab-workforce">
             <table class="data-table" id="workforceTable">
               <thead>
                 <tr>
-                  <th style="width: 80px;">Role</th>
-                  <th style="width: 220px;">Agent Name</th>
-                  <th style="width: 120px;">Status</th>
-                  <th>Current Responsibility / Task</th>
-                  <th style="width: 150px;">Permission Tier</th>
-                  <th style="width: 120px;">Last Activity</th>
+                  <th style="width: 80px;">ROLE</th>
+                  <th style="width: 220px;">AGENT NAME</th>
+                  <th style="width: 120px;">STATUS</th>
+                  <th>CURRENT RESPONSIBILITY</th>
+                  <th style="width: 160px;">PERMISSION TIER</th>
+                  <th style="width: 120px;">LAST ACTIVITY</th>
                 </tr>
               </thead>
               <tbody id="workforceCardsGrid">
-                <!-- Dynamically populated or rendered -->
                 <tr class="agent-row" data-agent="swe">
                   <td><span class="badge badge-cyan">SWE</span></td>
                   <td><strong>Software Engineer Agent</strong></td>
@@ -788,12 +1037,12 @@
            ===================================================================== -->
       <div class="view-page" id="viewEvidence">
         <div class="page-container">
-          <div class="page-header">
+          <div class="section-header-bar" style="margin-bottom: 16px;">
             <div>
-              <h2 class="page-title">Evidence Provenance Ledger</h2>
-              <p class="page-description">Cryptographic, append-only ledger tracking Claimed &rarr; Observed &rarr; Verified evidence items.</p>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary);">Evidence Provenance Ledger</h2>
+              <p style="font-size: 12.5px; color: var(--text-muted);">Cryptographic, append-only ledger tracking Claimed &rarr; Observed &rarr; Verified evidence items.</p>
             </div>
-            <div class="evidence-filter-group" id="evidenceFilterGroup">
+            <div class="evidence-filter-group" id="evidenceFilterGroup" style="display: flex; gap: 6px;">
               <button type="button" class="btn btn-secondary btn-xs active filter-btn" data-filter="all">All</button>
               <button type="button" class="btn btn-secondary btn-xs filter-btn" data-filter="verified">Verified</button>
               <button type="button" class="btn btn-secondary btn-xs filter-btn" data-filter="observed">Observed</button>
@@ -801,20 +1050,15 @@
             </div>
           </div>
 
-          <div class="evidence-axiom-banner panel">
-            <span class="axiom-icon">⚖️</span>
-            <span><strong>Core Verification Axiom:</strong> EXECUTION &ne; SUCCESS. VERIFIED EXECUTION = SUCCESS.</span>
-          </div>
-
-          <div class="panel-table-wrap panel" id="tab-evidence">
+          <div class="table-surface" id="tab-evidence">
             <table class="data-table" id="evidenceTable">
               <thead>
                 <tr>
-                  <th style="width: 140px;">Level</th>
-                  <th style="width: 140px;">Category</th>
-                  <th>Statement / Evidence Content</th>
-                  <th style="width: 180px;">Cryptographic Provenance</th>
-                  <th style="width: 140px;">Timestamp</th>
+                  <th style="width: 140px;">LEVEL</th>
+                  <th style="width: 140px;">CATEGORY</th>
+                  <th>STATEMENT / EVIDENCE CONTENT</th>
+                  <th style="width: 200px;">CRYPTOGRAPHIC PROVENANCE</th>
+                  <th style="width: 140px;">TIMESTAMP</th>
                 </tr>
               </thead>
               <tbody id="evidenceFeed">
@@ -830,12 +1074,12 @@
            ===================================================================== -->
       <div class="view-page" id="viewSystem">
         <div class="page-container">
-          <div class="page-header">
+          <div class="section-header-bar" style="margin-bottom: 16px;">
             <div>
-              <h2 class="page-title">System &amp; Governance</h2>
-              <p class="page-description">Authoritative PolicyEngine guardrails, evaluation benchmarks, and distributed observability traces.</p>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary);">System &amp; Governance</h2>
+              <p style="font-size: 12.5px; color: var(--text-muted);">Authoritative PolicyEngine guardrails, evaluation benchmarks, and distributed observability traces.</p>
             </div>
-            <div class="system-subnav" id="systemSubnav">
+            <div class="system-subnav" id="systemSubnav" style="display: flex; gap: 6px;">
               <button type="button" class="btn btn-secondary btn-xs active" data-subview="security">Security &amp; Policy</button>
               <button type="button" class="btn btn-secondary btn-xs" data-subview="eval">Evaluation Lab</button>
               <button type="button" class="btn btn-secondary btn-xs" data-subview="obs">Observability</button>
@@ -845,25 +1089,23 @@
 
           <!-- SUBVIEW: SECURITY & POLICY ENGINE -->
           <div class="system-subpanel active" id="sysSubSecurity">
-            <div class="panel-section-title">20 NON-NEGOTIABLE SECURITY INVARIANTS</div>
-            <div class="invariants-table-wrap panel" id="tab-policy">
+            <div class="section-title-label" style="margin-bottom: 10px;">20 NON-NEGOTIABLE SECURITY INVARIANTS</div>
+            <div class="table-surface" id="tab-policy">
               <table class="data-table policy-rules-table" id="policyRulesTable">
                 <thead>
                   <tr>
-                    <th style="width: 120px;">Rule ID</th>
-                    <th style="width: 220px;">Invariant Name</th>
-                    <th style="width: 90px;">Effect</th>
-                    <th style="width: 80px;">Priority</th>
-                    <th>Target Actions &amp; Resources</th>
+                    <th style="width: 120px;">RULE ID</th>
+                    <th style="width: 240px;">INVARIANT NAME</th>
+                    <th style="width: 90px;">EFFECT</th>
+                    <th style="width: 80px;">PRIORITY</th>
+                    <th>TARGET ACTIONS &amp; RESOURCES</th>
                   </tr>
                 </thead>
-                <tbody id="policyRulesList">
-                  <!-- Dynamically populated or rendered -->
-                </tbody>
+                <tbody id="policyRulesList"></tbody>
               </table>
             </div>
 
-            <div class="panel-section-title" style="margin-top: 1.5rem;">POLICY EVALUATION DECISION STREAM</div>
+            <div class="section-title-label" style="margin-top: 20px; margin-bottom: 10px;">POLICY EVALUATION DECISION STREAM</div>
             <div class="panel" id="policyDecisionsBox">
               <div id="policyDecisionsList" class="policy-decisions-feed">
                 <div class="empty-state">No policy evaluation events recorded.</div>
@@ -874,11 +1116,10 @@
 
           <!-- SUBVIEW: EVALUATION LAB -->
           <div class="system-subpanel" id="sysSubEval" style="display: none;">
-            <div class="panel-section-title">STANDARDIZED BENCHMARK SUITES</div>
             <div class="panel" id="tab-eval">
               <div class="panel-header">
                 <span class="panel-title">EXPERIMENT COMPARATOR</span>
-                <div class="eval-actions">
+                <div class="eval-actions" style="display: flex; gap: 8px;">
                   <button type="button" class="btn btn-primary btn-xs" id="btnRunEvaluation">Run Evaluation</button>
                   <button type="button" class="btn btn-secondary btn-xs" id="btnCompareExperiments">Compare Experiments</button>
                 </div>
@@ -887,12 +1128,12 @@
                 <table class="data-table eval-runs-table" id="evalRunsTable">
                   <thead>
                     <tr>
-                      <th>Run ID</th>
-                      <th>Suite</th>
-                      <th>Pass@1</th>
-                      <th>Recovery Rate</th>
-                      <th>Mean Duration</th>
-                      <th>Timestamp</th>
+                      <th>RUN ID</th>
+                      <th>SUITE</th>
+                      <th>PASS@1</th>
+                      <th>RECOVERY RATE</th>
+                      <th>MEAN DURATION</th>
+                      <th>TIMESTAMP</th>
                     </tr>
                   </thead>
                   <tbody id="evalRunsTbody">
@@ -905,7 +1146,6 @@
 
           <!-- SUBVIEW: OBSERVABILITY -->
           <div class="system-subpanel" id="sysSubObs" style="display: none;">
-            <div class="panel-section-title">DISTRIBUTED TRACER WATERFALL</div>
             <div class="panel trace-waterfall-container" id="tab-observability">
               <div class="panel-header">
                 <span class="panel-title">SPAN TRACE WATERFALL</span>
@@ -930,12 +1170,11 @@
 
           <!-- SUBVIEW: HEALTH -->
           <div class="system-subpanel" id="sysSubHealth" style="display: none;">
-            <div class="panel-section-title">SYSTEM HEALTH &amp; DIAGNOSTICS</div>
             <div class="panel">
               <div class="metadata-grid">
                 <div class="meta-row"><span class="meta-label">Engine Core</span><span class="meta-val text-emerald">RUNNING (Python 3.12 Pure Standard Library)</span></div>
                 <div class="meta-row"><span class="meta-label">Dependencies</span><span class="meta-val text-emerald">0 Third-Party Runtime Dependencies</span></div>
-                <div class="meta-row"><span class="meta-label">Uptime</span><span class="meta-val code-font" id="engineUptime">Active</span></div>
+                <div class="meta-row"><span class="meta-label">Uptime</span><span class="meta-val code-font text-blue" id="engineUptime">Active</span></div>
                 <div class="meta-row"><span class="meta-label">Rate Limiter</span><span class="meta-val">TokenBucket (Sliding Window Active)</span></div>
                 <div class="meta-row"><span class="meta-label">Workspace Isolation</span><span class="meta-val text-emerald">ENFORCED (Traversal / UNC / Symlinks Blocked)</span></div>
                 <div class="meta-row"><span class="meta-label">Active Missions</span><span class="meta-val" id="activeMissionsCount">0</span></div>
@@ -943,7 +1182,7 @@
             </div>
           </div>
 
-          <!-- Retained auxiliary contract elements for HITL and Repo tools -->
+          <!-- Auxiliary elements for HITL and Repo tools -->
           <div id="tab-repo" style="display: none;">
             <input type="text" id="repoImpactTargetFile">
             <button id="btnAnalyzeImpact"></button>
@@ -959,51 +1198,637 @@
         </div>
       </div>
 
+      <!-- =====================================================================
+           PAGE 7: LANDING (CINEMATIC ENTERPRISE SHOWCASE)
+           ===================================================================== -->
+      <div class="view-page" id="viewLanding">
+        <div class="landing-page-container">
+          
+          <!-- 1. Hero Section -->
+          <section class="landing-hero-section">
+            <canvas id="landingSpaceCanvas" class="hero-space-canvas"></canvas>
+            <div class="landing-hero-atmosphere"></div>
+            <div class="landing-hero-content">
+              <div class="landing-badge-chip">
+                <span class="status-dot online"></span>
+                <span>AUTONOMOUS AI ENGINEERING PLATFORM &bull; VERSION 1.0</span>
+              </div>
+              <h1 class="landing-hero-title">Deterministic Multi-Agent Engineering Across Real Repositories.</h1>
+              <p class="landing-hero-lead">
+                ORION coordinates an authoritative workforce of specialized SWE, Diagnostics, Verifier, and Recovery agents. Governed by deterministic 7-stage task graphs, strict filesystem containment boundaries, dual-key human approval gates, sandboxed pytest runners, and immutable forensic evidence ledgers.
+              </p>
+              <div class="landing-hero-ctas">
+                <button type="button" class="btn btn-primary btn-lg" id="btnLandingLaunchApp">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Launch Mission Cockpit</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-lg" id="btnLandingViewArch">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  <span>System Architecture</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-lg" id="btnLandingOpenDocs">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  <span>Documentation</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Technical Invariants Banner -->
+          <section class="landing-telemetry-banner">
+            <div class="telemetry-banner-grid">
+              <div class="telemetry-banner-item">
+                <span class="telemetry-label">SECURITY INVARIANTS</span>
+                <span class="telemetry-val text-blue">20 / 20 Verified</span>
+                <span class="telemetry-desc">Zero-trust containment &amp; dual-key approvals</span>
+              </div>
+              <div class="telemetry-vsep"></div>
+              <div class="telemetry-banner-item">
+                <span class="telemetry-label">WORKFORCE SPECIALIZATION</span>
+                <span class="telemetry-val text-primary">4 Autonomous Roles</span>
+                <span class="telemetry-desc">SWE, Diagnostics, Verifier, Recovery</span>
+              </div>
+              <div class="telemetry-vsep"></div>
+              <div class="telemetry-banner-item">
+                <span class="telemetry-label">TASK EXECUTION GRAPH</span>
+                <span class="telemetry-val text-primary">7 Deterministic Stages</span>
+                <span class="telemetry-desc">Strict topological DAG, bounded recovery</span>
+              </div>
+              <div class="telemetry-vsep"></div>
+              <div class="telemetry-banner-item">
+                <span class="telemetry-label">RUNTIME DEPENDENCIES</span>
+                <span class="telemetry-val text-green">0 Third-Party</span>
+                <span class="telemetry-desc">100% Python Standard Library execution</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. Authentic Interactive Preview -->
+          <section class="landing-preview-section">
+            <div class="landing-section-header">
+              <div class="section-title-label">MISSION COMMAND CENTER</div>
+              <h2 class="landing-section-title">The 12 Observatories of the Flagship Cockpit</h2>
+              <p class="landing-section-sub">A high-density operational command center providing real-time telemetry, interactive task DAGs, and forensic evidence tracking.</p>
+            </div>
+            <div class="cockpit-preview-frame">
+              <div class="preview-frame-topbar">
+                <div class="frame-dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                <span class="frame-url">http://127.0.0.1:8000/ &bull; ORION Mission Command Center</span>
+                <button type="button" class="btn btn-secondary btn-xs" id="btnLandingFrameOpen">Open Live Cockpit &rarr;</button>
+              </div>
+              <div class="preview-frame-body">
+                <div class="preview-grid-3col">
+                  <div class="preview-col-nav">
+                    <div class="preview-nav-item active"><span class="dot online"></span> Overview</div>
+                    <div class="preview-nav-item">Missions Active</div>
+                    <div class="preview-nav-item">Pipeline DAG</div>
+                    <div class="preview-nav-item">Test Scope</div>
+                    <div class="preview-nav-item">Evidence Ledger</div>
+                    <div class="preview-nav-item">Verification</div>
+                    <div class="preview-nav-item">Policy Engine</div>
+                  </div>
+                  <div class="preview-col-main">
+                    <div class="preview-card-hero">
+                      <span class="eyebrow">ACTIVE TELEMETRY</span>
+                      <div class="headline">Deterministic Autonomous Software Engineering</div>
+                      <div class="tags">
+                        <span class="badge badge-outline">API: HEALTHY</span>
+                        <span class="badge badge-outline">EXECUTION: READY</span>
+                        <span class="badge badge-outline">VERIFICATION: AUTHORITATIVE</span>
+                      </div>
+                    </div>
+                    <div class="preview-stages-row">
+                      <div class="preview-stage-pill done">1. Inspect</div>
+                      <div class="preview-stage-pill done">2. Analyze</div>
+                      <div class="preview-stage-pill done">3. Formulate</div>
+                      <div class="preview-stage-pill done">4. Dual-Key Gate</div>
+                      <div class="preview-stage-pill active">5. Implement</div>
+                      <div class="preview-stage-pill">6. Pytest Runner</div>
+                      <div class="preview-stage-pill">7. Verify</div>
+                    </div>
+                  </div>
+                  <div class="preview-col-rail">
+                    <div class="rail-title">QUICK ACCESS</div>
+                    <div class="rail-card">Demo Center &rsaquo;</div>
+                    <div class="rail-card">Mission Templates &rsaquo;</div>
+                    <div class="rail-card">Architecture Explorer &rsaquo;</div>
+                    <div class="rail-card">System Health: 99.98% &rsaquo;</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. End-to-End Workflow Capabilities -->
+          <section class="landing-workflow-section">
+            <div class="landing-section-header">
+              <div class="section-title-label">DETERMINISTIC PIPELINE</div>
+              <h2 class="landing-section-title">Authoritative 7-Stage Engineering Graph</h2>
+              <p class="landing-section-sub">Unlike unbounded chatbot loops that loop indefinitely, every ORION mission executes through bounded, verifiable stages.</p>
+            </div>
+            <div class="workflow-cards-grid">
+              <div class="workflow-card">
+                <div class="workflow-card-num">01</div>
+                <h3 class="workflow-card-title">Repository Intelligence</h3>
+                <p class="workflow-card-desc">Extracts AST code graphs, callers, callees, symbol references, and computes exact change blast radius within workspace boundaries.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">02</div>
+                <h3 class="workflow-card-title">Diagnostic Failure Classifier</h3>
+                <p class="workflow-card-desc">Classifies failures across 6 deterministic categories (syntax, assertion, import, timeout, boundary, regression) with non-probabilistic attribution.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">03</div>
+                <h3 class="workflow-card-title">Patch Synthesis &amp; Locks</h3>
+                <p class="workflow-card-desc">Generates syntax-checked unified diffs protected by optimistic SHA-256 concurrency locks preventing drift or unmonitored file mutations.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">04</div>
+                <h3 class="workflow-card-title">Dual-Key Human Gate</h3>
+                <p class="workflow-card-desc">Authoritative approval service verifies human authorization tokens with single-use replay protection before applying high-risk patches.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">05</div>
+                <h3 class="workflow-card-title">Sandboxed Test Execution</h3>
+                <p class="workflow-card-desc">Executes bounded pytest subprocesses with shell=False containment, strict timeouts, and comprehensive exit code analysis.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">06</div>
+                <h3 class="workflow-card-title">Ground-Truth Verification</h3>
+                <p class="workflow-card-desc">VerificationEngine acts as the sole verification authority—agents cannot declare victory; acceptance criteria must be proven.</p>
+              </div>
+              <div class="workflow-card">
+                <div class="workflow-card-num">07</div>
+                <h3 class="workflow-card-title">Cryptographic Certification</h3>
+                <p class="workflow-card-desc">Generates forensic reports with cryptographic evidence ledger provenance, diff summaries, and immutable audit logs.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5. Autonomous Workforce Architecture -->
+          <section class="landing-workforce-section">
+            <div class="landing-section-header">
+              <div class="section-title-label">MULTI-AGENT WORKFORCE</div>
+              <h2 class="landing-section-title">Specialized Technical Specialists</h2>
+              <p class="landing-section-sub">Four distinct roles collaborating under strict policy engine authorization.</p>
+            </div>
+            <div class="workforce-grid">
+              <div class="wf-role-card">
+                <div class="wf-role-badge">SWE SPECIALIST</div>
+                <h3 class="wf-role-name">Autonomous Software Engineer</h3>
+                <p class="wf-role-desc">Specialized in code transformations, bug repairs, refactoring, and AST-valid patch generation. Constrained by write boundaries.</p>
+                <div class="wf-role-perms">Permissions: read_file, propose_patch, format_diff</div>
+              </div>
+              <div class="wf-role-card">
+                <div class="wf-role-badge">DIAGNOSTICS</div>
+                <h3 class="wf-role-name">Diagnostic Investigator</h3>
+                <p class="wf-role-desc">Deep AST analysis, caller/callee graphs, traceback attribution, test collection, and failure taxonomy classifier.</p>
+                <div class="wf-role-perms">Permissions: inspect_ast, trace_symbol, test_scope</div>
+              </div>
+              <div class="wf-role-card">
+                <div class="wf-role-badge">VERIFIER</div>
+                <h3 class="wf-role-name">Authoritative Verifier</h3>
+                <p class="wf-role-desc">Evaluates ground-truth acceptance criteria independently. Untrusted models cannot manipulate verification outcomes.</p>
+                <div class="wf-role-perms">Permissions: run_pytest, evaluate_spec, certify_output</div>
+              </div>
+              <div class="wf-role-card">
+                <div class="wf-role-badge">RECOVERY</div>
+                <h3 class="wf-role-name">Recovery Coordinator</h3>
+                <p class="wf-role-desc">Self-healing supervisor with bounded retry budgets (max 3 attempts, 120s runtime, 2 patches) and non-destructive simulation.</p>
+                <div class="wf-role-perms">Permissions: rollback_diff, simulate_fix, escalate_hitl</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. Footer -->
+          <footer class="landing-footer">
+            <div class="footer-top">
+              <div class="footer-brand">
+                <div class="footer-brand-title">ORION</div>
+                <div class="footer-brand-sub">Certified Autonomous AI Engineering Operating System</div>
+                <p class="footer-brand-copy">Built 100% on standard library. Zero third-party runtime dependencies.</p>
+              </div>
+              <div class="footer-links-group">
+                <div class="footer-group-title">NAVIGATION</div>
+                <button type="button" class="footer-link-btn" id="btnFootLaunch">Mission Command Center</button>
+                <button type="button" class="footer-link-btn" id="btnFootArch">System Architecture</button>
+                <button type="button" class="footer-link-btn" id="btnFootDemo">Demo Center</button>
+                <button type="button" class="footer-link-btn" id="btnFootTour">Guided Tour</button>
+              </div>
+              <div class="footer-links-group">
+                <div class="footer-group-title">RESOURCES</div>
+                <button type="button" class="footer-link-btn" id="btnFootDocs">Product Documentation</button>
+                <button type="button" class="footer-link-btn" id="btnFootPrivacy">Privacy Policy</button>
+                <button type="button" class="footer-link-btn" id="btnFootTerms">Terms &amp; Conditions</button>
+              </div>
+            </div>
+            <div class="footer-bottom">
+              <span>&copy; 2026 ORION Autonomous Engineering. Released under MIT License.</span>
+              <span class="footer-status-pill"><span class="status-dot online"></span> System Healthy &bull; Port 8000</span>
+            </div>
+          </footer>
+
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 8: DOCUMENTATION
+           ===================================================================== -->
+      <div class="view-page" id="viewDocs">
+        <div class="docs-container">
+          <div class="section-header-bar" style="margin-bottom: 24px;">
+            <div>
+              <h1 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px;">ORION Product Documentation</h1>
+              <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Comprehensive architecture, task graphs, API contracts, and security reference.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btnDocsOpenCockpit">Launch Mission Cockpit &rarr;</button>
+          </div>
+
+          <div class="docs-grid">
+            <aside class="docs-nav-card">
+              <div class="docs-nav-title">DOCUMENTATION SECTIONS</div>
+              <a href="#doc-overview" class="docs-nav-link active">1. System Overview</a>
+              <a href="#doc-pipeline" class="docs-nav-link">2. 7-Stage SWE Graph</a>
+              <a href="#doc-workforce" class="docs-nav-link">3. Agent Workforce</a>
+              <a href="#doc-security" class="docs-nav-link">4. 20 Security Invariants</a>
+              <a href="#doc-api" class="docs-nav-link">5. REST API Reference</a>
+              <a href="#doc-cli" class="docs-nav-link">6. Local CLI &amp; Deployment</a>
+            </aside>
+
+            <div class="docs-body-card">
+              <section id="doc-overview">
+                <h2>1. System Overview &amp; Autonomous Architecture</h2>
+                <p>
+                  ORION is an industrial-grade Autonomous AI Software Engineering Operating System. Rather than treating code repair as an open-ended conversational prompt, ORION models engineering work as a deterministic directed acyclic graph (DAG) across verified repository states.
+                </p>
+                <p>
+                  All mutations occur inside strict workspace boundaries, pass through syntax validation, are locked by cryptographic hashes, require dual-key human approval where configured, and must be certified by an independent VerificationEngine authority before being marked complete.
+                </p>
+              </section>
+
+              <section id="doc-pipeline">
+                <h3>2. The Deterministic 7-Stage Engineering Graph</h3>
+                <p>Every engineering mission follows a strictly sequenced state machine:</p>
+                <ul>
+                  <li><strong>Stage 1 (INSPECT_REPOSITORY):</strong> Workspace boundary check, AST parsing, symbol indexation, and test target discovery.</li>
+                  <li><strong>Stage 2 (ANALYZE_FAILURE):</strong> Root-cause taxonomy classifier, traceback isolation, blast radius calculation.</li>
+                  <li><strong>Stage 3 (FORMULATE_FIX):</strong> Context-bounded patch synthesis, unified diff formulation, and AST syntax validation.</li>
+                  <li><strong>Stage 4 (APPROVAL_GATE):</strong> Dual-key human approval check. Verifies single-use cryptographically signed approval token.</li>
+                  <li><strong>Stage 5 (IMPLEMENT_CHANGE):</strong> Controlled file application with SHA-256 hash concurrency verification.</li>
+                  <li><strong>Stage 6 (RUN_TESTS):</strong> Bounded sandboxed pytest runner execution (subprocess with shell=False).</li>
+                  <li><strong>Stage 7 (VERIFY &amp; REPORT):</strong> VerificationEngine evaluates ground-truth acceptance criteria and produces cryptographic certified report.</li>
+                </ul>
+              </section>
+
+              <section id="doc-workforce">
+                <h3>3. Agent Workforce &amp; Role Policies</h3>
+                <p>The ORION workforce comprises four distinct autonomous specialists with least-privilege tool policies:</p>
+                <ul>
+                  <li><strong>SWE Specialist:</strong> Handles code transformations and patch generation within write boundaries.</li>
+                  <li><strong>Diagnostics Agent:</strong> Analyzes AST code structures, symbol references, and error taxonomies.</li>
+                  <li><strong>Verifier Agent:</strong> Authority responsible for independent verification and test evaluation.</li>
+                  <li><strong>Recovery Coordinator:</strong> Manages self-healing bounded recovery loops (capped at 3 attempts, 120s runtime).</li>
+                </ul>
+              </section>
+
+              <section id="doc-security">
+                <h3>4. The 20 Non-Negotiable Security Invariants</h3>
+                <p>ORION enforces 20 formal security invariants:</p>
+                <ul>
+                  <li>Frontend is untrusted; model output is untrusted; repository contents are untrusted.</li>
+                  <li>Arbitrary shell execution is forbidden; shell=False is enforced for all subprocesses.</li>
+                  <li>Workspace containment is mandatory; symlink, UNC, and path traversal escapes are rejected.</li>
+                  <li>Protected files (.git, .env, secrets) are immutable and cannot be modified.</li>
+                  <li>Approval tokens are single-use; replay attacks are cryptographically rejected.</li>
+                  <li>Zero fake telemetry; all SSE streams and status indicators mirror live internal state.</li>
+                </ul>
+              </section>
+
+              <section id="doc-api">
+                <h3>5. REST API Reference</h3>
+                <p>The ORION REST API operates over HTTP on port 8000 with real-time Server-Sent Events (SSE):</p>
+                <div class="docs-code-block">
+# Create a new autonomous mission
+POST /api/v1/missions
+Content-Type: application/json
+
+{
+  "objective": "Diagnose calc.py defect, synthesize fix, execute tests, and verify.",
+  "workspace_path": "C:/Users/LIKITH/ORION",
+  "execution_mode": "controlled"
+}
+
+# Stream real-time mission telemetry
+GET /api/v1/missions/{mission_id}/events
+Accept: text/event-stream
+
+# Dual-Key Human Approval
+POST /api/v1/missions/{mission_id}/approve
+{
+  "token": "SINGLE_USE_CRYPTOGRAPHIC_APPROVAL_TOKEN",
+  "decision": "approve"
+}
+                </div>
+              </section>
+
+              <section id="doc-cli">
+                <h3>6. Local CLI &amp; Deployment</h3>
+                <p>Launch the ORION server and Mission Command Center locally:</p>
+                <div class="docs-code-block">
+# Launch server bound to local workspace
+python -m orion --host 127.0.0.1 --port 8000 --workspace .
+
+# Run full test suite (1,395 tests)
+pytest -q
+
+# Run strict type checking (234 source files)
+mypy src
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 9: PRIVACY POLICY
+           ===================================================================== -->
+      <div class="view-page" id="viewPrivacy">
+        <div class="legal-container">
+          <div class="legal-card">
+            <h1>Privacy Policy</h1>
+            <div class="legal-meta">ORION Platform &bull; Effective Date: October 2026 &bull; Strict Local-Execution Policy</div>
+
+            <h2>1. Local Processing Guarantee</h2>
+            <p>
+              ORION is built as a local, self-contained autonomous software engineering system. All AST analysis, repository file reading, patch synthesis, subprocess test executions, and verification processes occur 100% locally on your designated host machine or private container. No repository code or AST graphs are transmitted to third-party tracking services.
+            </p>
+
+            <h2>2. Telemetry and Analytics Policy</h2>
+            <p>
+              ORION contains zero third-party telemetry libraries, tracking beacons, advertising cookies, or behavioral analytics. All health probes, metrics, and event streams (SSE) are served strictly over the local HTTP server interface for the sole benefit of the operator.
+            </p>
+
+            <h2>3. Automatic Credential &amp; Secret Redaction</h2>
+            <p>
+              Under Security Invariant 12 and Invariant 18, all hardcoded API keys, OAuth tokens, private SSH keys, and contents of protected files (.env, .git) are automatically scrubbed and redacted before any data enters distributed trace spans, unified diffs, or forensic evidence ledgers.
+            </p>
+
+            <h2>4. Workspace Containment &amp; Isolation</h2>
+            <p>
+              Under Security Invariant 6, all filesystem operations are strictly bound to the canonical root of the workspace designated at mission initialization. Path traversal attempts, symlink escapes, UNC paths, and directory boundary breakouts are rejected with immediate failure.
+            </p>
+
+            <div style="margin-top: 32px; display: flex; gap: 10px;">
+              <button type="button" class="btn btn-primary btn-sm" id="btnPrivBackCockpit">Return to Command Center</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnPrivDocs">View Documentation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           PAGE 10: TERMS & CONDITIONS
+           ===================================================================== -->
+      <div class="view-page" id="viewTerms">
+        <div class="legal-container">
+          <div class="legal-card">
+            <h1>Terms &amp; Conditions</h1>
+            <div class="legal-meta">ORION Platform &bull; Version 1.0 &bull; Licensed under the MIT License</div>
+
+            <h2>1. Open Source License &amp; Code Ownership</h2>
+            <p>
+              ORION is licensed under the permissive MIT License. You retain full, exclusive intellectual property ownership of all source code, patches, tests, verification artifacts, and cryptographic reports generated by or processed through the platform.
+            </p>
+
+            <h2>2. Operator Oversight &amp; Dual-Key Approvals</h2>
+            <p>
+              Autonomous code generation involves modifying source repositories. In Controlled Execution Mode, ORION requires explicit human authorization through the dual-key approval gate before applying any patch to disk. The operator assumes full responsibility for reviewing synthesized diffs and approving modifications.
+            </p>
+
+            <h2>3. Non-Destructive Simulation &amp; Rollback Guarantee</h2>
+            <p>
+              ORION's Self-Healing Recovery Coordinator executes patches with transactional hash locks and non-destructive simulations. In the event of a verification failure, changes are rolled back to the pre-patch canonical commit. However, users are strongly advised to run ORION on clean Git branches with committed working trees.
+            </p>
+
+            <h2>4. Safe Termination</h2>
+            <p>
+              Under Security Invariant 15, any unhandled error, corrupted state, or unexpected anomaly terminates execution safely and fails closed immediately.
+            </p>
+
+            <div style="margin-top: 32px; display: flex; gap: 10px;">
+              <button type="button" class="btn btn-primary btn-sm" id="btnTermsBackCockpit">Return to Command Center</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnTermsDocs">View Documentation</button>
+            </div>
+          </div>
+        </div>
+      <!-- =====================================================================
+           PAGE 11: SETTINGS & PLATFORM CONFIGURATION
+           ===================================================================== -->
+      <div class="view-page" id="viewSettings">
+        <div class="settings-container">
+          <div class="settings-header">
+            <h1 class="settings-title">Settings &amp; Platform Configuration</h1>
+            <p class="settings-subtitle">Disciplined runtime parameters, workspace boundary controls, and display preferences.</p>
+          </div>
+
+          <div class="settings-grid">
+            <!-- 1. Workspace Configuration -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2 class="settings-card-title">Workspace Configuration</h2>
+                <span class="badge badge-outline">BOUNDARY ENFORCED</span>
+              </div>
+              <div class="settings-card-body">
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <label for="cfgWorkspaceRoot" class="settings-label">Active Workspace Root</label>
+                    <span class="settings-desc">Base directory containing target software project and test suite.</span>
+                  </div>
+                  <div class="settings-control">
+                    <input type="text" class="form-input code-font" id="cfgWorkspaceRoot" value="." style="max-width: 280px;">
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Path Traversal Boundary</span>
+                    <span class="settings-desc">Prohibits read and write operations outside the designated workspace root.</span>
+                  </div>
+                  <div class="settings-control">
+                    <span class="status-pill status-pill-success">
+                      <span class="status-dot online"></span>
+                      <span>STRICT (Active)</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Default Execution Mode</span>
+                    <span class="settings-desc">Choose initial authorization requirement for newly launched missions.</span>
+                  </div>
+                  <div class="settings-control">
+                    <select class="form-select" id="cfgDefaultExecMode" style="max-width: 220px;">
+                      <option value="controlled" selected>Controlled (HITL Approval Gate)</option>
+                      <option value="autonomous">Autonomous (Automatic Patch Application)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Runtime & Service Information -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2 class="settings-card-title">Runtime &amp; Service Telemetry</h2>
+                <span class="badge badge-outline">VERIFIED RUNTIME</span>
+              </div>
+              <div class="settings-card-body">
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Backend REST API</span>
+                    <span class="settings-desc">FastAPI local application server endpoint.</span>
+                  </div>
+                  <div class="settings-control">
+                    <span class="code-font text-secondary" id="cfgApiEndpoint">http://127.0.0.1:8000/api</span>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Live Event Streaming</span>
+                    <span class="settings-desc">Server-Sent Events (SSE) real-time pipeline feed.</span>
+                  </div>
+                  <div class="settings-control">
+                    <span class="code-font text-secondary">/api/tasks/{taskId}/events</span>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Platform Engine Version</span>
+                    <span class="settings-desc">Autonomous AI Workforce orchestrator version.</span>
+                  </div>
+                  <div class="settings-control">
+                    <span class="code-font text-bronze">ORION Engine v1.0.0 (Production)</span>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Service Health Status</span>
+                    <span class="settings-desc">Verify local API server availability and responsiveness.</span>
+                  </div>
+                  <div class="settings-control" style="display: flex; gap: 10px; align-items: center;">
+                    <span class="status-pill status-pill-success" id="cfgServiceHealthBadge">
+                      <span class="status-dot online"></span>
+                      <span id="cfgServiceHealthText">Healthy (200 OK)</span>
+                    </span>
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnCheckServiceHealth">Check Health</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Display & Accessibility Preferences -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h2 class="settings-card-title">Display &amp; Console Preferences</h2>
+                <span class="badge badge-outline">LOCAL CLIENT</span>
+              </div>
+              <div class="settings-card-body">
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Presentation Mode</span>
+                    <span class="settings-desc">Enlarged typographic scale and high-contrast presentation banner.</span>
+                  </div>
+                  <div class="settings-control">
+                    <label class="toggle-switch-label" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                      <input type="checkbox" id="cfgTogglePresentation">
+                      <span>Enable Presenter</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Reduce Motion</span>
+                    <span class="settings-desc">Disable smooth scrolling and transition animations.</span>
+                  </div>
+                  <div class="settings-control">
+                    <label class="toggle-switch-label" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                      <input type="checkbox" id="cfgToggleReducedMotion">
+                      <span>Reduce Motion</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Dense Tables</span>
+                    <span class="settings-desc">Compact row spacing for evidence and mission tables.</span>
+                  </div>
+                  <div class="settings-control">
+                    <label class="toggle-switch-label" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                      <input type="checkbox" id="cfgToggleDenseTables">
+                      <span>Compact Layout</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-actions-bar" style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" id="btnResetSettings">Reset Defaults</button>
+            <button type="button" class="btn btn-primary" id="btnSaveSettings">Save Preferences</button>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
   <!-- =========================================================================
-       3. MODALS & AUXILIARY CONTROLS (TUCKED AWAY, ACCESSIBLE, NOT CLUTTERED)
+       3. MODALS & OVERLAYS
        ========================================================================= -->
 
   <!-- NEW MISSION MODAL -->
   <div class="modal-backdrop" id="newMissionModal">
-    <div class="modal-dialog panel">
+    <div class="modal-dialog">
       <div class="modal-header">
         <h3 class="modal-title">Initialize Engineering Mission</h3>
         <button type="button" class="modal-close-btn" id="btnNewMissionClose">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- Quick Templates Bar (Matches contract) -->
+        <!-- Quick Templates Bar -->
         <div class="templates-section">
-          <span class="templates-header-label">Quick-Launch Templates:</span>
-          <div class="mission-templates-bar" id="missionTemplatesBar">
-            <button type="button" class="template-chip" data-task="Fix Calculator Addition Offset" data-prompt="Analyze calc.py, repair off-by-one arithmetic subtraction in add(), execute tests/test_calc.py, and verify fix." data-mode="controlled">
-              <span class="chip-dot dot-cyan"></span>Fix Off-By-One Bug
+          <span class="form-label">Quick-Launch Templates:</span>
+          <div class="mission-templates-bar" id="missionTemplatesBar" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+            <button type="button" class="btn btn-secondary btn-xs template-chip" style="justify-content: flex-start;" data-task="Fix Calculator Addition Offset" data-prompt="Analyze calc.py, repair off-by-one arithmetic subtraction in add(), execute tests/test_calc.py, and verify fix." data-mode="controlled">
+              Fix Off-By-One Bug (calc.py)
             </button>
-            <button type="button" class="template-chip" data-task="Resolve Validator Syntax AST Error" data-prompt="Analyze validator.py, resolve missing syntax colon in validate_email regex definition, execute tests/test_validator.py, and verify fix." data-mode="controlled">
-              <span class="chip-dot dot-purple"></span>Fix Syntax Error
+            <button type="button" class="btn btn-secondary btn-xs template-chip" style="justify-content: flex-start;" data-task="Resolve Validator Syntax AST Error" data-prompt="Analyze validator.py, resolve missing syntax colon in validate_email regex definition, execute tests/test_validator.py, and verify fix." data-mode="controlled">
+              Fix Syntax Error (validator.py)
             </button>
-            <button type="button" class="template-chip" data-task="Repair Cache Expiration Check" data-prompt="Diagnose SimpleCache TTL expiration regression in cache.py, synthesize TTL fix, execute regression test suite, and verify authoritative status." data-mode="controlled">
-              <span class="chip-dot dot-amber"></span>Diagnose Regression
+            <button type="button" class="btn btn-secondary btn-xs template-chip" style="justify-content: flex-start;" data-task="Repair Cache Expiration Check" data-prompt="Diagnose SimpleCache TTL expiration regression in cache.py, synthesize TTL fix, execute regression test suite, and verify authoritative status." data-mode="controlled">
+              Diagnose Regression (cache.py)
             </button>
-            <button type="button" class="template-chip" data-task="Enforce Path Traversal Boundary" data-prompt="Audit sanitize_path in storage.py, enforce strict boundary guard against directory traversal attacks, require policy approval, and verify." data-mode="controlled">
-              <span class="chip-dot dot-rose"></span>Security-Sensitive Task
+            <button type="button" class="btn btn-secondary btn-xs template-chip" style="justify-content: flex-start;" data-task="Enforce Path Traversal Boundary" data-prompt="Audit sanitize_path in storage.py, enforce strict boundary guard against directory traversal attacks, require policy approval, and verify." data-mode="controlled">
+              Security-Sensitive Guardrail
             </button>
-            <button type="button" class="template-chip" data-task="Autonomous Self-Healing Recovery" data-prompt="Execute self-healing task with bounded retries: parse_config whitespace bug, isolate assertion failure, trigger recovery retry, and verify." data-mode="controlled">
-              <span class="chip-dot dot-emerald"></span>Self-Healing Recovery
+            <button type="button" class="btn btn-secondary btn-xs template-chip" style="justify-content: flex-start;" data-task="Autonomous Self-Healing Recovery" data-prompt="Execute self-healing task with bounded retries: parse_config whitespace bug, isolate assertion failure, trigger recovery retry, and verify." data-mode="controlled">
+              Self-Healing Recovery
             </button>
           </div>
         </div>
 
-        <!-- Command Center Form (Matches contract) -->
+        <!-- Command Center Form -->
         <form id="commandCenterForm" class="command-form">
           <div class="form-group">
             <label for="taskInputPrompt" class="form-label">Engineering Directive / Objective</label>
             <textarea id="taskInputPrompt" class="form-textarea" rows="4" placeholder="Describe the bug, feature, or security guardrail to implement..." required></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-group flex-1">
+          <div class="form-row" style="display: flex; gap: 12px;">
+            <div class="form-group" style="flex: 1;">
               <label for="workspaceInputPath" class="form-label">Workspace Path</label>
               <input type="text" id="workspaceInputPath" class="form-input" value="." required>
             </div>
@@ -1015,7 +1840,7 @@
               </select>
             </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer" style="margin: 0 -20px -22px; padding: 14px 20px;">
             <button type="button" class="btn btn-secondary" id="btnNewMissionCancel">Cancel</button>
             <button type="submit" class="btn btn-primary" id="btnSubmitTask">Launch Mission &rarr;</button>
           </div>
@@ -1026,16 +1851,16 @@
 
   <!-- DUAL-KEY APPROVAL MODAL -->
   <div class="modal-backdrop" id="approvalModalBackdrop">
-    <div class="modal-dialog panel" style="max-width: 760px;">
+    <div class="modal-dialog" style="max-width: 760px;">
       <div class="modal-header">
         <h3 class="modal-title">Review Patch Proposal // Dual-Key Approval</h3>
         <button type="button" class="modal-close-btn" id="modalApprovalCloseBtn">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="modal-desc">Inspect proposed code diff before permitting physical disk write into repository workspace.</p>
-        <pre class="diff-code-block modal-diff" id="modalApprovalDiff">No pending diff.</pre>
+        <p style="font-size: 12.5px; color: var(--text-secondary);">Inspect proposed code diff before permitting physical disk write into repository workspace.</p>
+        <pre class="diff-code-block modal-diff" id="modalApprovalDiff" style="background: var(--bg-page); padding: 12px; border-radius: var(--radius-md); max-height: 380px; overflow-y: auto;">No pending diff.</pre>
         <form id="approvalDecisionForm" style="display: none;"></form>
-        <div class="modal-footer">
+        <div class="modal-footer" style="margin: 0 -20px -22px; padding: 14px 20px;">
           <button type="button" class="btn btn-danger" id="btnModalDeny">Deny Patch</button>
           <button type="button" class="btn btn-primary" id="btnModalApprove">Approve &amp; Apply Patch</button>
         </div>
@@ -1043,69 +1868,67 @@
     </div>
   </div>
 
-  <!-- DEMO & PRESENTATION TOOLS MODAL / DRAWER -->
+  <!-- DEMO & PRESENTATION TOOLS MODAL -->
   <div class="modal-backdrop" id="demoToolsModal">
-    <div class="modal-dialog panel" style="max-width: 900px;">
+    <div class="modal-dialog" style="max-width: 900px;">
       <div class="modal-header">
-        <div class="modal-header-left">
+        <div class="modal-header-left" style="display: flex; align-items: center; gap: 10px;">
           <h3 class="modal-title">Demonstration &amp; Presentation Center</h3>
           <span class="badge badge-outline">INTERVIEW / DEMO READY</span>
         </div>
         <button type="button" class="modal-close-btn" id="btnDemoToolsClose">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- Replay Scrubber (Contract: timelineReplayBar) -->
-        <div class="replay-bar-wrapper" id="timelineReplayBar">
-          <div class="replay-header">
-            <span>Timeline Replay Scrubber</span>
-            <span class="replay-step-badge" id="replayStepCounter">Step 0/0</span>
+        <!-- Replay Scrubber -->
+        <div class="replay-bar-wrapper" id="timelineReplayBar" style="background: var(--surface-secondary); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div class="replay-header" style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+            <span style="font-weight: 600;">Timeline Replay Scrubber</span>
+            <span class="badge badge-cyan" id="replayStepCounter">Step 0/0</span>
           </div>
-          <div class="replay-controls">
+          <div class="replay-controls" style="display: flex; align-items: center; gap: 10px;">
             <button type="button" class="btn btn-secondary btn-xs" id="btnReplayPrev">&larr; Prev</button>
-            <input type="range" class="replay-slider" id="timelineReplayScrubber" min="0" max="10" value="0">
+            <input type="range" class="replay-slider" id="timelineReplayScrubber" min="0" max="10" value="0" style="flex: 1;">
             <button type="button" class="btn btn-secondary btn-xs" id="btnReplayNext">Next &rarr;</button>
             <button type="button" class="btn btn-secondary btn-xs" id="btnReplayLive">Live Stream</button>
           </div>
         </div>
 
-        <!-- Demo Center & Player (Contract: tab-demo) -->
+        <!-- Demo Center & Player -->
         <div class="demo-player-section" id="tab-demo">
-          <div class="demo-scenarios-bar" id="demoScenariosGrid">
-            <!-- Dynamically populated or pre-set -->
-            <button type="button" class="demo-scenario-btn active" data-scenario="SWE-BUG-001">SWE-BUG-001 (Math Fix)</button>
-            <button type="button" class="demo-scenario-btn" data-scenario="SWE-SYN-001">SWE-SYN-001 (Syntax AST)</button>
-            <button type="button" class="demo-scenario-btn" data-scenario="SWE-REG-001">SWE-REG-001 (Regression)</button>
-            <button type="button" class="demo-scenario-btn" data-scenario="SWE-SEC-001">SWE-SEC-001 (Security)</button>
-            <button type="button" class="demo-scenario-btn" data-scenario="SWE-REC-001">SWE-REC-001 (Self-Healing)</button>
+          <div class="demo-scenarios-bar" id="demoScenariosGrid" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-xs demo-scenario-btn active" data-scenario="SWE-BUG-001">SWE-BUG-001 (Math Fix)</button>
+            <button type="button" class="btn btn-secondary btn-xs demo-scenario-btn" data-scenario="SWE-SYN-001">SWE-SYN-001 (Syntax AST)</button>
+            <button type="button" class="btn btn-secondary btn-xs demo-scenario-btn" data-scenario="SWE-REG-001">SWE-REG-001 (Regression)</button>
+            <button type="button" class="btn btn-secondary btn-xs demo-scenario-btn" data-scenario="SWE-SEC-001">SWE-SEC-001 (Security)</button>
+            <button type="button" class="btn btn-secondary btn-xs demo-scenario-btn" data-scenario="SWE-REC-001">SWE-REC-001 (Self-Healing)</button>
           </div>
 
-          <div class="demo-controls-row">
-            <div class="demo-buttons">
-              <button type="button" class="btn btn-primary btn-xs" id="btnDemoPlay">Play ▶</button>
-              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoRestart">Restart ↺</button>
+          <div class="demo-controls-row" style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px;">
+            <div class="demo-buttons" style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-primary btn-xs" id="btnDemoPlay"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Play</button>
+              <button type="button" class="btn btn-secondary btn-xs" id="btnDemoRestart"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>Restart</button>
               <button type="button" class="btn btn-secondary btn-xs" id="btnDemoPrevStage">&larr; Prev Stage</button>
               <button type="button" class="btn btn-secondary btn-xs" id="btnDemoNextStage">Next Stage &rarr;</button>
               <button type="button" class="btn btn-secondary btn-xs" id="btnDemoRunReal">Run as Real Mission &rarr;</button>
             </div>
-            <div class="demo-speed">
-              <span>Speed:</span>
-              <select id="demoSpeedSelect" class="form-select-sm">
+            <div class="demo-speed" style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+              <span class="text-dim">Speed:</span>
+              <select id="demoSpeedSelect" class="form-select" style="padding: 2px 6px; font-size: 11px;">
                 <option value="1">1x</option>
                 <option value="2">2x</option>
               </select>
             </div>
           </div>
 
-          <input type="range" class="demo-scrubber" id="demoScrubber" min="0" max="7" value="1">
-          <div class="demo-track" id="demoTimelineTrack"></div>
-          <div class="demo-viewport panel" id="demoStageViewport">
-            <!-- FROZEN DEMO / DEMONSTRATION SCENARIO (contract text) -->
-            <div class="demo-viewport-banner">DEMONSTRATION SCENARIO // FROZEN DEMO</div>
-            <pre class="demo-output-code" id="demoViewportContent">Select a demonstration scenario above to preview full execution trace.</pre>
+          <input type="range" class="demo-scrubber" id="demoScrubber" min="0" max="7" value="1" style="display: none;">
+          <div class="demo-track" id="demoTimelineTrack" style="display: none;"></div>
+          <div class="demo-viewport panel" id="demoStageViewport" style="margin-top: 12px; background: var(--bg-page);">
+            <div class="badge badge-amber" style="margin-bottom: 8px;">DEMONSTRATION SCENARIO // FROZEN DEMO</div>
+            <pre class="demo-output-code" id="demoViewportContent" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px; max-height: 280px; overflow-y: auto;">Select a demonstration scenario above to preview full execution trace.</pre>
           </div>
         </div>
 
-        <div class="demo-tools-footer">
+        <div class="demo-tools-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
           <button type="button" class="btn btn-secondary btn-sm" id="btnLaunchTourModal">Guided Product Tour</button>
           <button type="button" class="btn btn-secondary btn-sm" id="btnTogglePresenterModal">Presentation Mode (P)</button>
           <button type="button" class="btn btn-secondary btn-sm" id="btnOpenArchModal">Architecture Explorer</button>
@@ -1116,16 +1939,14 @@
 
   <!-- ARCHITECTURE EXPLORER MODAL -->
   <div class="modal-backdrop" id="architectureModal">
-    <div class="modal-dialog panel" style="max-width: 960px;">
+    <div class="modal-dialog" style="max-width: 960px;">
       <div class="modal-header">
         <h3 class="modal-title">ORION Subsystem Architecture Explorer</h3>
         <button type="button" class="modal-close-btn" id="btnArchClose">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="arch-flow" id="archPipelineFlow">
-          <!-- Flow steps -->
-        </div>
-        <div class="arch-detail panel" id="archDetailPanel">
+        <div class="arch-flow" id="archPipelineFlow" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;"></div>
+        <div class="arch-detail panel" id="archDetailPanel" style="background: var(--surface-secondary);">
           <div class="empty-state">Select an architectural subsystem above to inspect specifications.</div>
         </div>
       </div>
@@ -1133,34 +1954,36 @@
   </div>
 
   <!-- GUIDED PRODUCT TOUR CARD -->
-  <div class="product-tour-card panel" id="productTourCard" style="display: none;">
-    <div class="tour-header">
+  <div class="product-tour-card panel" id="productTourCard" style="display: none; position: fixed; bottom: 30px; left: 280px; z-index: 1500; width: 380px; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+    <div class="tour-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
       <span class="badge badge-cyan" id="tourStepBadge">STEP 1 OF 10</span>
-      <h4 class="tour-title" id="tourTitle">Mission Command Center</h4>
-      <button type="button" class="tour-close-btn" id="btnTourClose">&times;</button>
+      <h4 class="tour-title" id="tourTitle" style="font-size: 13px; font-weight: 600;">Mission Command Center</h4>
+      <button type="button" class="tour-close-btn" id="btnTourClose" style="color: var(--text-muted);">&times;</button>
     </div>
-    <div class="tour-body">
-      <p class="tour-description" id="tourDescription">The Mission Command Center is ORION's primary directive console where you submit natural-language engineering tasks.</p>
+    <div class="tour-body" style="margin-bottom: 12px;">
+      <p class="tour-description" id="tourDescription" style="font-size: 12px; color: var(--text-secondary);">The Mission Command Center is ORION's primary directive console where you submit natural-language engineering tasks.</p>
     </div>
-    <div class="tour-footer">
+    <div class="tour-footer" style="display: flex; justify-content: space-between; align-items: center;">
       <button type="button" class="btn btn-secondary btn-xs" id="btnTourSkip">Skip</button>
-      <div class="tour-buttons">
+      <div class="tour-buttons" style="display: flex; gap: 6px;">
         <button type="button" class="btn btn-secondary btn-xs" id="btnTourPrev">&larr; Back</button>
         <button type="button" class="btn btn-primary btn-xs" id="btnTourNext">Next &rarr;</button>
       </div>
     </div>
   </div>
 
-  <!-- PRESENTATION MODE FLOATING BANNER -->
-  <div class="presentation-banner" id="presentationBanner" style="display: none;">
-    <div class="pres-brand">ORION // PRESENTATION MODE</div>
-    <div class="pres-sub">High-Legibility Demonstration Console &bull; Press [P] or Esc to exit</div>
+  <!-- PRESENTATION MODE BANNER -->
+  <div class="presentation-banner" id="presentationBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: var(--surface-elevated); border-bottom: 1px solid var(--border-accent); padding: 8px 24px; z-index: 2000; align-items: center; justify-content: space-between;">
+    <div>
+      <span style="font-weight: 700; color: var(--color-blue-bright); letter-spacing: 0.06em;">ORION // PRESENTATION MODE</span>
+      <span style="font-size: 11px; color: var(--text-muted); margin-left: 12px;">High-Legibility Demonstration Console &bull; Press [P] or Esc to exit</span>
+    </div>
     <button type="button" class="btn btn-secondary btn-xs" id="btnExitPresentation">Exit Presenter (Esc)</button>
   </div>
 
-  <!-- COMMAND PALETTE MODAL (Ctrl+K) -->
+  <!-- COMMAND PALETTE (Ctrl+K) -->
   <div class="modal-backdrop" id="commandPaletteBackdrop">
-    <div class="command-palette-modal panel" id="commandPaletteModal">
+    <div class="command-palette-modal" id="commandPaletteModal">
       <div class="cp-search-row">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <input type="text" class="cp-input" id="commandPaletteInput" placeholder="Type a view or command (Overview, Missions, Evidence, Graph)...">
@@ -1173,7 +1996,7 @@
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Retained auxiliary buttons for contract compatibility -->
+  <!-- Auxiliary contract elements for backward compatibility -->
   <div style="display: none;">
     <button id="btnEnterOrion"></button>
     <button id="btnIntroDemo"></button>
@@ -1205,6 +2028,8 @@
     <div id="agentDiagnostics"></div>
     <div id="agentVerifier"></div>
     <div id="agentRecovery"></div>
+    <span id="engineUptime">Active</span>
+    <span id="activeMissionsCount">0</span>
   </div>
 
   <script src="/static/app.js"></script>

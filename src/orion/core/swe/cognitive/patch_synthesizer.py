@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from orion.config.model_config import ModelConfig
@@ -16,9 +17,11 @@ from orion.core.swe.cognitive.errors import (
 from orion.core.swe.cognitive.patch_contracts import PatchProposal
 from orion.core.swe.cognitive.patch_validator import PatchValidator
 from orion.core.workspace.models import ExecutionIdentity, Workspace
-from orion.models.context.assembler import ContextAssembler
 from orion.models.errors import sanitize_error_message
 from orion.models.runtime.runtime import ModelRuntime
+
+if TYPE_CHECKING:
+    from orion.models.context.assembler import ContextAssembler
 
 PATCH_FORMAT_INSTRUCTIONS = """Respond strictly with a valid JSON object matching this schema:
 {
@@ -59,7 +62,12 @@ class PatchSynthesizer:
         self._runtime = model_runtime
         self._config = model_config
         self._workspace = workspace
-        self._assembler = context_assembler or ContextAssembler()
+        if context_assembler is not None:
+            self._assembler = context_assembler
+        else:
+            from orion.models.context.assembler import ContextAssembler
+
+            self._assembler = ContextAssembler()
         self._validator = validator or PatchValidator()
 
     @property
