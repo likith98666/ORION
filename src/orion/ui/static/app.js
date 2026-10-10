@@ -4482,20 +4482,36 @@ Verification: VERIFIED_SUCCESS`,
         const recVal = document.getElementById('evalBarRecVal');
         const safeVal = document.getElementById('evalBarSafeVal');
 
-        if (evalBarPass1Fill && runList.length > 0) {
-          const first = runList[0];
-          const m = first.metrics || {};
-          const p1 = m.mission_success_rate !== undefined ? m.mission_success_rate : 0.85;
-          const rec = m.recovery_success_rate !== undefined ? m.recovery_success_rate : 0.75;
-          const safe = m.safe_termination_rate !== undefined ? m.safe_termination_rate : 0.95;
+        if (evalBarPass1Fill) {
+          if (runList.length > 0) {
+            const first = runList[0];
+            const m = first.metrics || {};
+            const p1 = (m.mission && m.mission.mission_success_rate !== undefined)
+              ? m.mission.mission_success_rate
+              : (m.mission_success_rate !== undefined ? m.mission_success_rate : 0);
+            const rec = (m.recovery && m.recovery.recovery_success_rate !== undefined)
+              ? m.recovery.recovery_success_rate
+              : (m.recovery_success_rate !== undefined ? m.recovery_success_rate : 0);
+            const safe = (m.mission && m.mission.safe_termination_rate !== undefined)
+              ? m.mission.safe_termination_rate
+              : (m.safe_termination_rate !== undefined ? m.safe_termination_rate : 0);
 
-          if (p1Val) p1Val.textContent = `${(p1 * 100).toFixed(1)}%`;
-          if (recVal) recVal.textContent = `${(rec * 100).toFixed(1)}%`;
-          if (safeVal) safeVal.textContent = `${(safe * 100).toFixed(1)}%`;
+            if (p1Val) p1Val.textContent = `${(p1 * 100).toFixed(1)}%`;
+            if (recVal) recVal.textContent = `${(rec * 100).toFixed(1)}%`;
+            if (safeVal) safeVal.textContent = `${(safe * 100).toFixed(1)}%`;
 
-          evalBarPass1Fill.style.transform = `scaleX(${Math.max(0, Math.min(1, p1))})`;
-          evalBarRecFill.style.transform = `scaleX(${Math.max(0, Math.min(1, rec))})`;
-          evalBarSafeFill.style.transform = `scaleX(${Math.max(0, Math.min(1, safe))})`;
+            evalBarPass1Fill.style.transform = `scaleX(${Math.max(0, Math.min(1, p1))})`;
+            evalBarRecFill.style.transform = `scaleX(${Math.max(0, Math.min(1, rec))})`;
+            evalBarSafeFill.style.transform = `scaleX(${Math.max(0, Math.min(1, safe))})`;
+          } else {
+            if (p1Val) p1Val.textContent = '--';
+            if (recVal) recVal.textContent = '--';
+            if (safeVal) safeVal.textContent = '--';
+
+            evalBarPass1Fill.style.transform = 'scaleX(0)';
+            evalBarRecFill.style.transform = 'scaleX(0)';
+            evalBarSafeFill.style.transform = 'scaleX(0)';
+          }
         }
       }
     } catch (e) {
@@ -4514,9 +4530,12 @@ Verification: VERIFIED_SUCCESS`,
         list.forEach(r => {
           const m = r.metrics || {};
           const row = document.createElement('tr');
-          const succRate = m.mission_success_rate !== undefined ? `${(m.mission_success_rate * 100).toFixed(1)}%` : '--';
-          const recRate = m.recovery_success_rate !== undefined ? `${(m.recovery_success_rate * 100).toFixed(1)}%` : '--';
-          const safeRate = m.safe_termination_rate !== undefined ? `${(m.safe_termination_rate * 100).toFixed(1)}%` : '--';
+          const p1 = (m.mission && m.mission.mission_success_rate !== undefined) ? m.mission.mission_success_rate : m.mission_success_rate;
+          const rec = (m.recovery && m.recovery.recovery_success_rate !== undefined) ? m.recovery.recovery_success_rate : m.recovery_success_rate;
+          const safe = (m.mission && m.mission.safe_termination_rate !== undefined) ? m.mission.safe_termination_rate : m.safe_termination_rate;
+          const succRate = p1 !== undefined ? `${(p1 * 100).toFixed(1)}%` : '--';
+          const recRate = rec !== undefined ? `${(rec * 100).toFixed(1)}%` : '--';
+          const safeRate = safe !== undefined ? `${(safe * 100).toFixed(1)}%` : '--';
           const p90 = m.latency_p90_seconds !== undefined ? `${m.latency_p90_seconds.toFixed(2)}s` : '--';
           const cost = m.total_cost_usd !== undefined ? `$${m.total_cost_usd.toFixed(4)}` : '$0.0000';
 

@@ -624,4 +624,3 @@ def test_static_assets_exempt_from_rate_limit(running_server):
         req = Request(f"{base_url}/static/app.css")
         with urlopen(req) as resp:
             assert resp.status == HTTPStatus.OK
-

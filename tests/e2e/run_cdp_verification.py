@@ -265,9 +265,57 @@ def main():
             landing_size = client.capture_screenshot(OUTPUT_DIR / "landing_view.png")
             print(f"Saved ui_snapshot/landing_view.png ({landing_size} bytes)")
 
+            # Document Fonts verification (Part C)
+            print("Verifying document.fonts loading status...")
+            fonts_info = client.eval_js("""
+                Promise.all(Array.from(document.fonts).map(f => f.load())).then(() => {
+                    const list = [];
+                    document.fonts.forEach(f => {
+                        list.push({
+                            family: f.family,
+                            weight: f.weight,
+                            style: f.style,
+                            status: f.status
+                        });
+                    });
+                    return {
+                        status: document.fonts.status,
+                        count: document.fonts.size,
+                        all_loaded: list.every(f => f.status === 'loaded'),
+                        orbitron_check: document.fonts.check("16px Orbitron"),
+                        jetbrains_check: document.fonts.check("14px 'JetBrains Mono'"),
+                        fonts: list
+                    };
+                })
+            """)
+            f_status = fonts_info.get("status")
+            f_count = fonts_info.get("count")
+            print(f"document.fonts status: {f_status}, count: {f_count}")
+            print(f"Orbitron font check: {fonts_info.get('orbitron_check')}")
+            print(f"JetBrains Mono font check: {fonts_info.get('jetbrains_check')}")
+            print(f"All declared fonts loaded: {fonts_info.get('all_loaded')}")
+            for f in fonts_info.get("fonts", []):
+                fam, wt = f.get("family"), f.get("weight")
+                st, stat = f.get("style"), f.get("status")
+                print(f"  - {fam} (weight {wt}, {st}): {stat}")
+
+            # Strict Part C assertions
+            assert fonts_info.get("all_loaded") is True, (
+                f"All declared fonts must be loaded, got: {fonts_info}"
+            )
+            assert fonts_info.get("orbitron_check") is True, (
+                "Orbitron font must be loaded in document.fonts"
+            )
+            assert fonts_info.get("jetbrains_check") is True, (
+                "JetBrains Mono font must be loaded in document.fonts"
+            )
+            assert len(external_requests) == 0, f"Found external requests: {external_requests}"
+            assert len(console_errors) == 0, f"Found console errors: {console_errors}"
+
             summary = {
                 "page_finished_loading": ready_state == "complete",
                 "title": title,
+                "document_fonts": fonts_info,
                 "console_errors_count": len(console_errors),
                 "console_errors": console_errors,
                 "total_network_requests": len(all_requests),

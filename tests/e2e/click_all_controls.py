@@ -45,9 +45,7 @@ class CDPClient:
         self._sock.sendall(handshake.encode("utf-8"))
         resp = self._sock.recv(2048)
         if b"101 " not in resp:
-            raise ConnectionError(
-                f"WebSocket handshake failed: {resp.decode('utf-8', 'ignore')}"
-            )
+            raise ConnectionError(f"WebSocket handshake failed: {resp.decode('utf-8', 'ignore')}")
 
     def close(self):
         try:
@@ -103,23 +101,21 @@ class CDPClient:
                     p = msg.get("params", {})
                     if p.get("type") in ("error", "assert"):
                         args = p.get("args", [])
-                        text = " ".join(
-                            str(a.get("value", a.get("description", ""))) for a in args
-                        )
+                        text = " ".join(str(a.get("value", a.get("description", ""))) for a in args)
                         self.console_errors.append(text)
                 elif method == "Log.entryAdded":
                     entry = msg.get("params", {}).get("entry", {})
                     if entry.get("level") == "error":
-                        self.console_errors.append(
-                            f"[{entry.get('source')}] {entry.get('text')}"
-                        )
+                        self.console_errors.append(f"[{entry.get('source')}] {entry.get('text')}")
                 elif method == "Network.responseReceived":
                     resp = msg.get("params", {}).get("response", {})
-                    self.network_events.append({
-                        "url": resp.get("url"),
-                        "status": resp.get("status"),
-                        "mime": resp.get("mimeType"),
-                    })
+                    self.network_events.append(
+                        {
+                            "url": resp.get("url"),
+                            "status": resp.get("status"),
+                            "mime": resp.get("mimeType"),
+                        }
+                    )
             return msg
         except Exception:
             return None
@@ -225,9 +221,7 @@ def main():
             # 2. RUN REAL MISSION JOURNEY END-TO-END THROUGH UI
             print("\n--- Running Real Mission Journey Through UI ---")
             client.clear_events()
-            prompt = (
-                "Autonomous Verification: repair off-by-one arithmetic in add() and run pytest"
-            )
+            prompt = "Autonomous Verification: repair off-by-one arithmetic in add() and run pytest"
             client.eval_js(f"""
                 document.getElementById('taskInputPrompt').value = '{prompt}';
                 document.getElementById('workspaceInputPath').value = '.';
@@ -301,14 +295,16 @@ def main():
             r_verd = (
                 "PASS" if replay_click_res.get("found") and not client.console_errors else "FAIL"
             )
-            results.append({
-                "control": "btnReplayMission",
-                "action": "Click (Toggle Replay Mode)",
-                "request": replay_req_str,
-                "result": f"Replay bar visible: {r_vis}, Button: '{r_btn}'",
-                "console_error": r_err,
-                "verdict": r_verd,
-            })
+            results.append(
+                {
+                    "control": "btnReplayMission",
+                    "action": "Click (Toggle Replay Mode)",
+                    "request": replay_req_str,
+                    "result": f"Replay bar visible: {r_vis}, Button: '{r_btn}'",
+                    "console_error": r_err,
+                    "verdict": r_verd,
+                }
+            )
 
             # Test Replay Controls: Next, Prev, Exit
             client.clear_events()
@@ -319,14 +315,16 @@ def main():
             time.sleep(0.3)
             client.drain(0.3)
             nxt_err = "None" if not client.console_errors else str(client.console_errors)
-            results.append({
-                "control": "btnMissionReplayNext",
-                "action": "Click (Step Next Event)",
-                "request": "Internal scrubber step",
-                "result": "Timeline scrubber advanced",
-                "console_error": nxt_err,
-                "verdict": "PASS" if not client.console_errors else "FAIL",
-            })
+            results.append(
+                {
+                    "control": "btnMissionReplayNext",
+                    "action": "Click (Step Next Event)",
+                    "request": "Internal scrubber step",
+                    "result": "Timeline scrubber advanced",
+                    "console_error": nxt_err,
+                    "verdict": "PASS" if not client.console_errors else "FAIL",
+                }
+            )
 
             client.clear_events()
             exit_scrub = (
@@ -339,14 +337,16 @@ def main():
                 "document.getElementById('missionReplayBar').style.display === 'none'"
             )
             ex_err = "None" if not client.console_errors else str(client.console_errors)
-            results.append({
-                "control": "btnExitMissionReplay",
-                "action": "Click (Exit Replay Mode)",
-                "request": "Internal mode reset",
-                "result": f"Replay bar hidden: {bar_after_exit}",
-                "console_error": ex_err,
-                "verdict": "PASS" if bar_after_exit and not client.console_errors else "FAIL",
-            })
+            results.append(
+                {
+                    "control": "btnExitMissionReplay",
+                    "action": "Click (Exit Replay Mode)",
+                    "request": "Internal mode reset",
+                    "result": f"Replay bar hidden: {bar_after_exit}",
+                    "console_error": ex_err,
+                    "verdict": "PASS" if bar_after_exit and not client.console_errors else "FAIL",
+                }
+            )
 
             # 4. TEST ALL NAVIGATION VIEWS
             nav_views = [
@@ -386,14 +386,16 @@ def main():
                 )
                 has_err = len(client.console_errors) > 0
                 passed = click_res.get("found") and click_res.get("isActive") and not has_err
-                results.append({
-                    "control": f"#{nav_id} ({view_name})",
-                    "action": f"Click (Switch to {view_name})",
-                    "request": f"{net_req} ({net_status})",
-                    "result": f"View #{target_id} active: {click_res.get('isActive')}",
-                    "console_error": "None" if not has_err else str(client.console_errors),
-                    "verdict": "PASS" if passed else "FAIL",
-                })
+                results.append(
+                    {
+                        "control": f"#{nav_id} ({view_name})",
+                        "action": f"Click (Switch to {view_name})",
+                        "request": f"{net_req} ({net_status})",
+                        "result": f"View #{target_id} active: {click_res.get('isActive')}",
+                        "console_error": "None" if not has_err else str(client.console_errors),
+                        "verdict": "PASS" if passed else "FAIL",
+                    }
+                )
 
             # 5. TEST MISSION DETAIL TABS
             client.eval_js("if (window.switchView) window.switchView('mission-detail');")
@@ -427,22 +429,22 @@ def main():
                 """)
                 time.sleep(0.4)
                 client.drain(0.4)
-                net_req = (
-                    client.network_events[0]["url"] if client.network_events else "Local Tab"
-                )
+                net_req = client.network_events[0]["url"] if client.network_events else "Local Tab"
                 net_status = (
                     str(client.network_events[0]["status"]) if client.network_events else "200"
                 )
                 has_err = len(client.console_errors) > 0
                 passed = click_res.get("found") and click_res.get("isVisible") and not has_err
-                results.append({
-                    "control": f"Tab: {tab_name}",
-                    "action": f"Click (Open {tab_name} pane)",
-                    "request": f"{net_req} ({net_status})",
-                    "result": f"Pane #{pane_id} active: {click_res.get('isVisible')}",
-                    "console_error": "None" if not has_err else str(client.console_errors),
-                    "verdict": "PASS" if passed else "FAIL",
-                })
+                results.append(
+                    {
+                        "control": f"Tab: {tab_name}",
+                        "action": f"Click (Open {tab_name} pane)",
+                        "request": f"{net_req} ({net_status})",
+                        "result": f"Pane #{pane_id} active: {click_res.get('isVisible')}",
+                        "console_error": "None" if not has_err else str(client.console_errors),
+                        "verdict": "PASS" if passed else "FAIL",
+                    }
+                )
 
             # 6. TEST ACTION BUTTONS
             action_buttons = [
@@ -478,14 +480,16 @@ def main():
                     net_str = "Local handler"
                 has_err = len(client.console_errors) > 0
                 passed = click_res.get("found") and not has_err
-                results.append({
-                    "control": f"#{btn_id}",
-                    "action": act_desc,
-                    "request": net_str,
-                    "result": exp_res,
-                    "console_error": "None" if not has_err else str(client.console_errors),
-                    "verdict": "PASS" if passed else "FAIL",
-                })
+                results.append(
+                    {
+                        "control": f"#{btn_id}",
+                        "action": act_desc,
+                        "request": net_str,
+                        "result": exp_res,
+                        "console_error": "None" if not has_err else str(client.console_errors),
+                        "verdict": "PASS" if passed else "FAIL",
+                    }
+                )
 
             # PRINT SUMMARY TABLE
             print("\n=== STEP 2 CONTROLS VERIFICATION TABLE ===")
@@ -493,7 +497,11 @@ def main():
             print("| :--- | :--- | :--- | :--- | :--- |")
             for r in results:
                 ctrl, act, req_s, res_s, verd = (
-                    r["control"], r["action"], r["request"], r["result"], r["verdict"]
+                    r["control"],
+                    r["action"],
+                    r["request"],
+                    r["result"],
+                    r["verdict"],
                 )
                 print(f"| `{ctrl}` | {act} | {req_s} | {res_s} | **{verd}** |")
 

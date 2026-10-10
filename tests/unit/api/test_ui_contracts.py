@@ -559,9 +559,7 @@ def test_state_driven_animation_contracts():
     # - eventSlideIn -> real-time SSE arrival in appendTimelineEvent(..., true)
     # - toastIn -> real user-facing notification in showToast()
     state_hooks = {
-        "viewFadeIn": (
-            "viewFadeIn" in app_css and "switchView" in app_js
-        ),
+        "viewFadeIn": ("viewFadeIn" in app_css and "switchView" in app_js),
         "healthPulse": (
             "healthPulse" in app_css and "health-pulse" in app_js and "/api/v1/health" in app_js
         ),
@@ -619,4 +617,3 @@ def test_state_driven_animation_contracts():
     assert "evalBarPass1Fill" in app_js
     assert "evalBarPass1Fill.style.transform" in app_js
     assert "budgetBarAttempts.style.transform" in app_js
-
