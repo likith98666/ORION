@@ -79,6 +79,6 @@ Success: no issues found in 235 source files
 ```
 
 ### 5. Phase 0 Commit & Formatting
-- **Hygiene & UI Baseline Commit**: Pending below.
-- **Ruff Format Commit**: Pending below.
-- **Remaining Blockers**: None. Ready for Phase 1.
+- **Hygiene & UI Baseline Commit**: `656c960` (`Phase 0: Baseline hygiene, UI redesign, and procedural canvas visual`)
+- **Ruff Format Commit**: `ecb097a` (`Phase 0: Run ruff format on src and tests`)
+- **Remaining Blockers**: None. Phase 0 complete and all quality gates green. Ready for Phase 1.
