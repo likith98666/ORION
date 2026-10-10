@@ -196,4 +196,57 @@ Success: no issues found in 235 source files
 - **Phase 2 Commit**: `12f6e1a` (`Phase 2: Security threat model, negative verification suite, and API hardening`)
 - **Remaining Blockers**: None. Phase 2 complete and fully verified. Ready for Phase 3.
 
+---
+
+## PHASE 3: EVIDENCE OF QUALITY
+
+### 1. 10-Task Reproducible Benchmark Suite (`v1`)
+Expanded benchmark task definitions in `src/orion/core/benchmarks/tasks.py` and integrated into `src/orion/core/evaluation/corpus.py`:
+- `BM-OFF-BY-ONE` (`off_by_one`): Pagination slice 0-based index offset error in `pagination.py`.
+- `BM-TYPE-ERROR` (`type_error`): String + int port concatenation type error in `network.py`.
+- `BM-MISSING-NONE` (`missing_none_check`): Missing None check on header sanitation in `headers.py`.
+- `BM-WRONG-EXCEPTION` (`wrong_exception`): Catching `ValueError` instead of `KeyError` in `storage.py`.
+- `BM-BAD-REGEX` (`bad_regex`): Unescaped regex dot in semantic version validator in `semver.py`.
+- `BM-CONCURRENCY-RACE` (`concurrency_race`): Unsynchronized metrics counter under multi-threaded contention in `metrics.py`.
+- `BM-RESOURCE-LEAK` (`resource_leak`): File handle leak without context management or close in `logger.py`.
+- `BM-WRONG-OPERATOR` (`wrong_operator`): Inverted comparison operator in rate limit checker in `limiter.py`.
+- `BM-BAD-DEFAULT-ARG` (`bad_default_argument`): Mutable list `[]` default parameter accumulation in `tracer.py`.
+- `BM-FLOAT-ROUNDING` (`floating_point_rounding`): Unrounded float summation accumulating precision artifacts in `ledger.py`.
+
+### 2. Empirical Benchmark Runs (3 Full Trials) & `docs/EVALUATION.md`
+- **Baseline Probe (Unassisted)**:
+  ```powershell
+  python -c "import sys; sys.path.insert(0, 'src'); from orion.core.evaluation.runner import BenchmarkRunner; r = BenchmarkRunner(); rep = r.run_suite('v1', auto_repair=False); print(f'Unassisted: {rep.passed_tasks}/{rep.total_tasks} ({rep.pass_at_1_rate*100:.1f}%)')"
+  # Output: Unassisted: 0/10 (0.0%)
+  ```
+- **Assisted Autonomous Execution (3 Trials)**:
+  - **Trial 1**: 10/10 passed (100.0%), Mean: 0.778s, Median: 0.779s
+  - **Trial 2**: 10/10 passed (100.0%), Mean: 0.774s, Median: 0.771s
+  - **Trial 3**: 10/10 passed (100.0%), Mean: 0.779s, Median: 0.773s
+  - **Overall Pass@1**: 30/30 (100.0%), Overall Median: 0.773s
+  - **Verification Completeness**: 100.0% (all 30 runs cryptographically certified by `VerificationEngine`)
+  - **Raw Evidence Logs**: Saved to `docs/benchmark_results_raw.json` (180 total evidence records, 6 per task)
+- **Evaluation Documentation**: Created comprehensive report in `docs/EVALUATION.md` detailing failure taxonomy, raw metrics table, and recovery comparisons.
+
+### 3. Failure-Injection Recovery Test Suite
+Created automated integration test suite in `tests/integration/test_recovery_failure_injection.py` testing the 4 injected failure modes:
+| Injected Failure Mode | Failure Classification | Recovery Strategy Selected | Rollback Outcome | Status |
+|---|---|---|---|---|
+| **Broken Tool Output** | `TOOL_FAILURE` | `RecoveryStrategy.CHANGE_TOOL` | N/A | **PASSED** |
+| **Model Repetition Loop** | `MODEL_FAILURE` | `RecoveryStrategy.CHANGE_MODEL` | N/A | **PASSED** |
+| **Test Runner Crash / Timeout** | `TIMEOUT` | `RecoveryStrategy.RETRY_CURRENT_TASK` | Retry scheduled | **PASSED** |
+| **Bad Patch Breaking Passing Tests** | `TEST_FAILURE` (Regression) | `SWERecoveryStrategy.ROLLBACK` | `PatchRecoveryManager` restored clean pre-patch bytes | **PASSED** |
+
+### 4. Distributed Trace ID UI Wiring
+- **Mission Header**: Added interactive trace button `#btnMissionTraceLink` displaying dynamic `TRACE: <span id="missionTraceIdText">` badge in `src/orion/ui/static/index.html`.
+- **Navigation Flow**: Clicking the trace badge or the newly unhidden `#tabBtnObservability` button switches to the System Observability view (`sysSubObs`), pulls active spans from `/api/v1/observability/spans/{mission_id}`, and renders the distributed waterfall and bottleneck inspector.
+- **Header Telemetry**: Updated `renderTaskHeader(task)` in `src/orion/ui/static/app.js` to dynamically bind trace ID to both DOM elements and button tooltips.
+
+### 5. Quality Gate Evidence
+- `pytest -q`: `1437 passed, 1 skipped in 110.04s`
+- `ruff check .`: `All checks passed!`
+- `mypy src`: `Success: no issues found in 238 source files`
+- **Phase 3 Commit**: `7f1b2df` (`Phase 3: Expanded 10-task benchmark suite, evaluation report, and failure-injection recovery`)
+- **Remaining Blockers**: None. Phase 3 complete and fully verified. Ready for Phase 4.
+
 
