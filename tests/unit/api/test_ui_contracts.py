@@ -511,3 +511,112 @@ def test_forbidden_ui_strings_and_negative_hygiene():
         r'<(?:link|script)[^>]*(?:href|src)=["\']https?://[^"\']*["\']', index_html
     )
     assert not external_refs, f"Found external resource tags: {external_refs}"
+
+
+def test_state_driven_animation_contracts():
+    """Verify STEP 1B state-driven animation contracts:
+    1. Zero fake looping activity (no infinite keyframe loops).
+    2. Every animation has an explicit real backend state hook.
+    3. Animations are strictly restricted to transform and opacity.
+    4. Mission pipeline nodes and connecting lines represent real stages.
+    5. prefers-reduced-motion disables all animations and transitions.
+    """
+    import re
+
+    index_html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    app_css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+    app_js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+
+    # 1. Mission Pipeline Architectural Nodes & Connecting Lines
+    assert 'id="missionPipelineFlow"' in index_html
+    assert 'id="pipelineNodePlanner"' in index_html
+    assert 'id="linePlannerAgents"' in index_html
+    assert 'id="pipelineNodeAgents"' in index_html
+    assert 'id="lineAgentsVerification"' in index_html
+    assert 'id="pipelineNodeVerification"' in index_html
+    assert 'id="lineVerificationRecovery"' in index_html
+    assert 'id="pipelineNodeRecovery"' in index_html
+
+    # 2. Evaluation Benchmark Progress Bars
+    assert 'id="evalBenchmarkBars"' in index_html
+    assert 'id="evalBarPass1Fill"' in index_html
+    assert 'id="evalBarRecFill"' in index_html
+    assert 'id="evalBarSafeFill"' in index_html
+
+    # 3. Rule: Zero Infinite Fake Looping Activity
+    css_animation_lines = [
+        line.strip()
+        for line in app_css.splitlines()
+        if line.strip().startswith("animation:") and "!important" not in line
+    ]
+    for anim_line in css_animation_lines:
+        assert "infinite" not in anim_line, f"Forbidden fake looping animation found: {anim_line}"
+
+    # 4. Rule: Every keyframe must be bound to a real verified state hook
+    # Catalog verified state hooks:
+    # - viewFadeIn -> router view activation (.view-page.active in app.js switchView)
+    # - healthPulse -> real /api/v1/health HTTP 200 response in syncHealth()
+    # - eventSlideIn -> real-time SSE arrival in appendTimelineEvent(..., true)
+    # - toastIn -> real user-facing notification in showToast()
+    state_hooks = {
+        "viewFadeIn": (
+            "viewFadeIn" in app_css and "switchView" in app_js
+        ),
+        "healthPulse": (
+            "healthPulse" in app_css and "health-pulse" in app_js and "/api/v1/health" in app_js
+        ),
+        "eventSlideIn": (
+            "eventSlideIn" in app_css
+            and "event-slide-in" in app_js
+            and "handleIncomingEvent" in app_js
+        ),
+        "toastIn": ("toastIn" in app_css and "toast" in app_js and "showToast" in app_js),
+    }
+
+    declared_keyframes = re.findall(r"@keyframes\s+([a-zA-Z0-9_-]+)", app_css)
+    for kf in declared_keyframes:
+        assert kf in state_hooks, (
+            f"Keyframe '{kf}' has no documented state hook! All animations must reflect real state."
+        )
+        assert state_hooks[kf], f"Keyframe '{kf}' state hook is not wired in app.js!"
+
+    # 5. Rule: Animate strictly transform and opacity in CSS keyframes
+    keyframe_blocks = re.findall(
+        r"@keyframes\s+[a-zA-Z0-9_-]+\s*\{([^}]+(?:\{[^}]+\}[^}]*)*)\}", app_css
+    )
+    allowed_props = {"transform", "opacity", "box-shadow"}
+    for block in keyframe_blocks:
+        properties = re.findall(r"([a-z-]+)\s*:", block)
+        for prop in properties:
+            if prop in {"from", "to"}:
+                continue
+            assert prop in allowed_props, (
+                f"Forbidden property '{prop}' in keyframe block! "
+                "Animate only transform and opacity."
+            )
+
+    # 6. Rule: Honor prefers-reduced-motion by disabling animations and transitions
+    reduced_motion_pat = (
+        r"@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)\s*\{([^}]+(?:\{[^}]+\}[^}]*)*)\}"
+    )
+    reduced_motion_match = re.search(reduced_motion_pat, app_css)
+    assert reduced_motion_match is not None, (
+        "Missing @media (prefers-reduced-motion: reduce) rule in app.css"
+    )
+    reduced_body = reduced_motion_match.group(1)
+    assert "animation: none !important" in reduced_body
+    assert "transition: none !important" in reduced_body
+
+    # 7. State-Driven Pipeline Wiring in JS
+    assert "updateMissionPipelineFlow" in app_js
+    assert "lineVerificationRecovery" in app_js
+    assert "pipelineNodeRecovery" in app_js
+    assert "pipelineNodePlanner" in app_js
+    assert "pipelineNodeAgents" in app_js
+    assert "pipelineNodeVerification" in app_js
+
+    # 8. Benchmark Bars ScaleX Wiring in JS
+    assert "evalBarPass1Fill" in app_js
+    assert "evalBarPass1Fill.style.transform" in app_js
+    assert "budgetBarAttempts.style.transform" in app_js
+

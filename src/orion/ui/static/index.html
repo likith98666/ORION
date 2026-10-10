@@ -637,6 +637,47 @@
                 <span class="legend-item"><span class="status-dot pending"></span> Pending</span>
               </span>
             </div>
+            <!-- Architectural Mission Pipeline Flow (Planner -> Agents -> Verification -> Recovery) -->
+            <div class="mission-pipeline-flow" id="missionPipelineFlow" aria-label="Mission Pipeline Architectural Nodes">
+              <div class="pipeline-flow-node" id="pipelineNodePlanner" data-node="planner">
+                <span class="pipeline-flow-icon">01</span>
+                <div class="pipeline-flow-text">
+                  <span class="pipeline-flow-title">Planner</span>
+                  <span class="pipeline-flow-sub">Cognitive Plan &amp; AST</span>
+                </div>
+              </div>
+              <div class="pipeline-flow-line" id="linePlannerAgents">
+                <div class="pipeline-flow-line-fill"></div>
+              </div>
+              <div class="pipeline-flow-node" id="pipelineNodeAgents" data-node="agents">
+                <span class="pipeline-flow-icon">02</span>
+                <div class="pipeline-flow-text">
+                  <span class="pipeline-flow-title">Agents</span>
+                  <span class="pipeline-flow-sub">Code &amp; Test Specialists</span>
+                </div>
+              </div>
+              <div class="pipeline-flow-line" id="lineAgentsVerification">
+                <div class="pipeline-flow-line-fill"></div>
+              </div>
+              <div class="pipeline-flow-node" id="pipelineNodeVerification" data-node="verification">
+                <span class="pipeline-flow-icon">03</span>
+                <div class="pipeline-flow-text">
+                  <span class="pipeline-flow-title">Verification</span>
+                  <span class="pipeline-flow-sub">Ground Truth Certified</span>
+                </div>
+              </div>
+              <div class="pipeline-flow-line recovery-line" id="lineVerificationRecovery">
+                <div class="pipeline-flow-line-fill"></div>
+              </div>
+              <div class="pipeline-flow-node recovery-node" id="pipelineNodeRecovery" data-node="recovery">
+                <span class="pipeline-flow-icon">04</span>
+                <div class="pipeline-flow-text">
+                  <span class="pipeline-flow-title">Recovery</span>
+                  <span class="pipeline-flow-sub">Bounded Self-Healing</span>
+                </div>
+              </div>
+            </div>
+
             <div class="pipeline-stepper" id="stepperNodes">
               <div class="step-node" id="step-inspect_repository" data-stage="inspect_repository">
                 <div class="step-badge">1</div>
@@ -1160,6 +1201,32 @@
                 <div class="eval-actions" style="display: flex; gap: 8px;">
                   <button type="button" class="btn btn-primary btn-xs" id="btnRunEvaluation">Run Evaluation</button>
                   <button type="button" class="btn btn-secondary btn-xs" id="btnCompareExperiments">Compare Experiments</button>
+                </div>
+              </div>
+              <div class="eval-benchmark-bars" id="evalBenchmarkBars" style="padding: 16px; border-bottom: 1px solid var(--border-subtle); display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div class="eval-bar-item">
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
+                    <span>Pass@1 Benchmark Accuracy</span><span id="evalBarPass1Val" class="code-font text-emerald">0.0%</span>
+                  </div>
+                  <div class="eval-benchmark-track budget-track" style="height: 6px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;">
+                    <div class="budget-fill eval-benchmark-fill" id="evalBarPass1Fill" style="background: var(--color-success); transform: scaleX(0);"></div>
+                  </div>
+                </div>
+                <div class="eval-bar-item">
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
+                    <span>Recovery Success Rate</span><span id="evalBarRecVal" class="code-font text-cyan">0.0%</span>
+                  </div>
+                  <div class="eval-benchmark-track budget-track" style="height: 6px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;">
+                    <div class="budget-fill eval-benchmark-fill" id="evalBarRecFill" style="background: var(--color-ice); transform: scaleX(0);"></div>
+                  </div>
+                </div>
+                <div class="eval-bar-item">
+                  <div class="budget-head" style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); margin-bottom: 4px;">
+                    <span>Safe Termination Rate</span><span id="evalBarSafeVal" class="code-font text-purple">0.0%</span>
+                  </div>
+                  <div class="eval-benchmark-track budget-track" style="height: 6px; background: var(--surface-secondary); border-radius: 3px; overflow: hidden;">
+                    <div class="budget-fill eval-benchmark-fill" id="evalBarSafeFill" style="background: var(--color-bronze); transform: scaleX(0);"></div>
+                  </div>
                 </div>
               </div>
               <div class="table-responsive">
