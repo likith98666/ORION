@@ -47,6 +47,7 @@ build/
 
 # UI Snapshots & Scratch outputs
 ui_snapshot/
+scratch/
 
 # Temporary files
 tmp/
