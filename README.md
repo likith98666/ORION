@@ -1,15 +1,15 @@
-# ORION — Autonomous AI Engineering Operating System
+# ORION // Autonomous AI Software Engineering Operating System
 
 [![Python Version](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1%2C395%20passed%20%7C%201%20skipped%20%7C%200%20failed-emerald.svg)]()
-[![Type Checking](https://img.shields.io/badge/mypy-strict%20%7C%20234%20files%20clean-blue.svg)]()
+[![Tests](https://img.shields.io/badge/tests-1%2C438%20passed%20%7C%201%20skipped%20%7C%200%20failed-emerald.svg)]()
+[![Type Checking](https://img.shields.io/badge/mypy-strict%20%7C%20238%20files%20clean-blue.svg)]()
 [![Code Quality](https://img.shields.io/badge/ruff-clean-green.svg)]()
 [![Runtime Dependencies](https://img.shields.io/badge/dependencies-0%20third--party%20runtime-purple.svg)]()
 [![Security Invariants](https://img.shields.io/badge/security-20%2F20%20invariants%20verified-red.svg)]()
-[![Release Status](https://img.shields.io/badge/release-V10%20Release%20Candidate-amber.svg)]()
+[![Release Status](https://img.shields.io/badge/release-v1.0.0%20GA-emerald.svg)]()
 
-> **ORION** is a coherent, secure, reproducible, production-grade **Autonomous AI Engineering Platform**. It plans, coordinates, executes, verifies, and self-heals complex technical work across real repositories through an authoritative, observable, and policy-governed multi-agent workforce.
+> **ORION** is an authoritative, secure, reproducible, production-grade **Autonomous Software Engineering Platform**. It coordinates specialized technical agents to plan, formulate, execute, verify, and self-heal complex code modifications across real repositories with zero third-party runtime dependencies.
 
 ---
 
@@ -19,44 +19,44 @@ Unlike unconstrained chatbot loops that execute non-deterministic `while not sol
 
 ### End-to-End Pipeline
 ```text
-MISSION
+MISSION DIRECTIVE
    ↓
-UNDERSTANDING
+UNDERSTANDING & AST EXPLORATION
    ↓
-PLANNING (DAG)
+PLANNING (DAG Decomposer)
    ↓
 REPOSITORY INTELLIGENCE (AST & Blast Radius)
    ↓
 MULTI-AGENT WORKFORCE (SWE, DX, VF, RC)
    ↓
-PATCH GENERATION (Unified Diffs & Hash Locks)
+PATCH GENERATION (Unified Diffs & SHA-256 Locks)
    ↓
 HUMAN OVERSIGHT (Clarification, Steering, Approval Gate)
    ↓
 CONTROLLED EXECUTION (Workspace Containment)
    ↓
-TESTING (Sandboxed Pytest Runner)
+TESTING (Sandboxed Pytest Runner, shell=False)
    ↓
-VERIFICATION (Independent Ground-Truth Authority)
+VERIFICATION (Authoritative VerificationEngine Ground Truth)
    ↓
 SELF-HEALING (Taxonomy Diagnosis, Simulation, Bounded Recovery)
    ↓
 POLICY ENFORCEMENT (Central Zero-Trust Guardrails)
    ↓
-EVALUATION (Standardized Benchmarks & Engineering Metrics)
+EVALUATION (10-Task Standardized SWE Benchmark Suite)
    ↓
-OBSERVABILITY (Distributed Traces, Quantiles, Token Costing)
+OBSERVABILITY (Distributed Spans, Quantiles, Token Costing)
    ↓
-EVIDENCE (Tiered Epistemic Ledger: Claimed / Observed / Verified)
+EVIDENCE LEDGER (Claimed / Observed / Verified Epistemic Tiers)
    ↓
-FINAL CERTIFIED RESULT (Cryptographic Report & Provenance Artifacts)
+FINAL CERTIFIED RESULT (Cryptographic Report & Forensic Provenance)
 ```
 
 ---
 
-## 2. The 12 Observatories of the V10 Flagship Cockpit
+## 2. Core Technical Observatories
 
-The ORION Command Center provides a high-density, cinematic Obsidian interface unifying 12 technical observatories:
+The ORION Command Center provides a cinematic Obsidian interface unifying 12 technical observatories:
 
 | # | Observatory | Focus & Real-Time Capabilities |
 | :--- | :--- | :--- |
@@ -66,11 +66,11 @@ The ORION Command Center provides a high-density, cinematic Obsidian interface u
 | **4** | **Repository Intelligence** | Static AST code-graph analyzer, cross-file symbol caller/callee mapper, change blast radius calculator, and token-bounded context optimizer. |
 | **5** | **Patch Intelligence** | Structured code changes, modified files list, unified diff viewer, syntax validation, optimistic SHA-256 hash concurrency locking, and approval gating. |
 | **6** | **Test & Verification** | Sandboxed pytest execution terminal, exit codes, assertion summaries, regression tracking, and formal ground-truth acceptance criteria verification. |
-| **7** | **Recovery Observatory** | Self-healing failure classifier (6 formal categories), pre-flight non-destructive simulator, recovery budget gauges (attempts, runtime, patches), and rollback audit trail. |
-| **8** | **Human Oversight (HITL)** | Real-time clarification queue, manual steering directive injector, pause/resume engine, operator feedback scoring (1–5 stars), and immutable intervention audit log. |
-| **9** | **Policy & Security** | Authoritative security guardrails (`RULE-SEC-001`, `RULE-TOOL-001`, `RULE-BUDGET-001`, `RULE-VERIF-001`), live decision audit stream, and interactive policy evaluator simulator. |
-| **10** | **Evaluation Lab** | Standardized benchmark suites (`standard`, `smoke`, `taxonomy`), automated experiment runner, metric history (Pass@1, recovery rate, latency), and differential regression comparator. |
-| **11** | **Observability** | Distributed trace waterfall correlating Mission &rarr; Task &rarr; Agent &rarr; Tool/Model &rarr; Verification, latency quantiles ($P_{50}, P_{90}, P_{99}$), token costing, bottleneck detection, and autonomous system optimizations. |
+| **7** | **Recovery Observatory** | Self-healing failure classifier, pre-flight non-destructive simulator, recovery budget gauges (attempts, runtime, patches), and rollback audit trail. |
+| **8** | **Human Oversight (HITL)** | Real-time clarification queue, manual steering directive injector, pause/resume engine, operator feedback scoring, and immutable intervention audit log. |
+| **9** | **Policy & Security** | Authoritative security guardrails (`RULE-SEC-001` through `RULE-TOOL-001`), live decision audit stream, and interactive policy evaluator simulator. |
+| **10** | **Evaluation Lab** | Standardized 10-task benchmark suite, automated experiment runner, metric history (Pass@1, recovery rate, latency), and differential regression comparator. |
+| **11** | **Observability** | Distributed trace waterfall correlating Mission &rarr; Task &rarr; Agent &rarr; Tool/Model &rarr; Verification, latency quantiles ($P_{50}, P_{90}, P_{99}$), token costing, and bottleneck detection. |
 | **12** | **Evidence Ledger** | Forensic append-only ledger tracking Claimed hypotheses, Observed tool outputs, and Verified ground truth with cryptographic hashes and audit provenance. |
 
 ---
@@ -122,10 +122,10 @@ python -m venv .venv
 # Install development & testing tooling
 pip install -e ".[dev]"
 
-# Run full test suite (1,395 tests)
+# Run full test suite (1,438 tests)
 pytest -q
 
-# Run strict type checking (234 source files)
+# Run strict type checking (238 source files)
 mypy src
 
 # Run code linter
@@ -145,88 +145,34 @@ Open your browser to:
 
 ---
 
-## 5. Docker Deployment
-
-ORION includes a hardened, non-root, multi-stage production Docker container:
-
-```bash
-# Build and start container
-docker compose up -d
-
-# Verify container health
-docker compose ps
-curl http://localhost:8000/api/v1/health
-```
-
-### Container Security Properties
-- **Non-root user:** Runs as UID/GID 1000 (`orion`).
-- **Resource bounded:** Configurable memory and CPU limits.
-- **Graceful shutdown:** Intercepts `SIGTERM` with clean task checkpointing.
-- **Automated health check:** Queries `/api/v1/health` every 30s.
-
----
-
-## 6. End-to-End Demonstration Mission
-
-You can trigger a deterministic end-to-end mission directly via REST API:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/missions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "objective": "Analyze repository, formulate fix for failing tests, run controlled tests, and verify fix.",
-    "workspace_path": "C:/Users/LIKITH/ORION",
-    "execution_mode": "controlled"
-  }'
-```
-
-Response:
-```json
-{
-  "mission_id": "7f8b9c2a-1e3d-4c5b-9a8f-0e1d2c3b4a5f",
-  "task_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-  "status": "initialized",
-  "lifecycle_state": "RECEIVED",
-  "objective": "Analyze repository, formulate fix for failing tests, run controlled tests, and verify fix."
-}
-```
-
-Trigger pipeline execution:
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/missions/7f8b9c2a-1e3d-4c5b-9a8f-0e1d2c3b4a5f/run
-```
-
----
-
-## 7. Verified Release Metrics & Quality Gates
+## 5. Verified Release Metrics & Quality Gates
 
 | Quality Gate | Requirement | Measured Result | Status |
 | :--- | :--- | :--- | :--- |
-| **Pytest Full Suite** | 100% Pass Rate | **1,395 passed, 1 skipped, 0 failed** in 89.5s | **PASS** |
-| **Mypy Static Typing** | Strict, 0 Errors | **0 errors across 234 source files** | **PASS** |
+| **Pytest Full Suite** | 100% Pass Rate | **1,438 passed, 1 skipped, 0 failed** in 104.65s | **PASS** |
+| **Mypy Static Typing** | Strict, 0 Errors | **0 errors across 238 source files** | **PASS** |
 | **Ruff Linter** | Clean | **All checks passed!** | **PASS** |
-| **Git Diff Check** | Clean Working Tree | **0 whitespace / syntax errors** | **PASS** |
-| **Standard Benchmark Pass@1** | $\ge 95\%$ | **100.0%** (4/4 passed) | **PASS** |
-| **Taxonomy Benchmark Pass@1**| $\ge 95\%$ | **100.0%** (6/6 passed) | **PASS** |
-| **Verification Authority Rate**| $100\%$ | **100.0%** (10/10 verified) | **PASS** |
-| **Safe Termination Rate** | $100\%$ | **100.0%** (10/10 safe) | **PASS** |
-| **Adversarial Security Suite** | 100% Pass Rate | **7 passed in 1.71s** | **PASS** |
-| **Runtime Dependencies** | Standard Library Only | **0 third-party packages** | **PASS** |
+| **10-Task SWE Benchmark Pass@1** | $\ge 95\%$ | **100.0%** (30/30 across 3 trials; 0.773s median) | **PASS** |
+| **Unassisted Baseline** | Ground Truth Defect | **0.0%** (0/10 passed without fix) | **PASS** |
+| **Failure-Injection Recovery Suite** | 100% Pass Rate | **4/4 injected failure modes handled cleanly** | **PASS** |
+| **Security Threat Model Suite** | 100% Negative Pass Rate | **8/8 threat vectors blocked** | **PASS** |
+| **Verification Authority Rate** | 100% Ground Truth | **100.0%** (all runs certified by `VerificationEngine`) | **PASS** |
+| **Runtime Dependencies** | Standard Library Only | **0 third-party runtime packages** | **PASS** |
 
 ---
 
-## 8. Release Documentation Index
+## 6. Documentation Index
 
-- [Architecture Specification](docs/ORION_ARCHITECTURE.md)
-- [Distributed Execution Architecture Decision (ADR-001)](docs/ORION_DISTRIBUTED_EXECUTION_ARCHITECTURE_DECISION.md)
-- [Final Benchmark & Evaluation Report](docs/ORION_V10_FINAL_BENCHMARK_REPORT.md)
-- [API Contract Audit & Schema Specification](docs/ORION_V10_API_CONTRACT_AUDIT.md)
-- [Security Audit & Adversarial Hardening Report](docs/ORION_V10_SECURITY_AUDIT.md)
-- [V10 Final Release Candidate Certification](docs/ORION_V10_RELEASE_CANDIDATE.md)
-- [V1–V9 Roadmap Reconciliation Audit](docs/ORION_V1_V9_ROADMAP_RECONCILIATION.md)
+- [System Architecture](ARCHITECTURE.md)
+- [Security Policy & Invariants](SECURITY.md)
+- [Threat Model Specification](docs/THREAT_MODEL.md)
+- [Empirical Benchmark & Evaluation Report](docs/EVALUATION.md)
+- [Demonstration Walkthrough Guide](docs/DEMO_GUIDE.md)
+- [REST API Reference](docs/API.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 
-## 9. License
+## 7. License
 
 ORION is licensed under the MIT License. See [LICENSE](LICENSE) for details.
