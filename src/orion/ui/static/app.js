@@ -1,5 +1,5 @@
 /**
- * ORION — Autonomous AI Workforce Command Center Client
+ * ORION // Autonomous AI Workforce Command Center Client
  * Communicates with Orion REST & SSE Streaming API at /api/tasks/ and /api/v1/
  */
 

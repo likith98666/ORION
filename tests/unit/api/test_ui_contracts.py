@@ -463,3 +463,41 @@ def test_premium_website_redesign_contracts():
     # 11. Strictly Prohibited Elements Verification (No emojis)
     assert not any(ord(c) > 0x25FF for c in index_html)
     assert not any(ord(c) > 0x25FF for c in app_js)
+
+
+def test_forbidden_ui_strings_and_negative_hygiene():
+    """Verify zero emojis, zero em-dashes, zero TODOs, zero placeholder links,
+    and verified honest initial states across all static UI assets.
+    """
+    index_html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    app_css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+    app_js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+
+    # 1. Zero emojis across all assets (codepoints above 0x25FF)
+    for name, content in [("index.html", index_html), ("app.css", app_css), ("app.js", app_js)]:
+        emojis = [c for c in content if ord(c) > 0x25FF]
+        assert not emojis, f"Found emojis {emojis[:5]} in {name}"
+
+    # 2. Zero em-dashes across all assets (U+2014)
+    for name, content in [("index.html", index_html), ("app.css", app_css), ("app.js", app_js)]:
+        assert "—" not in content, f"Found em-dash in {name}"
+
+    # 3. Zero unhandled TODOs or FIXMEs
+    for name, content in [("index.html", index_html), ("app.css", app_css), ("app.js", app_js)]:
+        assert "TODO" not in content, f"Found TODO in {name}"
+        assert "FIXME" not in content, f"Found FIXME in {name}"
+
+    # 4. Zero broken placeholder links
+    assert 'href="#"' not in index_html
+    assert 'href="javascript:void(0)"' not in index_html
+    assert 'href=""' not in index_html
+
+    # 5. Honest initial state defaults
+    assert 'id="verifResultVal">PENDING</span>' in index_html
+    assert 'id="testExitCodeBadge">READY</span>' in index_html
+    assert 'id="verifEvidenceCountVal">0 RECORDS</span>' in index_html
+
+    # 6. Canvas animation accessibility & lifecycle
+    assert "prefersReducedMotion" in app_js
+    assert "document.hidden" in app_js
+
