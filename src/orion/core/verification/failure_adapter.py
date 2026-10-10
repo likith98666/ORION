@@ -18,14 +18,10 @@ class VerificationFailureAdapter:
             verification_result,
             VerificationResult,
         ):
-            raise TypeError(
-                "verification_result must be a VerificationResult instance."
-            )
+            raise TypeError("verification_result must be a VerificationResult instance.")
 
         if verification_result.status != VerificationStatus.FAILED:
-            raise ValueError(
-                "Only failed verification results can become failures."
-            )
+            raise ValueError("Only failed verification results can become failures.")
 
         return Failure(
             failure_type=FailureType.VERIFICATION_FAILURE,

@@ -64,9 +64,7 @@ def test_secret_reference_is_resolved_only_for_handler() -> None:
         return arguments["api_token"]
 
     registry = _registry(handler)
-    provider = InMemorySecretProvider(
-        {"github_token": "super-secret-value"}
-    )
+    provider = InMemorySecretProvider({"github_token": "super-secret-value"})
 
     result = ToolExecutor(
         registry,
@@ -87,9 +85,7 @@ def test_secret_reference_is_resolved_only_for_handler() -> None:
 
 def test_raw_secret_is_never_persisted_in_tool_arguments() -> None:
     repository = InMemoryToolExecutionRepository()
-    provider = InMemorySecretProvider(
-        {"github_token": "super-secret-value"}
-    )
+    provider = InMemorySecretProvider({"github_token": "super-secret-value"})
 
     ToolExecutor(
         _registry(lambda arguments: "ok"),
@@ -106,9 +102,7 @@ def test_raw_secret_is_never_persisted_in_tool_arguments() -> None:
 
     execution = next(iter(repository._executions.values()))
 
-    assert execution.arguments["api_token"] == SecretReference(
-        "github_token"
-    )
+    assert execution.arguments["api_token"] == SecretReference("github_token")
     assert execution.arguments["api_token"].name == "github_token"
     assert "super-secret-value" not in str(execution.arguments)
 
@@ -160,9 +154,7 @@ def test_missing_secret_fails_without_calling_handler() -> None:
 def test_plain_string_cannot_be_used_as_secret_reference() -> None:
     executor = ToolExecutor(
         _registry(lambda arguments: "should not execute"),
-        secret_provider=InMemorySecretProvider(
-            {"github_token": "super-secret-value"}
-        ),
+        secret_provider=InMemorySecretProvider({"github_token": "super-secret-value"}),
     )
 
     with pytest.raises(

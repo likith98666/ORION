@@ -79,9 +79,7 @@ class FixProposal:
     def to_proposed_fix_plan(self) -> ProposedFixPlan:
         """Convert validated FixProposal into the coordinator's internal ProposedFixPlan."""
         strategy = (
-            "; ".join(self.validation_plan)
-            if self.validation_plan
-            else "run_tests validation"
+            "; ".join(self.validation_plan) if self.validation_plan else "run_tests validation"
         )
         return ProposedFixPlan(
             target_files=self.affected_files,

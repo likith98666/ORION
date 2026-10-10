@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
 from orion.config.model_config import ModelConfig
 from orion.core.recovery.recovery_action import (
@@ -30,9 +30,7 @@ class RecoveryExecutor:
         """Execute a recovery action and return its structured outcome."""
 
         if not isinstance(action, RecoveryAction):
-            raise TypeError(
-                "action must be a RecoveryAction instance."
-            )
+            raise TypeError("action must be a RecoveryAction instance.")
 
         if action.action_type == RecoveryActionType.CHANGE_MODEL:
             return self._change_model(

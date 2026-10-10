@@ -1,4 +1,4 @@
-﻿from uuid import UUID
+from uuid import UUID
 
 from orion.core.tools.execution_repository import ToolExecutionRepository
 from orion.core.tools.executions import ToolExecution
@@ -18,7 +18,5 @@ class InMemoryToolExecutionRepository(ToolExecutionRepository):
 
     def list_for_agent(self, agent_id: UUID) -> list[ToolExecution]:
         return [
-            execution
-            for execution in self._executions.values()
-            if execution.agent_id == agent_id
+            execution for execution in self._executions.values() if execution.agent_id == agent_id
         ]

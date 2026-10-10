@@ -29,53 +29,75 @@ class PatchExecutionState(str, Enum):
 
 # Strict deterministic transition graph
 VALID_TRANSITIONS: dict[PatchExecutionState, frozenset[PatchExecutionState]] = {
-    PatchExecutionState.PROPOSED: frozenset({
-        PatchExecutionState.VALIDATED,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.VALIDATED: frozenset({
-        PatchExecutionState.PENDING_APPROVAL,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.PENDING_APPROVAL: frozenset({
-        PatchExecutionState.AUTHORIZED,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.AUTHORIZED: frozenset({
-        PatchExecutionState.APPLYING,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.APPLYING: frozenset({
-        PatchExecutionState.APPLIED,
-        PatchExecutionState.PARTIALLY_APPLIED,
-        PatchExecutionState.RECOVERING,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.APPLIED: frozenset({
-        PatchExecutionState.EXECUTING,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.EXECUTING: frozenset({
-        PatchExecutionState.VERIFIED,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.PARTIALLY_APPLIED: frozenset({
-        PatchExecutionState.RECOVERING,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.RECOVERING: frozenset({
-        PatchExecutionState.RECOVERED,
-        PatchExecutionState.RECOVERY_FAILED,
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.RECOVERED: frozenset({
-        PatchExecutionState.FAILED,
-    }),
-    PatchExecutionState.RECOVERY_FAILED: frozenset({
-        PatchExecutionState.FAILED,
-    }),
+    PatchExecutionState.PROPOSED: frozenset(
+        {
+            PatchExecutionState.VALIDATED,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.VALIDATED: frozenset(
+        {
+            PatchExecutionState.PENDING_APPROVAL,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.PENDING_APPROVAL: frozenset(
+        {
+            PatchExecutionState.AUTHORIZED,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.AUTHORIZED: frozenset(
+        {
+            PatchExecutionState.APPLYING,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.APPLYING: frozenset(
+        {
+            PatchExecutionState.APPLIED,
+            PatchExecutionState.PARTIALLY_APPLIED,
+            PatchExecutionState.RECOVERING,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.APPLIED: frozenset(
+        {
+            PatchExecutionState.EXECUTING,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.EXECUTING: frozenset(
+        {
+            PatchExecutionState.VERIFIED,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.PARTIALLY_APPLIED: frozenset(
+        {
+            PatchExecutionState.RECOVERING,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.RECOVERING: frozenset(
+        {
+            PatchExecutionState.RECOVERED,
+            PatchExecutionState.RECOVERY_FAILED,
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.RECOVERED: frozenset(
+        {
+            PatchExecutionState.FAILED,
+        }
+    ),
+    PatchExecutionState.RECOVERY_FAILED: frozenset(
+        {
+            PatchExecutionState.FAILED,
+        }
+    ),
     PatchExecutionState.VERIFIED: frozenset(),  # Terminal state
-    PatchExecutionState.FAILED: frozenset(),    # Terminal state
+    PatchExecutionState.FAILED: frozenset(),  # Terminal state
 }
 
 

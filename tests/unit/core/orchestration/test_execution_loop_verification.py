@@ -388,9 +388,7 @@ def test_verification_failure_reaches_recovery_coordinator_and_engine() -> None:
     recovery_engine = RecoveryEngine()
     recovery_coordinator = RecoveryCoordinator(recovery_engine=recovery_engine)
 
-    fake_recovery_service = FakeRecoveryService(
-        ["Second attempt now includes PostgreSQL."]
-    )
+    fake_recovery_service = FakeRecoveryService(["Second attempt now includes PostgreSQL."])
 
     loop = ExecutionLoop(
         execution_coordinator=coordinator,
@@ -432,9 +430,7 @@ def test_verification_failure_triggers_re_execution_and_re_verification() -> Non
     recovery_engine = RecoveryEngine()
     recovery_coordinator = RecoveryCoordinator(recovery_engine=recovery_engine)
 
-    fake_recovery_service = FakeRecoveryService(
-        ["Correct PostgreSQL documentation."]
-    )
+    fake_recovery_service = FakeRecoveryService(["Correct PostgreSQL documentation."])
 
     loop = ExecutionLoop(
         execution_coordinator=coordinator,
@@ -484,9 +480,7 @@ def test_first_attempt_fails_verification_second_attempt_passes_and_completes() 
 
     coordinator = VerificationExecutionCoordinator("Failing first attempt.")
     recovery_coordinator = RecoveryCoordinator(RecoveryEngine())
-    recovery_service = FakeRecoveryService(
-        ["Successful PostgreSQL documentation."]
-    )
+    recovery_service = FakeRecoveryService(["Successful PostgreSQL documentation."])
 
     loop = ExecutionLoop(
         execution_coordinator=coordinator,

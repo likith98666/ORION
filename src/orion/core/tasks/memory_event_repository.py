@@ -15,11 +15,7 @@ class InMemoryTaskEventRepository(TaskEventRepository):
         return self._events.get(event_id)
 
     def list_for_task(self, task_id: UUID) -> list[TaskEvent]:
-        events = [
-            event
-            for event in self._events.values()
-            if event.task_id == task_id
-        ]
+        events = [event for event in self._events.values() if event.task_id == task_id]
 
         return sorted(
             events,

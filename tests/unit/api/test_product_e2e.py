@@ -145,11 +145,13 @@ def test_real_end_to_end_mission_pipeline(e2e_environment):
     # -------------------------------------------------------------
     approve_req = Request(
         f"{base_url}/api/v1/missions/{mission_id}/approve",
-        data=json.dumps({
-            "decision": "approve",
-            "approver": "LeadSecurityOfficer",
-            "reason": "Authorized patch for calculator addition fix",
-        }).encode("utf-8"),
+        data=json.dumps(
+            {
+                "decision": "approve",
+                "approver": "LeadSecurityOfficer",
+                "reason": "Authorized patch for calculator addition fix",
+            }
+        ).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
     )

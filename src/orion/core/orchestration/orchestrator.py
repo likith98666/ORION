@@ -65,9 +65,7 @@ class Orchestrator:
                 required_capability=step.required_capability,
             )
 
-            assigned_task = self._assignment_service.assign_task(
-                agent_task
-            )
+            assigned_task = self._assignment_service.assign_task(agent_task)
 
             agent_tasks.append(assigned_task)
 
@@ -85,9 +83,7 @@ class Orchestrator:
         """Orchestrate ready tasks and execute them."""
 
         if self._execution_loop is None:
-            raise ValueError(
-                "Execution loop is required for orchestrate_and_execute."
-            )
+            raise ValueError("Execution loop is required for orchestrate_and_execute.")
 
         orchestration = self.orchestrate(
             task_id=task_id,

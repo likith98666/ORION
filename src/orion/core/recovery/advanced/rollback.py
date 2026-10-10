@@ -98,9 +98,7 @@ class IntelligentRollbackManager:
                 try:
                     full_dest.relative_to(self.root_dir)
                 except ValueError:
-                    raise ValueError(
-                        f"Path traversal detected in rollback: '{rel_path}'"
-                    ) from None
+                    raise ValueError(f"Path traversal detected in rollback: '{rel_path}'") from None
                 full_dest.parent.mkdir(parents=True, exist_ok=True)
                 full_dest.write_bytes(file_snap.content)
                 restored_count += 1

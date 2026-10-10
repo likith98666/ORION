@@ -17,6 +17,4 @@ class InMemorySecretProvider:
         try:
             return self._secrets[reference.name]
         except KeyError as exc:
-            raise KeyError(
-                f"Secret '{reference.name}' was not found."
-            ) from exc
+            raise KeyError(f"Secret '{reference.name}' was not found.") from exc

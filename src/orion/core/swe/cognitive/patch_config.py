@@ -10,9 +10,9 @@ class PatchConfig:
     """Bounded configuration limits for model-proposed patches."""
 
     max_payload_size: int = 65_536  # Max JSON model response length (characters)
-    max_affected_files: int = 10     # Max files affected by a single patch proposal
-    max_changed_lines: int = 2_000   # Max total changed lines across proposal diffs
-    max_file_size: int = 524_288     # Max bytes per file modification (512 KB)
+    max_affected_files: int = 10  # Max files affected by a single patch proposal
+    max_changed_lines: int = 2_000  # Max total changed lines across proposal diffs
+    max_file_size: int = 524_288  # Max bytes per file modification (512 KB)
 
     def __post_init__(self) -> None:
         if self.max_payload_size <= 0:

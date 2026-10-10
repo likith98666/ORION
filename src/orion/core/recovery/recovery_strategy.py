@@ -30,8 +30,6 @@ class RecoveryDecision:
             raise ValueError("Recovery decision reason cannot be empty.")
 
         if len(cleaned_reason) > 5000:
-            raise ValueError(
-                "Recovery decision reason cannot exceed 5,000 characters."
-            )
+            raise ValueError("Recovery decision reason cannot exceed 5,000 characters.")
 
         object.__setattr__(self, "reason", cleaned_reason)

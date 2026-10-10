@@ -21,9 +21,7 @@ class ProposedFixPlan:
             )
         for target in self.target_files:
             if not isinstance(target, str) or not target.strip():
-                raise FormulationIncompleteError(
-                    "Target file paths must be non-empty strings."
-                )
+                raise FormulationIncompleteError("Target file paths must be non-empty strings.")
 
         if not self.intended_modification or not self.intended_modification.strip():
             raise FormulationIncompleteError(
@@ -31,19 +29,13 @@ class ProposedFixPlan:
             )
 
         if not self.expected_behavior or not self.expected_behavior.strip():
-            raise FormulationIncompleteError(
-                "Proposed fix plan must specify expected behavior."
-            )
+            raise FormulationIncompleteError("Proposed fix plan must specify expected behavior.")
 
         if not self.validation_strategy or not self.validation_strategy.strip():
-            raise FormulationIncompleteError(
-                "Proposed fix plan must specify validation strategy."
-            )
+            raise FormulationIncompleteError("Proposed fix plan must specify validation strategy.")
 
         if not isinstance(self.constraints, (tuple, list)):
-            raise FormulationIncompleteError(
-                "Constraints must be an iterable sequence of strings."
-            )
+            raise FormulationIncompleteError("Constraints must be an iterable sequence of strings.")
         cleaned_constraints = tuple(str(c).strip() for c in self.constraints if str(c).strip())
         object.__setattr__(self, "constraints", cleaned_constraints)
 

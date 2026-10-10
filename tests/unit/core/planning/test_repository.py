@@ -41,11 +41,7 @@ def test_plan_repository_contract_can_be_implemented() -> None:
             self.plans.pop(plan_id, None)
 
         def list_for_task(self, task_id):
-            return [
-                plan
-                for plan in self.plans.values()
-                if plan.task_id == task_id
-            ]
+            return [plan for plan in self.plans.values() if plan.task_id == task_id]
 
     repository = TestRepository()
     task_id = uuid4()

@@ -123,6 +123,7 @@ def test_api_advance_and_timeline(running_server):
 def test_api_serves_static_ui(running_server):
     """Verify root / serves index.html and /static/* serves CSS and JS with correct MIME types."""
     import urllib.error
+
     base_url, _, _ = running_server
 
     # 1. GET /
@@ -165,5 +166,3 @@ def test_api_serves_static_ui(running_server):
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         urlopen(f"{base_url}/static/../../pyproject.toml")
     assert exc_info.value.code in (HTTPStatus.FORBIDDEN, HTTPStatus.NOT_FOUND)
-
-

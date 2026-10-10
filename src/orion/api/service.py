@@ -182,13 +182,9 @@ class MissionAPIService:
         self._missions: dict[UUID, MissionRecord] = {}
         self._start_time = time.time()
         self._default_workspace_path = (
-            Path(default_workspace_path).resolve()
-            if default_workspace_path
-            else None
+            Path(default_workspace_path).resolve() if default_workspace_path else None
         )
-        self._config = config or AppConfig.from_env(
-            argv_workspace=self._default_workspace_path
-        )
+        self._config = config or AppConfig.from_env(argv_workspace=self._default_workspace_path)
         self._redaction_engine = RedactionEngine(secrets=self._config.known_secrets)
         self._is_shutting_down: bool = False
         self._mission_plans: dict[UUID, tuple[MissionPlan, MissionTaskGraph]] = {}
@@ -245,9 +241,7 @@ class MissionAPIService:
             record.subscribers.append(q)
         return q
 
-    def unsubscribe_events(
-        self, mission_id: UUID, q: queue.Queue[dict[str, Any]]
-    ) -> None:
+    def unsubscribe_events(self, mission_id: UUID, q: queue.Queue[dict[str, Any]]) -> None:
         """Unregister an SSE event queue."""
         record = self._get_record(mission_id)
         if not record:
@@ -270,9 +264,7 @@ class MissionAPIService:
 
         # Scrub sensitive tokens/passwords if redaction is enabled
         scrubbed_data: dict[str, Any] = (
-            self._redaction_engine.redact(data)
-            if self._config.redaction_enabled
-            else data
+            self._redaction_engine.redact(data) if self._config.redaction_enabled else data
         )
 
         now_iso = datetime.now(UTC).isoformat()
@@ -292,11 +284,7 @@ class MissionAPIService:
             if record.coordinator.current_stage
             else record.lifecycle_state.lower()
         )
-        raw_detail = str(
-            scrubbed_data.get("summary")
-            or scrubbed_data.get("detail")
-            or event_type
-        )
+        raw_detail = str(scrubbed_data.get("summary") or scrubbed_data.get("detail") or event_type)
         scrubbed_detail = (
             self._redaction_engine.redact(raw_detail)
             if self._config.redaction_enabled
@@ -331,11 +319,7 @@ class MissionAPIService:
     def check_readiness(self) -> ReadinessResponse:
         """Evaluate subsystem readiness, workspace writeability, and shutdown state."""
         now_iso = datetime.now(UTC).isoformat()
-        ws_path = (
-            self._default_workspace_path
-            or self._config.workspace
-            or Path(".").resolve()
-        )
+        ws_path = self._default_workspace_path or self._config.workspace or Path(".").resolve()
         ws_str = str(ws_path)
 
         checks: dict[str, bool] = {
@@ -477,21 +461,25 @@ class MissionAPIService:
             description=(
                 "Autonomous SWE workforce agent with repository inspection and repair capabilities"
             ),
-            capabilities=frozenset({
-                AgentCapability.REPOSITORY_ANALYSIS,
-                AgentCapability.SOFTWARE_DEBUGGING,
-                AgentCapability.REASONING,
-                AgentCapability.CODE_MODIFICATION,
-                AgentCapability.TESTING,
-                AgentCapability.VERIFICATION,
-                AgentCapability.WRITING,
-            }),
+            capabilities=frozenset(
+                {
+                    AgentCapability.REPOSITORY_ANALYSIS,
+                    AgentCapability.SOFTWARE_DEBUGGING,
+                    AgentCapability.REASONING,
+                    AgentCapability.CODE_MODIFICATION,
+                    AgentCapability.TESTING,
+                    AgentCapability.VERIFICATION,
+                    AgentCapability.WRITING,
+                }
+            ),
             permission_policy=AgentPermissionPolicy.create(
-                frozenset({
-                    AgentPermission.READ_FILES,
-                    AgentPermission.WRITE_FILES,
-                    AgentPermission.CODE_EXECUTION,
-                })
+                frozenset(
+                    {
+                        AgentPermission.READ_FILES,
+                        AgentPermission.WRITE_FILES,
+                        AgentPermission.CODE_EXECUTION,
+                    }
+                )
             ),
         )
 
@@ -580,9 +568,7 @@ class MissionAPIService:
         )
         return [EvidenceItemDTO.from_domain(item) for item in items]
 
-    def get_mission_verification(
-        self, mission_id: UUID
-    ) -> VerificationDetailDTO | None:
+    def get_mission_verification(self, mission_id: UUID) -> VerificationDetailDTO | None:
         """Retrieve formal verification details for a mission."""
         record = self._get_record(mission_id)
         if not record:
@@ -591,19 +577,13 @@ class MissionAPIService:
         verif_items = record.coordinator.ledger.get_items(
             category=EvidenceCategory.VERIFICATION_RESULT
         )
-        verified_count = sum(
-            1 for item in verif_items if item.level == EvidenceLevel.VERIFIED
-        )
+        verified_count = sum(1 for item in verif_items if item.level == EvidenceLevel.VERIFIED)
         passed = verified_count > 0
 
         latest_item = verif_items[-1] if verif_items else None
         reason = latest_item.content if latest_item else "No verification recorded."
         status_val = "passed" if passed else ("failed" if verif_items else "pending")
-        reqs = (
-            tuple(latest_item.metadata.get("requirements", ()))
-            if latest_item
-            else ()
-        )
+        reqs = tuple(latest_item.metadata.get("requirements", ())) if latest_item else ()
 
         return VerificationDetailDTO(
             status=status_val,
@@ -640,9 +620,7 @@ class MissionAPIService:
             transparent=True,
         )
 
-    def get_mission_evaluation(
-        self, mission_id: UUID
-    ) -> EvaluationDetailDTO | None:
+    def get_mission_evaluation(self, mission_id: UUID) -> EvaluationDetailDTO | None:
         """Retrieve deterministic evaluation metrics and criteria for a mission."""
         record = self._get_record(mission_id)
         if not record:
@@ -686,14 +664,10 @@ class MissionAPIService:
         is_approval_pending = False
         if record.pending_approval:
             approval_req = record.pending_approval.to_dict()
-            is_approval_pending = (
-                record.pending_approval.status == ApprovalStatus.PENDING
-            )
+            is_approval_pending = record.pending_approval.status == ApprovalStatus.PENDING
 
         current_stage = (
-            record.coordinator.current_stage.value
-            if record.coordinator.current_stage
-            else None
+            record.coordinator.current_stage.value if record.coordinator.current_stage else None
         )
         completed = tuple(s.value for s in record.coordinator.completed_stages)
 
@@ -734,9 +708,7 @@ class MissionAPIService:
             else ("FAILED" if (app_res and not app_res.is_applied) else "PENDING")
         )
         rollback_status = (
-            "ROLLED_BACK"
-            if (app_res and app_res.recovery_status == "ROLLED_BACK")
-            else "NONE"
+            "ROLLED_BACK" if (app_res and app_res.recovery_status == "ROLLED_BACK") else "NONE"
         )
 
         ops: tuple[dict[str, Any], ...] = ()
@@ -799,9 +771,7 @@ class MissionAPIService:
             is_fallback=sel.is_fallback if sel else False,
         )
 
-    def get_task_recovery_detail(
-        self, mission_id: UUID
-    ) -> RecoveryObservabilityResponse | None:
+    def get_task_recovery_detail(self, mission_id: UUID) -> RecoveryObservabilityResponse | None:
         """Retrieve full Phase 6 Bounded Self-Healing Recovery telemetry."""
         record = self._get_record(mission_id)
         if not record:
@@ -810,18 +780,12 @@ class MissionAPIService:
         report = record.coordinator.last_recovery_report
         if report:
             cat = report.initial_failure_category.value
-            strat = (
-                report.attempts[-1].strategy.value
-                if report.attempts
-                else None
-            )
+            strat = report.attempts[-1].strategy.value if report.attempts else None
             history_data = tuple(att.to_dict() for att in report.attempts)
             budget_dict = {
                 "attempts_remaining": report.final_budget.remaining_attempts,
                 "execution_seconds_remaining": report.final_budget.remaining_seconds,
-                "patch_regenerations_remaining": (
-                    report.final_budget.remaining_regenerations
-                ),
+                "patch_regenerations_remaining": (report.final_budget.remaining_regenerations),
                 "model_changes_remaining": report.final_budget.remaining_model_changes,
                 "test_retries_remaining": report.final_budget.remaining_test_retries,
             }
@@ -885,10 +849,7 @@ class MissionAPIService:
         elif lifecycle in ("RECOVERING", "RECOVERY"):
             recov_status = "ACTIVE"
             swe_status = "WAITING"
-        elif (
-            record.pending_approval
-            and record.pending_approval.status == ApprovalStatus.PENDING
-        ):
+        elif record.pending_approval and record.pending_approval.status == ApprovalStatus.PENDING:
             swe_status = "WAITING_APPROVAL"
         elif curr_stage in (SWETaskStage.INSPECT_REPOSITORY, SWETaskStage.ANALYZE_FAILURE):
             diag_status = "ACTIVE"
@@ -913,9 +874,7 @@ class MissionAPIService:
                 name="Orion-SWE-Engineer",
                 role="Lead SWE Orchestrator & Code Modification",
                 capabilities=tuple(c.value for c in record.agent.capabilities),
-                permissions=tuple(
-                    p.value for p in record.agent.permission_policy.permissions
-                ),
+                permissions=tuple(p.value for p in record.agent.permission_policy.permissions),
                 status=swe_status,
                 current_task=f"Executing {task_label}",
                 started_at=record.created_at.isoformat(),
@@ -1068,9 +1027,7 @@ class MissionAPIService:
                     verif_items = record.coordinator.ledger.get_items(
                         category=EvidenceCategory.VERIFICATION_RESULT
                     )
-                    has_verified = any(
-                        item.level == EvidenceLevel.VERIFIED for item in verif_items
-                    )
+                    has_verified = any(item.level == EvidenceLevel.VERIFIED for item in verif_items)
                     state = "VERIFIED" if has_verified else "FAILED"
                 elif name == "run_tests":
                     test_items = [
@@ -1081,11 +1038,7 @@ class MissionAPIService:
                         if item.source == "ControlledExecutionAuthority"
                     ]
                     last_test = test_items[-1] if test_items else None
-                    test_passed = (
-                        last_test.metadata.get("passed", False)
-                        if last_test
-                        else False
-                    )
+                    test_passed = last_test.metadata.get("passed", False) if last_test else False
                     state = "COMPLETED" if test_passed else "FAILED"
                 else:
                     state = "COMPLETED"
@@ -1109,19 +1062,14 @@ class MissionAPIService:
                 curr_idx = stage_order_map[name]
                 prev_name = stages_defs[curr_idx - 1][0] if curr_idx > 0 else None
                 prev_enum = (
-                    SWETaskStage(prev_name)
-                    if prev_name and prev_name != "approval_gate"
-                    else None
+                    SWETaskStage(prev_name) if prev_name and prev_name != "approval_gate" else None
                 )
 
                 if prev_name == "approval_gate":
                     prev_ready = (
                         record.pending_approval is not None
                         and record.pending_approval.status == ApprovalStatus.APPROVED
-                    ) or (
-                        SWETaskStage.FORMULATE_FIX in completed
-                        and not is_approval_pending
-                    )
+                    ) or (SWETaskStage.FORMULATE_FIX in completed and not is_approval_pending)
                 elif prev_enum:
                     prev_ready = prev_enum in completed
                 else:
@@ -1202,9 +1150,7 @@ class MissionAPIService:
     # -------------------------------------------------------------
     # Approval Flow
     # -------------------------------------------------------------
-    def approve_task(
-        self, mission_id: UUID, req: TaskApprovalRequest
-    ) -> TaskApprovalResponse:
+    def approve_task(self, mission_id: UUID, req: TaskApprovalRequest) -> TaskApprovalResponse:
         """Approve or deny a pending action for a mission via ApprovalService."""
         record = self._get_record(mission_id)
         if not record:
@@ -1767,9 +1713,7 @@ class MissionAPIService:
         )
         return self._build_mission_response(record)
 
-    def generate_final_report(
-        self, mission_id: UUID, summary: str = ""
-    ) -> dict[str, Any]:
+    def generate_final_report(self, mission_id: UUID, summary: str = "") -> dict[str, Any]:
         """Generate final mission report and update mission status."""
         record = self._get_record(mission_id)
         if not record:
@@ -1806,13 +1750,17 @@ class MissionAPIService:
         observed_cnt = sum(1 for item in ev_items if item.level == EvidenceLevel.OBSERVED)
         verified_cnt = sum(1 for item in ev_items if item.level == EvidenceLevel.VERIFIED)
 
-        modified_files = tuple(sorted({
-            str(item.metadata["path"])
-            for item in ev_items
-            if item.category == EvidenceCategory.FILE_CHANGE
-            and "path" in item.metadata
-            and item.metadata["path"]
-        }))
+        modified_files = tuple(
+            sorted(
+                {
+                    str(item.metadata["path"])
+                    for item in ev_items
+                    if item.category == EvidenceCategory.FILE_CHANGE
+                    and "path" in item.metadata
+                    and item.metadata["path"]
+                }
+            )
+        )
 
         evaluation_status = None
         try:
@@ -1836,9 +1784,7 @@ class MissionAPIService:
             lifecycle_state=record.lifecycle_state,
             approval_required=is_approval_pending,
             current_stage=(
-                record.coordinator.current_stage.value
-                if record.coordinator.current_stage
-                else None
+                record.coordinator.current_stage.value if record.coordinator.current_stage else None
             ),
             completed_stages=tuple(s.value for s in completed_stages),
             stages_total=len(STAGE_ORDER),
@@ -1994,9 +1940,7 @@ class MissionAPIService:
         verdict = reviewer.review(proposal)
         return verdict.to_dict()
 
-    def resolve_competing_proposals(
-        self, proposals_list: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def resolve_competing_proposals(self, proposals_list: list[dict[str, Any]]) -> dict[str, Any]:
         """Arbitrate between competing agent proposals using evidence scoring."""
         resolver = AgentConflictResolver()
         proposals = [

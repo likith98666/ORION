@@ -20,8 +20,7 @@ def get_default_security_rules() -> list[PolicyRule]:
             rule_id="RULE-SEC-001",
             name="Block Credential and Secret Access",
             description=(
-                "Blocks unauthorized access or exfiltration of credential, "
-                "key, and password files."
+                "Blocks unauthorized access or exfiltration of credential, key, and password files."
             ),
             effect=PolicyEffect.FORBID,
             priority=10,
@@ -57,8 +56,7 @@ def get_default_security_rules() -> list[PolicyRule]:
             rule_id="RULE-SEC-003",
             name="Adversarial Prompt Injection Defense",
             description=(
-                "Detects and blocks known prompt injection and instruction "
-                "override attempts."
+                "Detects and blocks known prompt injection and instruction override attempts."
             ),
             effect=PolicyEffect.FORBID,
             priority=15,
@@ -76,8 +74,7 @@ def get_default_security_rules() -> list[PolicyRule]:
             rule_id="RULE-SEC-004",
             name="Block Metadata Service SSRF",
             description=(
-                "Prevents server-side request forgery targeting cloud instance "
-                "metadata endpoints."
+                "Prevents server-side request forgery targeting cloud instance metadata endpoints."
             ),
             effect=PolicyEffect.FORBID,
             priority=20,
@@ -94,8 +91,7 @@ def get_default_security_rules() -> list[PolicyRule]:
             rule_id="RULE-SEC-005",
             name="Production Destructive Database Safeguard",
             description=(
-                "Requires explicit human approval for destructive database "
-                "actions in production."
+                "Requires explicit human approval for destructive database actions in production."
             ),
             effect=PolicyEffect.CHALLENGE,
             priority=25,

@@ -169,9 +169,7 @@ class AgentExecutionService:
         updated_execution = replace(
             execution,
             status=AgentExecutionStatus.FAILED,
-            runtime_status=(
-                execution.runtime_status or AgentExecutionStatus.COMPLETED
-            ),
+            runtime_status=(execution.runtime_status or AgentExecutionStatus.COMPLETED),
             verification_status=(
                 verification_result.status
                 if verification_result is not None
@@ -200,9 +198,7 @@ class AgentExecutionService:
         updated_execution = replace(
             execution,
             status=AgentExecutionStatus.COMPLETED,
-            runtime_status=(
-                execution.runtime_status or AgentExecutionStatus.COMPLETED
-            ),
+            runtime_status=(execution.runtime_status or AgentExecutionStatus.COMPLETED),
             verification_status=(
                 verification_result.status
                 if verification_result is not None

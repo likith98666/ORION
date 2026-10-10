@@ -82,8 +82,7 @@ class DistributedTracer:
                 [
                     s
                     for s in self._spans
-                    if str(s.trace_id) == mid_str
-                    or s.attributes.get("mission_id") == mid_str
+                    if str(s.trace_id) == mid_str or s.attributes.get("mission_id") == mid_str
                 ],
                 key=lambda s: s.start_time,
             )

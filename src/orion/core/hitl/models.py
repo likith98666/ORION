@@ -32,9 +32,9 @@ class ClarificationStatus(str, Enum):
 class RiskTier(str, Enum):
     """Classification of action risk determining human oversight requirements."""
 
-    LOW = "low"            # Autonomous execution
-    MEDIUM = "medium"      # Asynchronous advisory notification
-    HIGH = "high"          # Mandatory synchronous approval before execution
+    LOW = "low"  # Autonomous execution
+    MEDIUM = "medium"  # Asynchronous advisory notification
+    HIGH = "high"  # Mandatory synchronous approval before execution
     CRITICAL = "critical"  # Dual-authorization or security review required
 
 

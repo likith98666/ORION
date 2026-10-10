@@ -137,9 +137,7 @@ def test_mission_task_graph_cascade_blocked():
     graph = MissionTaskGraph(mission_id=mid)
 
     t1 = TaskNode(task_id=uuid4(), title="Parent Task", description="P")
-    t2 = TaskNode(
-        task_id=uuid4(), title="Child Task", description="C", dependencies={t1.task_id}
-    )
+    t2 = TaskNode(task_id=uuid4(), title="Child Task", description="C", dependencies={t1.task_id})
     t3 = TaskNode(
         task_id=uuid4(), title="Grandchild Task", description="GC", dependencies={t2.task_id}
     )
@@ -283,9 +281,9 @@ def test_api_v2_mission_endpoints(mission_server):
     base_url, _ = mission_server
 
     # 1. Plan Mission
-    plan_payload = json.dumps({
-        "objective": "Fix SQL injection in search endpoint, add tests, and update docs."
-    }).encode("utf-8")
+    plan_payload = json.dumps(
+        {"objective": "Fix SQL injection in search endpoint, add tests, and update docs."}
+    ).encode("utf-8")
     req = Request(
         f"{base_url}/api/v1/missions/plan",
         data=plan_payload,

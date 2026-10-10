@@ -76,17 +76,13 @@ class TaskManager:
 
         if status != TaskStatus.FAILED and error is not None:
             raise ValueError(
-                "An error message can only be provided when "
-                "transitioning a task to FAILED."
+                "An error message can only be provided when transitioning a task to FAILED."
             )
 
         allowed_statuses = ALLOWED_TRANSITIONS[task.status]
 
         if status not in allowed_statuses:
-            raise ValueError(
-                f"Invalid task transition: "
-                f"{task.status.value} -> {status.value}"
-            )
+            raise ValueError(f"Invalid task transition: {task.status.value} -> {status.value}")
 
         previous_status = task.status
 
@@ -94,9 +90,7 @@ class TaskManager:
             cleaned_error = error.strip() if error is not None else None
 
             if not cleaned_error:
-                raise ValueError(
-                    "An error message is required when a task fails."
-                )
+                raise ValueError("An error message is required when a task fails.")
 
             task.last_error = cleaned_error
 
@@ -120,10 +114,7 @@ class TaskManager:
             message = f"Task failed: {task.last_error}"
         else:
             event_type = TaskEventType.STATUS_CHANGED
-            message = (
-                f"Task status changed: "
-                f"{previous_status.value} -> {status.value}"
-            )
+            message = f"Task status changed: {previous_status.value} -> {status.value}"
 
         event = TaskEvent.create(
             task_id=task.id,

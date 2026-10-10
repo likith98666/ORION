@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.capabilities import AgentCapability
@@ -257,9 +257,7 @@ def test_orchestrator_assigns_every_created_task():
     )
 
     assert len(assignment_service.assigned_tasks) == 2
-    assert assignment_service.assigned_tasks == list(
-        result.agent_tasks
-    )
+    assert assignment_service.assigned_tasks == list(result.agent_tasks)
 
 
 def test_orchestrator_returns_empty_result_when_no_steps_are_ready():
@@ -330,8 +328,6 @@ def test_orchestrate_and_execute_passes_plan_steps_to_execution_loop():
     assert result.execution.executions == ()
 
     assert len(execution_loop.calls) == 1
-    assert execution_loop.calls[0]["tasks"] == list(
-        result.orchestration.agent_tasks
-    )
+    assert execution_loop.calls[0]["tasks"] == list(result.orchestration.agent_tasks)
     assert execution_loop.calls[0]["model_config"] is model_config
     assert execution_loop.calls[0]["plan_steps"] == [step]

@@ -108,9 +108,7 @@ def test_generate_strips_objective_before_sending_request() -> None:
 
     assert runtime.received_request is not None
     assert "Objective: Research AI platforms" in runtime.received_request.prompt
-    assert "Objective:   Research AI platforms  " not in (
-        runtime.received_request.prompt
-    )
+    assert "Objective:   Research AI platforms  " not in (runtime.received_request.prompt)
 
 
 def test_generate_rejects_empty_objective() -> None:
@@ -167,10 +165,7 @@ def test_parse_response_returns_generated_plan() -> None:
     assert result.steps[0].required_capability == AgentCapability.RESEARCH
 
     assert result.steps[1].order == 2
-    assert (
-        result.steps[1].required_capability
-        == AgentCapability.DATA_ANALYSIS
-    )
+    assert result.steps[1].required_capability == AgentCapability.DATA_ANALYSIS
     assert result.steps[1].dependencies == frozenset({1})
 
 

@@ -71,10 +71,9 @@ def test_parallel_executor_executes_all_tasks():
     )
 
     assert len(result.executions) == 3
-    assert {
-        execution.agent_task_id
-        for execution in result.executions
-    } == {task.id for task in tasks}
+    assert {execution.agent_task_id for execution in result.executions} == {
+        task.id for task in tasks
+    }
 
 
 def test_parallel_executor_runs_tasks_concurrently():
@@ -214,10 +213,9 @@ def test_parallel_executor_preserves_input_order():
         model_config=create_model_config(),
     )
 
-    assert [
-        execution.agent_task_id
-        for execution in result.executions
-    ] == [task.id for task in tasks]
+    assert [execution.agent_task_id for execution in result.executions] == [
+        task.id for task in tasks
+    ]
 
 
 def test_parallel_executor_handles_empty_tasks():
@@ -290,10 +288,10 @@ def test_parallel_executor_propagates_memory_context_per_task():
     for task, context in zip(tasks, contexts, strict=True):
         assert received[task.id] is context
 
-    assert [
-        execution.agent_task_id
-        for execution in result.executions
-    ] == [task.id for task in tasks]
+    assert [execution.agent_task_id for execution in result.executions] == [
+        task.id for task in tasks
+    ]
+
 
 def test_parallel_executor_rejects_mismatched_memory_contexts():
     executor = ParallelExecutor(

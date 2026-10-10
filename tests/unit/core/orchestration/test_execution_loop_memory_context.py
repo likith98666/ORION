@@ -21,9 +21,7 @@ class CapturingExecutionCoordinator:
         model_config,
         memory_context=None,
     ):
-        self.calls.append(
-            (task, model_config, memory_context)
-        )
+        self.calls.append((task, model_config, memory_context))
 
         execution = AgentExecution.create(
             agent_task_id=task.id,
@@ -142,10 +140,7 @@ def test_execution_loop_propagates_memory_contexts_in_parallel() -> None:
     assert len(result.executions) == 2
     assert len(coordinator.calls) == 2
 
-    captured = {
-        task.task_id: context
-        for task, _, context in coordinator.calls
-    }
+    captured = {task.task_id: context for task, _, context in coordinator.calls}
 
     first_context = captured[first_task.task_id]
     second_context = captured[second_task.task_id]

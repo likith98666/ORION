@@ -39,9 +39,7 @@ class RecoveryService:
             raise TypeError("model_config must be a ModelConfig instance.")
 
         if task.status != AgentTaskStatus.FAILED:
-            raise ValueError(
-                "Only failed agent tasks can be retried."
-            )
+            raise ValueError("Only failed agent tasks can be retried.")
 
         updated_task = self._agent_task_service.update_status(
             task.id,
@@ -67,27 +65,16 @@ class RecoveryService:
             raise TypeError("task must be an AgentTask instance.")
 
         if not isinstance(current_model_config, ModelConfig):
-            raise TypeError(
-                "current_model_config must be a ModelConfig instance."
-            )
+            raise TypeError("current_model_config must be a ModelConfig instance.")
 
         if not isinstance(alternative_model_configs, tuple):
-            raise TypeError(
-                "alternative_model_configs must be a tuple of ModelConfig instances."
-            )
+            raise TypeError("alternative_model_configs must be a tuple of ModelConfig instances.")
 
-        if any(
-            not isinstance(config, ModelConfig)
-            for config in alternative_model_configs
-        ):
-            raise TypeError(
-                "alternative_model_configs must contain only ModelConfig instances."
-            )
+        if any(not isinstance(config, ModelConfig) for config in alternative_model_configs):
+            raise TypeError("alternative_model_configs must contain only ModelConfig instances.")
 
         if task.status != AgentTaskStatus.FAILED:
-            raise ValueError(
-                "Only failed agent tasks can change model and retry."
-            )
+            raise ValueError("Only failed agent tasks can change model and retry.")
 
         action = RecoveryAction(
             action_type=RecoveryActionType.CHANGE_MODEL,
@@ -100,15 +87,10 @@ class RecoveryService:
         )
 
         if not recovery_result.applied:
-            raise ValueError(
-                "Model recovery could not be applied: "
-                f"{recovery_result.message}"
-            )
+            raise ValueError(f"Model recovery could not be applied: {recovery_result.message}")
 
         if recovery_result.selected_model is None:
-            raise ValueError(
-                "Model recovery was applied without selecting an alternative model."
-            )
+            raise ValueError("Model recovery was applied without selecting an alternative model.")
 
         return self.retry_task(
             task,

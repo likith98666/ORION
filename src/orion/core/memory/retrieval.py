@@ -29,15 +29,10 @@ class MemoryRetrieval:
         reference_time = now or datetime.now()
 
         candidates = [
-            memory
-            for memory in memories
-            if self._matches_filters(memory, query, reference_time)
+            memory for memory in memories if self._matches_filters(memory, query, reference_time)
         ]
 
-        results = [
-            self._score_memory(memory, query, reference_time)
-            for memory in candidates
-        ]
+        results = [self._score_memory(memory, query, reference_time) for memory in candidates]
 
         return self._rank_results(results, query.limit)
 
@@ -111,12 +106,9 @@ class MemoryRetrieval:
         if query.memory_types and memory.memory_type not in query.memory_types:
             return False
 
-        if (
-            query.minimum_importance is not None
-            and not self._importance_meets_minimum(
-                memory.importance,
-                query.minimum_importance,
-            )
+        if query.minimum_importance is not None and not self._importance_meets_minimum(
+            memory.importance,
+            query.minimum_importance,
         ):
             return False
 
@@ -168,11 +160,7 @@ class MemoryRetrieval:
         content_terms = set(memory.content.lower().split())
 
         overlap = query_terms & content_terms
-        relevance = (
-            len(overlap) / len(query_terms)
-            if query_terms
-            else 0.0
-        )
+        relevance = len(overlap) / len(query_terms) if query_terms else 0.0
 
         if relevance > 0:
             reasons.append("query_relevance")

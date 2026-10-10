@@ -28,9 +28,7 @@ def make_agent(
         name="audit-test-agent",
         description="Agent used for authorization audit tests.",
         capabilities=frozenset({AgentCapability.REASONING}),
-        permission_policy=AgentPermissionPolicy.create(
-            permissions=frozenset(permissions or set())
-        ),
+        permission_policy=AgentPermissionPolicy.create(permissions=frozenset(permissions or set())),
     )
 
 
@@ -124,10 +122,7 @@ def test_authorization_approval_required_is_audited() -> None:
 
     events = repository.list_for_agent(agent.id)
     assert len(events) == 1
-    assert (
-        events[0].event_type
-        is AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED
-    )
+    assert events[0].event_type is AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED
 
 
 def test_approval_request_is_audited() -> None:

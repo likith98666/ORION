@@ -50,10 +50,12 @@ class SWEStepSpec:
             raise TypeError("allows_file_modification must be a boolean.")
 
 
-FILE_MODIFICATION_TOOLS: frozenset[str] = frozenset({
-    "write_file",
-    "apply_change",
-})
+FILE_MODIFICATION_TOOLS: frozenset[str] = frozenset(
+    {
+        "write_file",
+        "apply_change",
+    }
+)
 
 DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
     SWETaskStage.INSPECT_REPOSITORY: SWEStepSpec(
@@ -79,10 +81,12 @@ DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
             "root cause. Produce structured diagnostic reasoning and evidence."
         ),
         required_capability=AgentCapability.SOFTWARE_DEBUGGING,
-        required_permissions=frozenset({
-            AgentPermission.READ_FILES,
-            AgentPermission.CODE_EXECUTION,
-        }),
+        required_permissions=frozenset(
+            {
+                AgentPermission.READ_FILES,
+                AgentPermission.CODE_EXECUTION,
+            }
+        ),
         allowed_tools=frozenset({"read_file", "search_files", "run_tests", "diff"}),
         allows_file_modification=False,
         expected_requirements=("failure diagnosis", "evidence"),
@@ -117,10 +121,12 @@ DEFAULT_SWE_STAGE_SPECS: dict[SWETaskStage, SWEStepSpec] = {
             "writes require authorization and approval."
         ),
         required_capability=AgentCapability.CODE_MODIFICATION,
-        required_permissions=frozenset({
-            AgentPermission.WRITE_FILES,
-            AgentPermission.READ_FILES,
-        }),
+        required_permissions=frozenset(
+            {
+                AgentPermission.WRITE_FILES,
+                AgentPermission.READ_FILES,
+            }
+        ),
         allowed_tools=frozenset({"write_file", "apply_change", "diff"}),
         allows_file_modification=True,
         expected_requirements=("change applied",),

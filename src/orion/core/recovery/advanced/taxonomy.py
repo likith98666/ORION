@@ -80,9 +80,7 @@ class FailureClassifier:
 
         # 2. Type Error
         elif (
-            "typeerror:" in text_lower
-            or "mypy" in text_lower
-            or "incompatible type" in text_lower
+            "typeerror:" in text_lower or "mypy" in text_lower or "incompatible type" in text_lower
         ):
             category = FailureCategory.TYPE_FAILURE
 

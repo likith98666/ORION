@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -35,9 +35,7 @@ def create_approved_request():
 
 
 def test_validate_approval_accepts_exact_context() -> None:
-    service, _, request, agent_id, execution_id = (
-        create_approved_request()
-    )
+    service, _, request, agent_id, execution_id = create_approved_request()
 
     validated = service.validate_approval(
         request_id=request.id,
@@ -81,9 +79,7 @@ def test_validate_approval_rejects_wrong_execution() -> None:
 
 
 def test_validate_approval_rejects_wrong_tool() -> None:
-    service, _, request, agent_id, execution_id = (
-        create_approved_request()
-    )
+    service, _, request, agent_id, execution_id = create_approved_request()
 
     with pytest.raises(PermissionError, match="tool"):
         service.validate_approval(
@@ -97,9 +93,7 @@ def test_validate_approval_rejects_wrong_tool() -> None:
 
 
 def test_validate_approval_rejects_wrong_action() -> None:
-    service, _, request, agent_id, execution_id = (
-        create_approved_request()
-    )
+    service, _, request, agent_id, execution_id = create_approved_request()
 
     with pytest.raises(PermissionError, match="action"):
         service.validate_approval(
@@ -113,9 +107,7 @@ def test_validate_approval_rejects_wrong_action() -> None:
 
 
 def test_validate_approval_rejects_wrong_risk_level() -> None:
-    service, _, request, agent_id, execution_id = (
-        create_approved_request()
-    )
+    service, _, request, agent_id, execution_id = create_approved_request()
 
     with pytest.raises(PermissionError, match="risk level"):
         service.validate_approval(

@@ -16,21 +16,23 @@ MAX_EVIDENCE_CONTENT_LENGTH = 16384  # 16 KB bounded
 MAX_EVIDENCE_SUMMARY_LENGTH = 500
 MAX_METADATA_STRING_LENGTH = 4096
 
-SENSITIVE_KEY_PATTERNS = frozenset({
-    "password",
-    "secret",
-    "token",
-    "api_key",
-    "apikey",
-    "private_key",
-    "access_key",
-    "authorization",
-    "auth",
-    "credential",
-    "bearer",
-    "cert",
-    "private",
-})
+SENSITIVE_KEY_PATTERNS = frozenset(
+    {
+        "password",
+        "secret",
+        "token",
+        "api_key",
+        "apikey",
+        "private_key",
+        "access_key",
+        "authorization",
+        "auth",
+        "credential",
+        "bearer",
+        "cert",
+        "private",
+    }
+)
 
 
 def _sanitize_metadata(metadata: dict[str, Any] | None) -> dict[str, Any]:
@@ -430,6 +432,7 @@ class SWEReport:
         # Invariant 2: cannot claim verified_success if evaluation status is not PASS
         if self.evaluation is not None and self.status == "verified_success":
             from orion.core.swe.evaluation import EvaluationStatus
+
             if self.evaluation.status != EvaluationStatus.PASS:
                 raise UnverifiedSuccessError(
                     f"Cannot mark SWE report as 'verified_success' when evaluation status is "
@@ -473,6 +476,7 @@ class SWEReport:
     def is_verified_success(self) -> bool:
         """Return True if mission completed with verified success and passing evaluation."""
         from orion.core.swe.evaluation import EvaluationStatus
+
         return (
             self.status == "verified_success"
             and len(self.verified_evidence) > 0
@@ -483,9 +487,7 @@ class SWEReport:
     def total_evidence_count(self) -> int:
         """Return total count of evidence items across all levels."""
         return (
-            len(self.claimed_evidence)
-            + len(self.observed_evidence)
-            + len(self.verified_evidence)
+            len(self.claimed_evidence) + len(self.observed_evidence) + len(self.verified_evidence)
         )
 
     def get_evidence_by_category(self, category: EvidenceCategory) -> tuple[EvidenceItem, ...]:
@@ -500,17 +502,27 @@ class SWEReport:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert report to a concise, structured dictionary representation."""
-        test_passed_cnt = self.evaluation.metrics.tests_passed if self.evaluation else sum(
-            1 for item in self.observed_evidence
-            if item.category == EvidenceCategory.TEST_RESULT
-            and (item.metadata.get("exit_code") == 0 or item.metadata.get("status") == "passed")
+        test_passed_cnt = (
+            self.evaluation.metrics.tests_passed
+            if self.evaluation
+            else sum(
+                1
+                for item in self.observed_evidence
+                if item.category == EvidenceCategory.TEST_RESULT
+                and (item.metadata.get("exit_code") == 0 or item.metadata.get("status") == "passed")
+            )
         )
-        test_failed_cnt = self.evaluation.metrics.tests_failed if self.evaluation else sum(
-            1 for item in self.observed_evidence
-            if item.category == EvidenceCategory.TEST_RESULT
-            and (
-                item.metadata.get("exit_code") not in (0, None)
-                or item.metadata.get("status") == "failed"
+        test_failed_cnt = (
+            self.evaluation.metrics.tests_failed
+            if self.evaluation
+            else sum(
+                1
+                for item in self.observed_evidence
+                if item.category == EvidenceCategory.TEST_RESULT
+                and (
+                    item.metadata.get("exit_code") not in (0, None)
+                    or item.metadata.get("status") == "failed"
+                )
             )
         )
         verif_passed_cnt = (
@@ -518,15 +530,22 @@ class SWEReport:
             if self.evaluation
             else len(self.verified_evidence)
         )
-        verif_failed_cnt = self.evaluation.metrics.verification_failed if self.evaluation else sum(
-            1 for item in self.observed_evidence
-            if item.category == EvidenceCategory.VERIFICATION_RESULT and "FAILED" in item.content
+        verif_failed_cnt = (
+            self.evaluation.metrics.verification_failed
+            if self.evaluation
+            else sum(
+                1
+                for item in self.observed_evidence
+                if item.category == EvidenceCategory.VERIFICATION_RESULT
+                and "FAILED" in item.content
+            )
         )
         recovery_attempts_cnt = (
             self.evaluation.metrics.recovery_attempts
             if self.evaluation
             else sum(
-                1 for item in self.observed_evidence
+                1
+                for item in self.observed_evidence
                 if item.category == EvidenceCategory.RECOVERY_EVENT
             )
         )
@@ -572,9 +591,7 @@ class SWEReport:
             "recovery": {
                 "recovery_attempts": recovery_attempts_cnt,
                 "recovery_transparent": (
-                    self.evaluation.criteria.recovery_transparent
-                    if self.evaluation
-                    else True
+                    self.evaluation.criteria.recovery_transparent if self.evaluation else True
                 ),
             },
             "evidence_summary": {

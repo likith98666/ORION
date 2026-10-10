@@ -97,9 +97,7 @@ class LLMPlanGenerator(PlanGenerator):
         try:
             decoded_response = json.loads(cleaned_response)
         except json.JSONDecodeError as exc:
-            raise ValueError(
-                "LLM plan response must contain valid JSON."
-            ) from exc
+            raise ValueError("LLM plan response must contain valid JSON.") from exc
 
         if not isinstance(decoded_response, dict):
             raise ValueError("LLM plan response must be a JSON object.")

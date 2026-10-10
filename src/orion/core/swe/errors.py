@@ -1,5 +1,3 @@
-
-
 class SWEWorkflowError(Exception):
     """Base exception for all SWE workflow operations."""
 

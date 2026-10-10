@@ -460,5 +460,3 @@ def test_premium_website_redesign_contracts():
     # 11. Strictly Prohibited Elements Verification (No emojis)
     assert not any(ord(c) > 0x25FF for c in index_html)
     assert not any(ord(c) > 0x25FF for c in app_js)
-
-

@@ -174,10 +174,7 @@ def test_high_risk_security_chain_is_enforced_end_to_end() -> None:
         parent_execution_id,
     )
 
-    assert [
-        event.event_type
-        for event in approval_events
-    ] == [
+    assert [event.event_type for event in approval_events] == [
         AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED,
         AuditEventType.APPROVAL_REQUESTED,
     ]
@@ -192,10 +189,7 @@ def test_high_risk_security_chain_is_enforced_end_to_end() -> None:
         parent_execution_id,
     )
 
-    assert [
-        event.event_type
-        for event in events_after_approval
-    ] == [
+    assert [event.event_type for event in events_after_approval] == [
         AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED,
         AuditEventType.APPROVAL_REQUESTED,
         AuditEventType.APPROVAL_GRANTED,
@@ -237,10 +231,7 @@ def test_high_risk_security_chain_is_enforced_end_to_end() -> None:
         parent_execution_id,
     )
 
-    assert [
-        event.event_type
-        for event in final_events
-    ] == [
+    assert [event.event_type for event in final_events] == [
         AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED,
         AuditEventType.APPROVAL_REQUESTED,
         AuditEventType.APPROVAL_GRANTED,
@@ -291,10 +282,7 @@ def test_unauthorized_agent_is_denied_before_handler() -> None:
         parent_execution_id,
     )
 
-    assert [
-        event.event_type
-        for event in events
-    ] == [
+    assert [event.event_type for event in events] == [
         AuditEventType.AUTHORIZATION_DENIED,
     ]
 

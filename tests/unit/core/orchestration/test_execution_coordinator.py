@@ -27,9 +27,7 @@ class FakeAgentExecutor:
         model_config: ModelConfig,
         memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
-        self.calls.append(
-            (task, model_config, memory_context)
-        )
+        self.calls.append((task, model_config, memory_context))
         return self.execution
 
 

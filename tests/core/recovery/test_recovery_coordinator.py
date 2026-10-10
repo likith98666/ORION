@@ -68,9 +68,7 @@ def test_coordinator_preserves_engine_decision() -> None:
 
     assert result.decision.strategy == RecoveryStrategy.CHANGE_MODEL
     assert result.action.action_type == RecoveryActionType.CHANGE_MODEL
-    assert result.decision.reason.startswith(
-        "Failure classified as 'model_failure'"
-    )
+    assert result.decision.reason.startswith("Failure classified as 'model_failure'")
     assert "Remaining budget: 100.0" in result.decision.reason
     assert "Remaining time: 5000.0 ms" in result.decision.reason
 

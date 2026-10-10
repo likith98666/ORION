@@ -492,9 +492,7 @@ def test_09_patch_regeneration_recovery(tmp_path: Path) -> None:
     )
 
     assert report.total_attempts_executed >= 1
-    assert any(
-        a.strategy == RecoveryStrategy.REGENERATE_PATCH for a in report.attempts
-    )
+    assert any(a.strategy == RecoveryStrategy.REGENERATE_PATCH for a in report.attempts)
 
 
 # ==============================================================================
@@ -640,9 +638,7 @@ def test_13_stale_workspace_recovery(tmp_path: Path) -> None:
 
     # Stale lock should have been released during recovery
     assert applier.lock_manager.is_locked(workspace.workspace_id) is False
-    assert any(
-        a.strategy == RecoveryStrategy.REFRESH_WORKSPACE_STATE for a in report.attempts
-    )
+    assert any(a.strategy == RecoveryStrategy.REFRESH_WORKSPACE_STATE for a in report.attempts)
 
 
 # ==============================================================================

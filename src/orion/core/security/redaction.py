@@ -32,10 +32,7 @@ class RedactionEngine:
             return self._redact_string(value)
 
         if isinstance(value, Mapping):
-            return {
-                key: self.redact(item)
-                for key, item in value.items()
-            }
+            return {key: self.redact(item) for key, item in value.items()}
 
         if isinstance(value, list):
             return [self.redact(item) for item in value]

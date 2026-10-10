@@ -62,8 +62,7 @@ def test_retrieval_respects_limit() -> None:
     now = datetime(2026, 9, 22, 12, 0, 0)
 
     memories = [
-        create_memory(f"model execution failure {index}", created_at=now)
-        for index in range(10)
+        create_memory(f"model execution failure {index}", created_at=now) for index in range(10)
     ]
 
     results = MemoryRetrieval().retrieve(
@@ -399,9 +398,7 @@ def test_retrieval_is_deterministic() -> None:
     first = retrieval.retrieve(memories, query, now=now)
     second = retrieval.retrieve(memories, query, now=now)
 
-    assert [result.memory.id for result in first] == [
-        result.memory.id for result in second
-    ]
+    assert [result.memory.id for result in first] == [result.memory.id for result in second]
 
 
 def test_scores_are_bounded() -> None:
@@ -427,6 +424,7 @@ def test_scores_are_bounded() -> None:
     )
 
     assert 0.0 <= results[0].score <= 1.0
+
 
 def test_importance_is_used_as_deterministic_tie_breaker() -> None:
     now = datetime(2026, 9, 22, 12, 0, 0)

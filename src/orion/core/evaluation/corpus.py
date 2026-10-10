@@ -160,8 +160,7 @@ TASK_TYPE_FORMATTER = BenchmarkTask(
     problem_statement="format_badge in formatter.py raises TypeError by concatenating int to str.",
     workspace_files={
         "src/formatter.py": (
-            "def format_badge(label: str, count: int) -> str:\n"
-            "    return label + ': ' + count\n"
+            "def format_badge(label: str, count: int) -> str:\n    return label + ': ' + count\n"
         ),
     },
     test_files={
@@ -186,10 +185,7 @@ TASK_IMPORT_RESOLVER = BenchmarkTask(
     difficulty=BenchmarkDifficulty.EASY,
     problem_statement="app.py imports non-existent 'math_utils' instead of 'utils'.",
     workspace_files={
-        "src/utils.py": (
-            "def square(x: int) -> int:\n"
-            "    return x * x\n"
-        ),
+        "src/utils.py": ("def square(x: int) -> int:\n    return x * x\n"),
         "src/app.py": (
             "from src.math_utils import square\n\n"
             "def run_square(n: int) -> int:\n"
@@ -198,9 +194,7 @@ TASK_IMPORT_RESOLVER = BenchmarkTask(
     },
     test_files={
         "tests/test_app.py": (
-            "from src.app import run_square\n\n"
-            "def test_square():\n"
-            "    assert run_square(4) == 16\n"
+            "from src.app import run_square\n\ndef test_square():\n    assert run_square(4) == 16\n"
         ),
     },
     target_files=("src/app.py",),
@@ -281,6 +275,5 @@ def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ..
     if normalized in ("taxonomy", "failures", "v6", "comprehensive"):
         return FAILURE_TAXONOMY_CORPUS
     raise KeyError(
-        f"Unknown benchmark suite '{suite_name}'. "
-        "Available: 'standard', 'smoke', 'taxonomy'."
+        f"Unknown benchmark suite '{suite_name}'. Available: 'standard', 'smoke', 'taxonomy'."
     )

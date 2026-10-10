@@ -43,9 +43,7 @@ class FakeAgentExecutor:
         model_config: ModelConfig,
         memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
-        self.calls.append(
-            (task, model_config, memory_context)
-        )
+        self.calls.append((task, model_config, memory_context))
         return self.execution
 
 
@@ -212,9 +210,7 @@ def test_change_model_and_retry_rejects_non_failed_task() -> None:
         service.change_model_and_retry(
             task=task,
             current_model_config=ModelConfig(provider_name="primary"),
-            alternative_model_configs=(
-                ModelConfig(provider_name="alternate"),
-            ),
+            alternative_model_configs=(ModelConfig(provider_name="alternate"),),
         )
 
     assert agent_task_service.status_updates == []

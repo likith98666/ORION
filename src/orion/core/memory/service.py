@@ -62,22 +62,13 @@ class MemoryService:
         """Convert an agent execution outcome into episodic memory."""
 
         if execution.status.value == "completed":
-            content = (
-                f"Agent execution completed successfully. "
-                f"Output: {execution.output or ''}"
-            )
+            content = f"Agent execution completed successfully. Output: {execution.output or ''}"
             importance = MemoryImportance.MEDIUM
         elif execution.status.value == "failed":
-            content = (
-                f"Agent execution failed. "
-                f"Error: {execution.error_message or 'Unknown error'}"
-            )
+            content = f"Agent execution failed. Error: {execution.error_message or 'Unknown error'}"
             importance = MemoryImportance.HIGH
         else:
-            content = (
-                f"Agent execution ended with status "
-                f"'{execution.status.value}'."
-            )
+            content = f"Agent execution ended with status '{execution.status.value}'."
             importance = MemoryImportance.LOW
 
         return self.remember(

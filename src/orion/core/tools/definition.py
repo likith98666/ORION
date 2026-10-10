@@ -38,6 +38,4 @@ class ToolDefinition:
             self.input_schema,
             ToolInputSchema,
         ):
-            raise TypeError(
-                "Tool input schema must be a ToolInputSchema."
-            )
+            raise TypeError("Tool input schema must be a ToolInputSchema.")

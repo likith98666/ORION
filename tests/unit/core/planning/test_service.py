@@ -122,9 +122,7 @@ def test_validate_steps_returns_validation_errors() -> None:
         required_capability=AgentCapability.DATA_ANALYSIS,
     )
 
-    result = service.validate_steps(
-        [first_step, second_step]
-    )
+    result = service.validate_steps([first_step, second_step])
 
     assert result.valid is False
     assert "Duplicate plan step order: 1." in result.errors
@@ -139,10 +137,7 @@ def test_custom_repository_and_validator_are_used() -> None:
             self.saved_plan = plan
 
         def get(self, plan_id: UUID) -> Plan | None:
-            if (
-                self.saved_plan is not None
-                and self.saved_plan.id == plan_id
-            ):
+            if self.saved_plan is not None and self.saved_plan.id == plan_id:
                 return self.saved_plan
 
             return None
@@ -151,10 +146,7 @@ def test_custom_repository_and_validator_are_used() -> None:
             self.saved_plan = None
 
         def list_for_task(self, task_id: UUID) -> list[Plan]:
-            if (
-                self.saved_plan is not None
-                and self.saved_plan.task_id == task_id
-            ):
+            if self.saved_plan is not None and self.saved_plan.task_id == task_id:
                 return [self.saved_plan]
 
             return []

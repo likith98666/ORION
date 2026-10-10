@@ -41,18 +41,22 @@ class ContextOptimizer:
                 clean_doc = sym.docstring.strip().splitlines()[0]
                 lines.append(f"  Doc: {clean_doc}")
 
-        lines.extend([
-            "",
-            "## Imported Dependencies",
-        ])
+        lines.extend(
+            [
+                "",
+                "## Imported Dependencies",
+            ]
+        )
         for imp in imports:
             lines.append(f"- `import {imp}`")
 
         if tests:
-            lines.extend([
-                "",
-                "## Covering Tests",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "## Covering Tests",
+                ]
+            )
             for t in tests:
                 lines.append(f"- `{t}`")
 
@@ -63,13 +67,15 @@ class ContextOptimizer:
                 raw_code = target_full_path.read_text(encoding="utf-8")
                 code_lines = raw_code.splitlines()
                 preview = "\n".join(code_lines[:150])  # Bounded to first 150 lines
-                lines.extend([
-                    "",
-                    "## Source Preview (Target File)",
-                    "```python",
-                    preview,
-                    "```",
-                ])
+                lines.extend(
+                    [
+                        "",
+                        "## Source Preview (Target File)",
+                        "```python",
+                        preview,
+                        "```",
+                    ]
+                )
             except Exception:
                 pass
 

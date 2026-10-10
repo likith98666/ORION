@@ -24,8 +24,4 @@ class InMemoryPlanRepository(PlanRepository):
 
     def list_for_task(self, task_id: UUID) -> list[Plan]:
         """List all plans belonging to a task."""
-        return [
-            plan
-            for plan in self._plans.values()
-            if plan.task_id == task_id
-        ]
+        return [plan for plan in self._plans.values() if plan.task_id == task_id]

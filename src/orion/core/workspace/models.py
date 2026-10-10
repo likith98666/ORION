@@ -123,18 +123,12 @@ class Workspace:
         try:
             resolved_root = Path(repository_root).resolve()
         except Exception as e:
-            raise InvalidWorkspaceError(
-                f"Invalid repository root '{repository_root}': {e}"
-            ) from e
+            raise InvalidWorkspaceError(f"Invalid repository root '{repository_root}': {e}") from e
 
         if not resolved_root.exists():
-            raise InvalidWorkspaceError(
-                f"Repository root does not exist: '{resolved_root}'"
-            )
+            raise InvalidWorkspaceError(f"Repository root does not exist: '{resolved_root}'")
         if not resolved_root.is_dir():
-            raise InvalidWorkspaceError(
-                f"Repository root is not a directory: '{resolved_root}'"
-            )
+            raise InvalidWorkspaceError(f"Repository root is not a directory: '{resolved_root}'")
 
         if task_scope is None:
             scope_obj = TaskScope(task_id=task_id)
@@ -158,9 +152,7 @@ class Workspace:
             )
         else:
             if isinstance(allowed_paths, str):
-                raise TypeError(
-                    "allowed_paths must be an iterable of paths, not a string."
-                )
+                raise TypeError("allowed_paths must be an iterable of paths, not a string.")
             raw_allowed = tuple(allowed_paths)
 
         resolved_allowed: list[Path] = []
@@ -171,11 +163,7 @@ class Workspace:
                 raise InvalidWorkspaceError(f"Allowed path '{item}' contains null byte.")
 
             item_path = Path(item)
-            is_abs = (
-                os.path.isabs(str(item))
-                or item_path.is_absolute()
-                or bool(item_path.anchor)
-            )
+            is_abs = os.path.isabs(str(item)) or item_path.is_absolute() or bool(item_path.anchor)
             if is_abs:
                 resolved_item = item_path.resolve()
             else:
@@ -323,11 +311,7 @@ class Workspace:
 
         try:
             path_obj = Path(path)
-            is_abs = (
-                os.path.isabs(path_str)
-                or path_obj.is_absolute()
-                or bool(path_obj.anchor)
-            )
+            is_abs = os.path.isabs(path_str) or path_obj.is_absolute() or bool(path_obj.anchor)
             if is_abs:
                 resolved = path_obj.resolve()
             else:
@@ -359,11 +343,7 @@ class Workspace:
                 return True
             if allowed.is_file():
                 continue
-            if (
-                allowed.suffix
-                and not allowed.is_dir()
-                and not allowed.name.startswith(".")
-            ):
+            if allowed.suffix and not allowed.is_dir() and not allowed.name.startswith("."):
                 continue
             try:
                 if resolved_target.is_relative_to(allowed):

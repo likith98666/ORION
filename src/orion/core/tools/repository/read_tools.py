@@ -27,14 +27,16 @@ MAX_SEARCH_RESULTS_LIMIT = 200
 MAX_LIST_ENTRIES_LIMIT = 500
 MAX_READ_FILE_SIZE = 1048576  # 1 MB
 DEFAULT_MAX_BYTES = 262144  # 256 KB
-IGNORED_DIRS = frozenset({
-    ".git",
-    "__pycache__",
-    ".pytest_cache",
-    ".venv",
-    "venv",
-    "node_modules",
-})
+IGNORED_DIRS = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        ".pytest_cache",
+        ".venv",
+        "venv",
+        "node_modules",
+    }
+)
 
 
 def _is_binary_file(file_path: Path) -> bool:
@@ -127,12 +129,14 @@ def build_list_files_tool(workspace: Workspace | None = None) -> ToolDefinition:
                 size = None if is_dir else (child.stat().st_size if child.exists() else None)
                 rel_to_root = str(ws.relative_path(child))
 
-                entries.append({
-                    "name": child.name,
-                    "path": rel_to_root,
-                    "is_dir": is_dir,
-                    "size": size,
-                })
+                entries.append(
+                    {
+                        "name": child.name,
+                        "path": rel_to_root,
+                        "is_dir": is_dir,
+                        "size": size,
+                    }
+                )
 
                 if len(entries) >= max_entries:
                     truncated = True
@@ -149,7 +153,8 @@ def build_list_files_tool(workspace: Workspace | None = None) -> ToolDefinition:
 
                 # Filter directories in-place to avoid traversing into ignored or protected dirs
                 dirs[:] = [
-                    d for d in dirs
+                    d
+                    for d in dirs
                     if d not in IGNORED_DIRS
                     and (include_hidden or not d.startswith("."))
                     and not is_protected_path(current_root / d)
@@ -159,12 +164,14 @@ def build_list_files_tool(workspace: Workspace | None = None) -> ToolDefinition:
                 # Process subdirectories
                 for d in dirs:
                     d_path = current_root / d
-                    entries.append({
-                        "name": d,
-                        "path": str(ws.relative_path(d_path)),
-                        "is_dir": True,
-                        "size": None,
-                    })
+                    entries.append(
+                        {
+                            "name": d,
+                            "path": str(ws.relative_path(d_path)),
+                            "is_dir": True,
+                            "size": None,
+                        }
+                    )
                     if len(entries) >= max_entries:
                         truncated = True
                         break
@@ -182,12 +189,14 @@ def build_list_files_tool(workspace: Workspace | None = None) -> ToolDefinition:
                         continue
 
                     size = f_path.stat().st_size if f_path.exists() else None
-                    entries.append({
-                        "name": f,
-                        "path": str(ws.relative_path(f_path)),
-                        "is_dir": False,
-                        "size": size,
-                    })
+                    entries.append(
+                        {
+                            "name": f,
+                            "path": str(ws.relative_path(f_path)),
+                            "is_dir": False,
+                            "size": size,
+                        }
+                    )
                     if len(entries) >= max_entries:
                         truncated = True
                         break
@@ -387,7 +396,8 @@ def build_search_files_tool(workspace: Workspace | None = None) -> ToolDefinitio
 
             # Filter out ignored/protected directories
             dirs[:] = [
-                d for d in dirs
+                d
+                for d in dirs
                 if d not in IGNORED_DIRS
                 and not d.startswith(".")
                 and not is_protected_path(current_root / d)

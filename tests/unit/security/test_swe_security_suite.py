@@ -57,9 +57,7 @@ def unprivileged_agent() -> Agent:
         name="Unprivileged-Agent",
         description="Agent without write permissions",
         capabilities=frozenset({AgentCapability.REPOSITORY_ANALYSIS}),
-        permission_policy=AgentPermissionPolicy.create(
-            frozenset({AgentPermission.READ_FILES})
-        ),
+        permission_policy=AgentPermissionPolicy.create(frozenset({AgentPermission.READ_FILES})),
     )
 
 
@@ -68,18 +66,22 @@ def full_swe_agent() -> Agent:
     return Agent.create(
         name="Full-SWE-Agent",
         description="Agent with read, write, and execute permissions",
-        capabilities=frozenset({
-            AgentCapability.REPOSITORY_ANALYSIS,
-            AgentCapability.CODE_MODIFICATION,
-            AgentCapability.TESTING,
-            AgentCapability.VERIFICATION,
-        }),
+        capabilities=frozenset(
+            {
+                AgentCapability.REPOSITORY_ANALYSIS,
+                AgentCapability.CODE_MODIFICATION,
+                AgentCapability.TESTING,
+                AgentCapability.VERIFICATION,
+            }
+        ),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -263,9 +265,10 @@ def test_stale_hash_concurrency_protection(secure_workspace: Workspace):
     stale_hash = "0000000000000000000000000000000000000000000000000000000000000000"
 
     with pytest.raises(StaleStateError):
-        apply_tool.handler({
-            "path": "safe_file.py",
-            "expected_hash": stale_hash,
-            "new_content": "print('world')",
-        })
-
+        apply_tool.handler(
+            {
+                "path": "safe_file.py",
+                "expected_hash": stale_hash,
+                "new_content": "print('world')",
+            }
+        )

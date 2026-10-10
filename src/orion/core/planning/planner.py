@@ -52,9 +52,7 @@ class Planner:
 
         for planned_step in planned_steps:
             if planned_step.order in step_ids_by_order:
-                raise ValueError(
-                    f"Duplicate plan step order: {planned_step.order}."
-                )
+                raise ValueError(f"Duplicate plan step order: {planned_step.order}.")
 
             step = PlanStep.create(
                 plan_id=plan_id,
@@ -72,20 +70,15 @@ class Planner:
             planned_steps,
             strict=True,
         ):
-            unknown_dependencies = (
-                planned_step.dependencies - step_ids_by_order.keys()
-            )
+            unknown_dependencies = planned_step.dependencies - step_ids_by_order.keys()
 
             if unknown_dependencies:
                 raise ValueError(
-                    "Plan step contains unknown dependency orders: "
-                    f"{sorted(unknown_dependencies)}."
+                    f"Plan step contains unknown dependency orders: {sorted(unknown_dependencies)}."
                 )
 
             if planned_step.order in planned_step.dependencies:
-                raise ValueError(
-                    f"Plan step {planned_step.order} cannot depend on itself."
-                )
+                raise ValueError(f"Plan step {planned_step.order} cannot depend on itself.")
 
             plan_step.dependencies = frozenset(
                 step_ids_by_order[dependency_order]

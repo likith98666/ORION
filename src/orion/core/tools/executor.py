@@ -55,9 +55,7 @@ class ToolExecutor:
     ) -> None:
         self._registry = registry
         self._execution_repository = execution_repository
-        self._authorization_service = (
-            authorization_service or AuthorizationService()
-        )
+        self._authorization_service = authorization_service or AuthorizationService()
         self._input_validator = input_validator or ToolInputValidator()
         self._secret_provider = secret_provider
         self._approval_service = approval_service
@@ -134,9 +132,7 @@ class ToolExecutor:
             )
             policy_decision = self._policy_engine.evaluate(pol_ctx)
             if policy_decision.decision == PolicyAction.DENY:
-                raise PermissionError(
-                    f"Policy Engine denied execution: {policy_decision.reason}"
-                )
+                raise PermissionError(f"Policy Engine denied execution: {policy_decision.reason}")
             elif policy_decision.decision == PolicyAction.REQUIRE_APPROVAL:
                 self._handle_required_approval(
                     agent=agent,
@@ -274,9 +270,7 @@ class ToolExecutor:
         """Enforce approval before a high-risk tool can execute."""
 
         if self._approval_service is None:
-            raise PermissionError(
-                f"Tool '{tool_name}' requires approval before execution."
-            )
+            raise PermissionError(f"Tool '{tool_name}' requires approval before execution.")
 
         if approval_id is None:
             request = self._approval_service.create_request(
@@ -323,15 +317,10 @@ class ToolExecutor:
             reference = resolved[name]
 
             if not isinstance(reference, SecretReference):
-                raise TypeError(
-                    f"Tool argument '{name}' must contain a SecretReference."
-                )
+                raise TypeError(f"Tool argument '{name}' must contain a SecretReference.")
 
             if self._secret_provider is None:
-                raise RuntimeError(
-                    "A SecretProvider is required for secret-backed tool "
-                    "arguments."
-                )
+                raise RuntimeError("A SecretProvider is required for secret-backed tool arguments.")
 
             secret = self._secret_provider.get(reference)
 

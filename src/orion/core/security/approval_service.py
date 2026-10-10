@@ -41,9 +41,7 @@ class ApprovalService:
             ToolRiskLevel.HIGH,
             ToolRiskLevel.CRITICAL,
         ):
-            raise ValueError(
-                "Approval requests are only valid for HIGH or CRITICAL risk."
-            )
+            raise ValueError("Approval requests are only valid for HIGH or CRITICAL risk.")
 
         request = ApprovalRequest.create(
             agent_id=agent_id,
@@ -172,9 +170,7 @@ class ApprovalService:
         request = self._repository.get(request_id)
 
         if request is None:
-            raise PermissionError(
-                f"Approval request '{request_id}' was not found."
-            )
+            raise PermissionError(f"Approval request '{request_id}' was not found.")
 
         if request.status is not ApprovalStatus.APPROVED:
             raise PermissionError("Approval request is not approved.")
@@ -183,29 +179,19 @@ class ApprovalService:
             raise PermissionError("Approval request has expired.")
 
         if request.agent_id != agent_id:
-            raise PermissionError(
-                "Approval request does not belong to this agent."
-            )
+            raise PermissionError("Approval request does not belong to this agent.")
 
         if request.execution_id != execution_id:
-            raise PermissionError(
-                "Approval request does not belong to this execution."
-            )
+            raise PermissionError("Approval request does not belong to this execution.")
 
         if request.tool_name != tool_name.strip():
-            raise PermissionError(
-                "Approval request does not match the requested tool."
-            )
+            raise PermissionError("Approval request does not match the requested tool.")
 
         if request.action != action.strip():
-            raise PermissionError(
-                "Approval request does not match the requested action."
-            )
+            raise PermissionError("Approval request does not match the requested action.")
 
         if request.risk_level is not risk_level:
-            raise PermissionError(
-                "Approval request does not match the requested risk level."
-            )
+            raise PermissionError("Approval request does not match the requested risk level.")
 
         return request
 
@@ -219,14 +205,10 @@ class ApprovalService:
         request = self._repository.get(request_id)
 
         if request is None:
-            raise PermissionError(
-                f"Approval request '{request_id}' was not found."
-            )
+            raise PermissionError(f"Approval request '{request_id}' was not found.")
 
         if request.status is not ApprovalStatus.APPROVED:
-            raise PermissionError(
-                "Approval request is not available for consumption."
-            )
+            raise PermissionError("Approval request is not available for consumption.")
 
         if request.is_expired:
             expired = ApprovalRequest(
@@ -287,9 +269,7 @@ class ApprovalService:
         request = self._repository.get(request_id)
 
         if request is None:
-            raise ValueError(
-                f"Approval request '{request_id}' was not found."
-            )
+            raise ValueError(f"Approval request '{request_id}' was not found.")
 
         if request.status is not ApprovalStatus.PENDING:
             raise ValueError("Approval request is no longer pending.")

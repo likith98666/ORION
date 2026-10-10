@@ -1,4 +1,4 @@
-﻿from uuid import UUID
+from uuid import UUID
 
 from orion.core.security.approval import ApprovalRequest
 from orion.core.security.approval_repository import ApprovalRepository

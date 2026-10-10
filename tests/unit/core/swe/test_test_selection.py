@@ -162,9 +162,7 @@ class TestBoundedSelectionPointByPoint:
         """F. Results are deterministic across repeated runs."""
         selector = TestTargetSelector(temp_workspace)
         results = [
-            selector.select_test_targets(
-                affected_files=["src/pkg/feature.py", "src/calc.py"]
-            )
+            selector.select_test_targets(affected_files=["src/pkg/feature.py", "src/calc.py"])
             for _ in range(5)
         ]
 
@@ -199,9 +197,7 @@ class TestBoundedSelectionPointByPoint:
     def test_i_missing_mapping_uses_bounded_fallback(self, temp_workspace: Workspace):
         """I. Missing mapping uses bounded fallback."""
         selector = TestTargetSelector(temp_workspace)
-        result = selector.select_test_targets(
-            affected_files=["src/nonexistent/random_module.xyz"]
-        )
+        result = selector.select_test_targets(affected_files=["src/nonexistent/random_module.xyz"])
 
         assert result.strategy == TestSelectionStrategy.SAFE_BOUNDED_FALLBACK
         assert result.is_fallback is True
@@ -226,9 +222,11 @@ class TestBoundedSelectionPointByPoint:
         """K. Selector performs no process execution."""
         selector = TestTargetSelector(temp_workspace)
 
-        with patch("subprocess.run") as mock_run, patch("subprocess.Popen") as mock_popen, patch(
-            "os.system"
-        ) as mock_system:
+        with (
+            patch("subprocess.run") as mock_run,
+            patch("subprocess.Popen") as mock_popen,
+            patch("os.system") as mock_system,
+        ):
             # Exercise all strategies
             selector.select_test_targets(explicit_target="tests/test_calc.py")
             selector.select_test_targets(affected_files=["src/calc.py"])
@@ -263,9 +261,7 @@ class TestBoundedSelectionPointByPoint:
             assert result.passed is True
             assert result.exit_code == 0
 
-    def test_m_existing_successful_test_missions_continue_to_work(
-        self, temp_workspace: Workspace
-    ):
+    def test_m_existing_successful_test_missions_continue_to_work(self, temp_workspace: Workspace):
         coordinator = _create_coordinator(temp_workspace)
         for st in (
             SWETaskStage.INSPECT_REPOSITORY,
@@ -278,9 +274,7 @@ class TestBoundedSelectionPointByPoint:
         coordinator.advance_stage(SWETaskStage.RUN_TESTS)
 
         # Mocking runner execution for clean deterministic success
-        with patch.object(
-            coordinator.controlled_execution_authority, "run_tests"
-        ) as mock_runner:
+        with patch.object(coordinator.controlled_execution_authority, "run_tests") as mock_runner:
             mock_runner.return_value = ControlledTestResult(
                 execution_id=uuid4(),
                 target="tests/test_calc.py",
@@ -335,9 +329,7 @@ class TestBoundedSelectionPointByPoint:
         coordinator.advance_stage(SWETaskStage.RUN_TESTS)
 
         # Simulate timeout failure
-        with patch.object(
-            coordinator.controlled_execution_authority, "run_tests"
-        ) as mock_runner:
+        with patch.object(coordinator.controlled_execution_authority, "run_tests") as mock_runner:
             mock_runner.return_value = ControlledTestResult(
                 execution_id=uuid4(),
                 target="tests/test_calc.py",
@@ -369,9 +361,7 @@ class TestBoundedSelectionPointByPoint:
 class TestCoordinatorBoundedSelectionIntegration:
     """Integration test verifying end-to-end RUN_TESTS bounded target inference."""
 
-    def test_coordinator_infers_bounded_tests_when_target_empty(
-        self, temp_workspace: Workspace
-    ):
+    def test_coordinator_infers_bounded_tests_when_target_empty(self, temp_workspace: Workspace):
         """When coordinator.run_controlled_tests receives target='', it infers bounded scope."""
         coordinator = _create_coordinator(temp_workspace)
 
@@ -398,9 +388,7 @@ class TestCoordinatorBoundedSelectionIntegration:
 
         coordinator.advance_stage(SWETaskStage.RUN_TESTS)
 
-        with patch.object(
-            coordinator.controlled_execution_authority, "run_tests"
-        ) as mock_runner:
+        with patch.object(coordinator.controlled_execution_authority, "run_tests") as mock_runner:
             mock_runner.return_value = ControlledTestResult(
                 execution_id=uuid4(),
                 target="tests/test_calc.py",
@@ -423,23 +411,17 @@ class TestCoordinatorBoundedSelectionIntegration:
                 coordinator.last_test_selection.strategy
                 == TestSelectionStrategy.DIRECT_TEST_MAPPING
             )
-            assert coordinator.last_test_selection.selected_tests == (
-                "tests/test_calc.py",
-            )
+            assert coordinator.last_test_selection.selected_tests == ("tests/test_calc.py",)
 
             # Ensure evidence was recorded in ledger
             evidence_items = coordinator.ledger.get_items(
                 stage=SWETaskStage.RUN_TESTS,
                 category=EvidenceCategory.TEST_RESULT,
             )
-            selector_items = [
-                i for i in evidence_items if i.source == "TestTargetSelector"
-            ]
+            selector_items = [i for i in evidence_items if i.source == "TestTargetSelector"]
             assert len(selector_items) == 1
             assert (
                 selector_items[0].metadata["strategy"]
                 == TestSelectionStrategy.DIRECT_TEST_MAPPING.value
             )
-            assert selector_items[0].metadata["selected_tests"] == [
-                "tests/test_calc.py"
-            ]
+            assert selector_items[0].metadata["selected_tests"] == ["tests/test_calc.py"]

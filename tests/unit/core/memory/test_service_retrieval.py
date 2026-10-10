@@ -94,9 +94,7 @@ def test_retrieve_forwards_reference_time() -> None:
 def test_retrieve_empty_repository_returns_empty_list() -> None:
     service = create_service()
 
-    results = service.retrieve(
-        MemoryQuery(query="anything", limit=5)
-    )
+    results = service.retrieve(MemoryQuery(query="anything", limit=5))
 
     assert results == []
 
@@ -136,9 +134,7 @@ def test_custom_retrieval_engine_can_be_injected() -> None:
         memory_type=MemoryType.LONG_TERM,
     )
 
-    results = service.retrieve(
-        MemoryQuery(query="Injected retrieval engine")
-    )
+    results = service.retrieve(MemoryQuery(query="Injected retrieval engine"))
 
     assert len(results) == 1
     assert results[0].memory is memory

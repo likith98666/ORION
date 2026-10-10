@@ -161,16 +161,19 @@ class SWEEvaluator:
         # 2. Test outcomes
         test_items = ledger.get_items(category=EvidenceCategory.TEST_RESULT)
         validation_tests = [
-            item for item in test_items
+            item
+            for item in test_items
             if item.stage in (SWETaskStage.RUN_TESTS, SWETaskStage.VERIFY)
         ]
 
         tests_passed_count = sum(
-            1 for item in test_items
+            1
+            for item in test_items
             if item.metadata.get("exit_code") == 0 or item.metadata.get("status") == "passed"
         )
         tests_failed_count = sum(
-            1 for item in test_items
+            1
+            for item in test_items
             if (
                 item.metadata.get("exit_code") not in (0, None)
                 or item.metadata.get("status") == "failed"
@@ -210,11 +213,11 @@ class SWEEvaluator:
         # 3. Verification outcomes
         verif_items = ledger.get_items(category=EvidenceCategory.VERIFICATION_RESULT)
         verification_passed_count = sum(
-            1 for item in verif_items
-            if item.level == EvidenceLevel.VERIFIED
+            1 for item in verif_items if item.level == EvidenceLevel.VERIFIED
         )
         verification_failed_count = sum(
-            1 for item in verif_items
+            1
+            for item in verif_items
             if item.level == EvidenceLevel.OBSERVED and "FAILED" in item.content
         )
 
@@ -352,9 +355,8 @@ class SWEEvaluator:
             summary = (
                 "Mission evaluation passed: workflow completed, tests passed, and outcome verified."
             )
-        elif (
-            (verification_failed_count > 0 and not verification_passed)
-            or (test_items and not test_passed)
+        elif (verification_failed_count > 0 and not verification_passed) or (
+            test_items and not test_passed
         ):
             status = EvaluationStatus.FAIL
             summary = "Mission evaluation failed: unrecovered test or verification failure."

@@ -53,9 +53,7 @@ class PlanStep:
             raise ValueError("Plan step description cannot be empty.")
 
         if len(cleaned_description) > 5_000:
-            raise ValueError(
-                "Plan step description cannot exceed 5,000 characters."
-            )
+            raise ValueError("Plan step description cannot exceed 5,000 characters.")
 
         if dependencies is None:
             dependencies = frozenset()

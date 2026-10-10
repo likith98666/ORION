@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 from orion.config.model_config import ModelConfig
 from orion.core.agents.capabilities import AgentCapability
@@ -168,9 +168,7 @@ def test_orchestrate_and_execute_preserves_orchestration_result():
         model_config=ModelConfig(provider_name="mock"),
     )
 
-    assert result.orchestration.ready_steps[0].description == (
-        "Research the topic."
-    )
+    assert result.orchestration.ready_steps[0].description == ("Research the topic.")
 
 
 def test_orchestrate_and_execute_returns_empty_execution_for_no_ready_tasks():

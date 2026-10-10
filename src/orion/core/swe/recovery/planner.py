@@ -67,9 +67,7 @@ class RecoveryPlanner:
                     f"for failure category '{classification.category.value}'."
                 )
             selected_strategy = strat_enum
-            rationale = (
-                f"Candidate strategy '{strat_enum.value}' verified and permitted."
-            )
+            rationale = f"Candidate strategy '{strat_enum.value}' verified and permitted."
         else:
             # Authoritative policy selection
             selected_strategy, rationale = self._policy.select_strategy(
@@ -114,8 +112,7 @@ class RecoveryPlanner:
             )
         elif selected_strategy == RecoveryStrategy.ROLLBACK:
             action = (
-                "Revert workspace mutations cleanly using pre-apply "
-                "FileSnapshot recovery point."
+                "Revert workspace mutations cleanly using pre-apply FileSnapshot recovery point."
             )
         elif selected_strategy == RecoveryStrategy.CHANGE_MODEL:
             target_model = candidate_model or (available_models[0] if available_models else None)

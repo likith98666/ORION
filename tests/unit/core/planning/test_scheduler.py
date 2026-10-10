@@ -77,9 +77,7 @@ def test_ready_steps_are_sorted_by_priority_then_order() -> None:
     medium = create_step(2, priority=3)
     high_early = create_step(4, priority=5)
 
-    result = PlanScheduler().get_ready_steps(
-        [low, high_late, medium, high_early]
-    )
+    result = PlanScheduler().get_ready_steps([low, high_late, medium, high_early])
 
     assert result == [
         high_late,

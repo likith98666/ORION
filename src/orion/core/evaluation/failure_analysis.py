@@ -97,9 +97,7 @@ class FailureAnalysisReport:
                     if not r.verification_passed
                     else ("run_tests" if r.tests_failed > 0 else "implement_change")
                 )
-                last_strat = (
-                    r.recovery_strategies[-1] if r.recovery_strategies else None
-                )
+                last_strat = r.recovery_strategies[-1] if r.recovery_strategies else None
 
                 rec = BenchmarkFailureRecord(
                     task_id=r.task_id,
@@ -112,9 +110,7 @@ class FailureAnalysisReport:
                     strategy_result="FAILED" if r.status != "PASS" else "PASSED",
                     rollback_performed=r.rollback_events > 0,
                     final_termination_reason=(
-                        r.termination_reason
-                        or r.error_message
-                        or "Mission failed verification."
+                        r.termination_reason or r.error_message or "Mission failed verification."
                     ),
                     orion_version=version,
                 )

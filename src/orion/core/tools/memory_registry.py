@@ -1,4 +1,4 @@
-﻿from orion.core.tools.definition import ToolDefinition
+from orion.core.tools.definition import ToolDefinition
 from orion.core.tools.registry import ToolRegistry
 
 

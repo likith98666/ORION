@@ -273,9 +273,9 @@ class PatchValidator:
 
             # Optimistic concurrency / hash locking check
             if expected_hash is not None and expected_hash:
-                text_hash = hashlib.sha256(
-                    (original_content or "").encode("utf-8")
-                ).hexdigest().lower()
+                text_hash = (
+                    hashlib.sha256((original_content or "").encode("utf-8")).hexdigest().lower()
+                )
                 if expected_hash not in (current_hash, text_hash):
                     raise StalePatchError(
                         f"Expected hash '{expected_hash}' does not match actual current hash "
@@ -332,9 +332,7 @@ class PatchValidator:
 
         # Reject UNC paths (\\server\share or //server/share)
         if raw_path.strip().startswith(("\\\\", "//")):
-            raise UnsafePatchPathError(
-                f"UNC path '{raw_path}' is forbidden in patch proposals."
-            )
+            raise UnsafePatchPathError(f"UNC path '{raw_path}' is forbidden in patch proposals.")
 
         # Reject leading slashes (root paths)
         if path_str.startswith("/"):
@@ -373,6 +371,5 @@ class PatchValidator:
             for pattern in DANGEROUS_COMMAND_PATTERNS:
                 if pattern.search(text):
                     raise InvalidPatchError(
-                        f"Patch contains prohibited destructive command pattern: "
-                        f"{pattern.pattern}"
+                        f"Patch contains prohibited destructive command pattern: {pattern.pattern}"
                     )

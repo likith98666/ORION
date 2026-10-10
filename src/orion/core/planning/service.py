@@ -45,9 +45,7 @@ class PlanService:
         """Generate, validate, persist, and return an execution plan."""
 
         if self._generator is None:
-            raise RuntimeError(
-                "Plan generation requires a configured PlanGenerator."
-            )
+            raise RuntimeError("Plan generation requires a configured PlanGenerator.")
 
         cleaned_objective = objective.strip()
 
@@ -60,9 +58,7 @@ class PlanService:
         )
 
         if generated_plan.task_id != task_id:
-            raise ValueError(
-                "Generated plan task ID does not match the requested task ID."
-            )
+            raise ValueError("Generated plan task ID does not match the requested task ID.")
 
         plan = Plan.create(
             task_id=task_id,
@@ -94,16 +90,12 @@ class PlanService:
                     for dependency_order in generated_step.dependencies
                 )
             except KeyError as exc:
-                raise ValueError(
-                    "Generated plan contains an unknown dependency."
-                ) from exc
+                raise ValueError("Generated plan contains an unknown dependency.") from exc
 
         validation_result = self.validate_steps(plan_steps)
 
         if not validation_result.valid:
-            raise ValueError(
-                "Generated plan failed validation."
-            )
+            raise ValueError("Generated plan failed validation.")
 
         self._repository.save(plan)
 

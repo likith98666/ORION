@@ -698,9 +698,11 @@ class SWERecoveryCoordinator:
             try:
                 target_path = self._workspace.validate_path(rel_path)
                 if target_path.exists() and target_path.is_file():
-                    pre_hashes[rel_path] = hashlib.sha256(
-                        target_path.read_text(encoding="utf-8").encode("utf-8")
-                    ).hexdigest().lower()
+                    pre_hashes[rel_path] = (
+                        hashlib.sha256(target_path.read_text(encoding="utf-8").encode("utf-8"))
+                        .hexdigest()
+                        .lower()
+                    )
                 else:
                     pre_hashes[rel_path] = None
             except Exception:
@@ -717,9 +719,11 @@ class SWERecoveryCoordinator:
             try:
                 target_path = self._workspace.validate_path(rel_path)
                 if target_path.exists() and target_path.is_file():
-                    post_hashes[rel_path] = hashlib.sha256(
-                        target_path.read_text(encoding="utf-8").encode("utf-8")
-                    ).hexdigest().lower()
+                    post_hashes[rel_path] = (
+                        hashlib.sha256(target_path.read_text(encoding="utf-8").encode("utf-8"))
+                        .hexdigest()
+                        .lower()
+                    )
                 else:
                     post_hashes[rel_path] = None
             except Exception:

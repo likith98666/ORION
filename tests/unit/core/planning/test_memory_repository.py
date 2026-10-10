@@ -42,9 +42,7 @@ def test_save_replaces_existing_plan() -> None:
     repository.save(plan)
 
     assert repository.get(plan.id) == plan
-    assert repository.get(plan.id).objective == (
-        "Research AI education platforms"
-    )
+    assert repository.get(plan.id).objective == ("Research AI education platforms")
 
 
 def test_delete_plan() -> None:

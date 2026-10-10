@@ -61,9 +61,7 @@ def test_high_risk_tool_is_blocked_until_approval() -> None:
     except PermissionError as exc:
         assert "requires approval" in str(exc)
     else:
-        raise AssertionError(
-            f"Expected approval requirement, got result: {result!r}"
-        )
+        raise AssertionError(f"Expected approval requirement, got result: {result!r}")
 
 
 def test_injected_risk_policy_controls_execution() -> None:

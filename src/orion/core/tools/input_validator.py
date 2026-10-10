@@ -20,14 +20,11 @@ class ToolInputValidator:
         schema: ToolInputSchema,
     ) -> None:
         if not isinstance(arguments, dict):
-            raise ToolInputValidationError(
-                "Tool arguments must be a dictionary."
-            )
+            raise ToolInputValidationError("Tool arguments must be a dictionary.")
 
         if len(arguments) > schema.max_fields:
             raise ToolInputValidationError(
-                f"Tool arguments exceed the maximum field count "
-                f"of {schema.max_fields}."
+                f"Tool arguments exceed the maximum field count of {schema.max_fields}."
             )
 
         fields = {field.name: field for field in schema.fields}
@@ -42,9 +39,7 @@ class ToolInputValidator:
 
         for field in schema.fields:
             if field.required and field.name not in arguments:
-                raise ToolInputValidationError(
-                    f"Required tool argument '{field.name}' is missing."
-                )
+                raise ToolInputValidationError(f"Required tool argument '{field.name}' is missing.")
 
         for name, value in arguments.items():
             input_field = fields.get(name)
@@ -66,9 +61,7 @@ class ToolInputValidator:
                 if input_field.nullable:
                     continue
 
-                raise ToolInputValidationError(
-                    f"Tool argument '{name}' cannot be null."
-                )
+                raise ToolInputValidationError(f"Tool argument '{name}' cannot be null.")
 
             self._validate_value(
                 value=value,
@@ -104,20 +97,16 @@ class ToolInputValidator:
             if nullable:
                 return
 
-            raise ToolInputValidationError(
-                f"Tool argument '{path}' cannot be null."
-            )
+            raise ToolInputValidationError(f"Tool argument '{path}' cannot be null.")
 
         if depth > max_depth:
             raise ToolInputValidationError(
-                f"Tool argument '{path}' exceeds maximum nesting depth "
-                f"of {max_depth}."
+                f"Tool argument '{path}' exceeds maximum nesting depth of {max_depth}."
             )
 
         if not self._matches_type(value, input_type):
             raise ToolInputValidationError(
-                f"Tool argument '{path}' must be of type "
-                f"'{input_type.value}'."
+                f"Tool argument '{path}' must be of type '{input_type.value}'."
             )
 
         if input_type == ToolInputType.SECRET_REFERENCE:
@@ -126,8 +115,7 @@ class ToolInputValidator:
         if isinstance(value, str):
             if len(value) > max_length:
                 raise ToolInputValidationError(
-                    f"Tool argument '{path}' exceeds maximum string "
-                    f"length of {max_length}."
+                    f"Tool argument '{path}' exceeds maximum string length of {max_length}."
                 )
 
             return
@@ -135,8 +123,7 @@ class ToolInputValidator:
         if isinstance(value, (list, tuple, set)):
             if len(value) > max_items:
                 raise ToolInputValidationError(
-                    f"Tool argument '{path}' exceeds maximum collection "
-                    f"size of {max_items}."
+                    f"Tool argument '{path}' exceeds maximum collection size of {max_items}."
                 )
 
             for index, item in enumerate(value):
@@ -156,8 +143,7 @@ class ToolInputValidator:
         if isinstance(value, dict):
             if len(value) > max_items:
                 raise ToolInputValidationError(
-                    f"Tool argument '{path}' exceeds maximum object "
-                    f"field count of {max_items}."
+                    f"Tool argument '{path}' exceeds maximum object field count of {max_items}."
                 )
 
             for key, item in value.items():
@@ -197,9 +183,7 @@ class ToolInputValidator:
             return isinstance(value, int) and not isinstance(value, bool)
 
         if input_type == ToolInputType.FLOAT:
-            return isinstance(value, (float, int)) and not isinstance(
-                value, bool
-            )
+            return isinstance(value, (float, int)) and not isinstance(value, bool)
 
         if input_type == ToolInputType.BOOLEAN:
             return isinstance(value, bool)

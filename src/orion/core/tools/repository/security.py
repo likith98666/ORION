@@ -2,13 +2,15 @@ from pathlib import Path
 
 from orion.core.tools.repository.errors import ProtectedPathError
 
-PROTECTED_EXACT_NAMES: frozenset[str] = frozenset({
-    ".env",
-    "id_rsa",
-    "id_ed25519",
-    "id_ecdsa",
-    "id_dsa",
-})
+PROTECTED_EXACT_NAMES: frozenset[str] = frozenset(
+    {
+        ".env",
+        "id_rsa",
+        "id_ed25519",
+        "id_ecdsa",
+        "id_dsa",
+    }
+)
 
 PROTECTED_PREFIXES: tuple[str, ...] = (
     ".env.",
@@ -16,15 +18,17 @@ PROTECTED_PREFIXES: tuple[str, ...] = (
     "secrets.",
 )
 
-PROTECTED_EXTENSIONS: frozenset[str] = frozenset({
-    ".pem",
-    ".key",
-    ".pfx",
-    ".p12",
-    ".pkcs12",
-    ".keystore",
-    ".jks",
-})
+PROTECTED_EXTENSIONS: frozenset[str] = frozenset(
+    {
+        ".pem",
+        ".key",
+        ".pfx",
+        ".p12",
+        ".pkcs12",
+        ".keystore",
+        ".jks",
+    }
+)
 
 
 def is_protected_path(path: str | Path) -> bool:

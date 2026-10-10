@@ -388,6 +388,4 @@ def test_evaluation_ranking_is_deterministic() -> None:
     first = retrieval.retrieve(memories, query, now=now)
     second = retrieval.retrieve(memories, query, now=now)
 
-    assert [result.memory.id for result in first] == [
-        result.memory.id for result in second
-    ]
+    assert [result.memory.id for result in first] == [result.memory.id for result in second]

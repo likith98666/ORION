@@ -19,19 +19,13 @@ def test_default_medium_risk_is_allowed() -> None:
 def test_default_high_risk_requires_approval() -> None:
     policy = ToolRiskPolicy()
 
-    assert (
-        policy.decide(ToolRiskLevel.HIGH)
-        == AuthorizationDecision.REQUIRE_APPROVAL
-    )
+    assert policy.decide(ToolRiskLevel.HIGH) == AuthorizationDecision.REQUIRE_APPROVAL
 
 
 def test_default_critical_risk_requires_approval() -> None:
     policy = ToolRiskPolicy()
 
-    assert (
-        policy.decide(ToolRiskLevel.CRITICAL)
-        == AuthorizationDecision.REQUIRE_APPROVAL
-    )
+    assert policy.decide(ToolRiskLevel.CRITICAL) == AuthorizationDecision.REQUIRE_APPROVAL
 
 
 def test_policy_is_immutable() -> None:

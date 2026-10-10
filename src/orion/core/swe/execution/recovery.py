@@ -102,9 +102,11 @@ class PatchRecoveryManager:
                     target_path.write_text(snapshot.content, encoding="utf-8", newline="\n")
 
                     # Verify restored hash
-                    restored_hash = hashlib.sha256(
-                        target_path.read_text(encoding="utf-8").encode("utf-8")
-                    ).hexdigest().lower()
+                    restored_hash = (
+                        hashlib.sha256(target_path.read_text(encoding="utf-8").encode("utf-8"))
+                        .hexdigest()
+                        .lower()
+                    )
 
                     if restored_hash != snapshot.sha256_hash:
                         errors.append(

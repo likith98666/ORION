@@ -69,9 +69,7 @@ class AdaptiveRecoveryMemory:
         self._history.append(record)
         return record
 
-    def get_failed_strategies_for_failure(
-        self, category: FailureCategory
-    ) -> list[str]:
+    def get_failed_strategies_for_failure(self, category: FailureCategory) -> list[str]:
         """Return list of strategy names that previously failed for the given failure category."""
         return [
             rec.strategy_name

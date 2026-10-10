@@ -221,7 +221,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             self._serve_static_file("favicon.svg", "image/svg+xml")
             return
         elif path.startswith("/static/"):
-            rel_file = path[len("/static/"):]
+            rel_file = path[len("/static/") :]
             self._serve_static_file(rel_file)
             return
 
@@ -433,9 +433,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
     def _handle_readiness(self) -> None:
         resp = self.service.check_readiness()
-        status_code = (
-            HTTPStatus.OK if resp.status == "ready" else HTTPStatus.SERVICE_UNAVAILABLE
-        )
+        status_code = HTTPStatus.OK if resp.status == "ready" else HTTPStatus.SERVICE_UNAVAILABLE
         self._send_json(status_code, resp.to_dict())
 
     def _handle_list_missions(self) -> None:
@@ -497,7 +495,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/v1/evaluation/runs/")
             else "/api/evaluation/runs/"
         )
-        subpath = path[len(prefix):].strip("/")
+        subpath = path[len(prefix) :].strip("/")
         parts = subpath.split("/")
         if not parts or not parts[0]:
             self._send_error_json(HTTPStatus.BAD_REQUEST, "Experiment ID is required.")
@@ -584,7 +582,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/v1/hitl/interventions/")
             else "/api/hitl/interventions/"
         )
-        mid_str = path[len(prefix):].strip("/")
+        mid_str = path[len(prefix) :].strip("/")
         try:
             mid = UUID(mid_str)
             intervs = self.service.get_mission_interventions(mid)
@@ -598,7 +596,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/v1/hitl/feedback/")
             else "/api/hitl/feedback/"
         )
-        mid_str = path[len(prefix):].strip("/")
+        mid_str = path[len(prefix) :].strip("/")
         try:
             mid = UUID(mid_str)
             fb = self.service.get_mission_feedback(mid)
@@ -662,7 +660,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/v1/hitl/clarifications/")
             else "/api/hitl/clarifications/"
         )
-        req_id_str = path[len(prefix):-len("/respond")].strip("/")
+        req_id_str = path[len(prefix) : -len("/respond")].strip("/")
         resp_text = body.get("response") or body.get("answer")
         operator = body.get("operator", "Operator")
         if not resp_text:
@@ -772,7 +770,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/v1/observability/spans/")
             else "/api/observability/spans/"
         )
-        mid_str = path[len(prefix):].strip("/")
+        mid_str = path[len(prefix) :].strip("/")
         try:
             mid = UUID(mid_str)
             spans = self.service.get_mission_spans(mid)
@@ -1172,9 +1170,7 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         reason = body.get("reason", "Operator requested cancellation")
         cancelled_by = body.get("cancelled_by", "Operator")
         try:
-            req = TaskCancellationRequest(
-                reason=str(reason), cancelled_by=str(cancelled_by)
-            )
+            req = TaskCancellationRequest(reason=str(reason), cancelled_by=str(cancelled_by))
             resp = self.service.cancel_mission(mission_id, req)
             self._send_json(HTTPStatus.OK, resp.to_dict())
         except KeyError:
@@ -1220,11 +1216,14 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
         try:
             self.service.run_pipeline(mission_id, auto_approve=auto_approve, background=background)
-            self._send_json(HTTPStatus.ACCEPTED, {
-                "status": "executing",
-                "mission_id": str(mission_id),
-                "message": "Pipeline execution initiated.",
-            })
+            self._send_json(
+                HTTPStatus.ACCEPTED,
+                {
+                    "status": "executing",
+                    "mission_id": str(mission_id),
+                    "message": "Pipeline execution initiated.",
+                },
+            )
         except KeyError:
             self._send_error_json(HTTPStatus.NOT_FOUND, f"Mission '{mission_id}' not found.")
         except Exception as exc:

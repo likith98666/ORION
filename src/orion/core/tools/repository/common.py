@@ -10,11 +10,7 @@ def get_effective_workspace(
     """Retrieve the effective Workspace instance from arguments or closure binding."""
     ws = arguments.get("workspace") or bound_workspace
     if ws is None:
-        raise ValueError(
-            "No Workspace was provided or bound for repository tool execution."
-        )
+        raise ValueError("No Workspace was provided or bound for repository tool execution.")
     if not isinstance(ws, Workspace):
-        raise TypeError(
-            f"Expected Workspace instance, got {type(ws).__name__}."
-        )
+        raise TypeError(f"Expected Workspace instance, got {type(ws).__name__}.")
     return ws

@@ -46,7 +46,6 @@ def test_selects_strategy_for_failure_type(
     failure_type: FailureType,
     expected_strategy: RecoveryStrategy,
 ) -> None:
-
     decision = engine.decide(
         failure=__import__(
             "orion.core.recovery.failures",

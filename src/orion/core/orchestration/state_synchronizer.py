@@ -23,23 +23,15 @@ class StateSynchronizer:
         task = self._task_service.get_task(execution.agent_task_id)
 
         if task is None:
-            raise ValueError(
-                f"Agent task not found: {execution.agent_task_id}"
-            )
+            raise ValueError(f"Agent task not found: {execution.agent_task_id}")
 
         plan_step = next(
-            (
-                step
-                for step in plan_steps
-                if step.id == task.plan_step_id
-            ),
+            (step for step in plan_steps if step.id == task.plan_step_id),
             None,
         )
 
         if plan_step is None:
-            raise ValueError(
-                f"Plan step not found: {task.plan_step_id}"
-            )
+            raise ValueError(f"Plan step not found: {task.plan_step_id}")
 
         if execution.status == AgentExecutionStatus.RUNNING:
             if task.status != AgentTaskStatus.RUNNING:

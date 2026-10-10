@@ -39,10 +39,7 @@ class RuleBasedPlanGenerator(PlanGenerator):
 
         normalized_objective = objective.lower()
 
-        if any(
-            keyword in normalized_objective
-            for keyword in ("research", "investigate", "study")
-        ):
+        if any(keyword in normalized_objective for keyword in ("research", "investigate", "study")):
             return self._research_plan()
 
         if any(

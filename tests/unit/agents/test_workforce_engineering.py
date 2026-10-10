@@ -229,12 +229,14 @@ def test_api_v4_workforce_endpoints(workforce_server):
         assert roster_data["total"] == 7
 
     # 2. POST /api/v1/workforce/review
-    review_payload = json.dumps({
-        "role": "implementer",
-        "target_files": ["src/math.py", "tests/test_math.py"],
-        "patch_content": "def square(n: int) -> int:\n    return n * n\n",
-        "rationale": "Add square function with tests",
-    }).encode("utf-8")
+    review_payload = json.dumps(
+        {
+            "role": "implementer",
+            "target_files": ["src/math.py", "tests/test_math.py"],
+            "patch_content": "def square(n: int) -> int:\n    return n * n\n",
+            "rationale": "Add square function with tests",
+        }
+    ).encode("utf-8")
     req = Request(
         f"{base_url}/api/v1/workforce/review",
         data=review_payload,
@@ -249,28 +251,30 @@ def test_api_v4_workforce_endpoints(workforce_server):
     # 3. POST /api/v1/workforce/resolve-conflict
     p1_id = str(uuid4())
     p2_id = str(uuid4())
-    conflict_payload = json.dumps({
-        "proposals": [
-            {
-                "proposal_id": p1_id,
-                "role": "implementer",
-                "target_files": ["src/fix.py"],
-                "patch_content": "def f(): pass\n",
-                "rationale": "Fix 1",
-                "confidence_score": 0.9,
-                "evidence_items": ["e1", "e2"],
-            },
-            {
-                "proposal_id": p2_id,
-                "role": "implementer",
-                "target_files": ["src/fix.py"],
-                "patch_content": "def f(): return True\n",
-                "rationale": "Fix 2",
-                "confidence_score": 0.5,
-                "evidence_items": [],
-            },
-        ]
-    }).encode("utf-8")
+    conflict_payload = json.dumps(
+        {
+            "proposals": [
+                {
+                    "proposal_id": p1_id,
+                    "role": "implementer",
+                    "target_files": ["src/fix.py"],
+                    "patch_content": "def f(): pass\n",
+                    "rationale": "Fix 1",
+                    "confidence_score": 0.9,
+                    "evidence_items": ["e1", "e2"],
+                },
+                {
+                    "proposal_id": p2_id,
+                    "role": "implementer",
+                    "target_files": ["src/fix.py"],
+                    "patch_content": "def f(): return True\n",
+                    "rationale": "Fix 2",
+                    "confidence_score": 0.5,
+                    "evidence_items": [],
+                },
+            ]
+        }
+    ).encode("utf-8")
     req_c = Request(
         f"{base_url}/api/v1/workforce/resolve-conflict",
         data=conflict_payload,

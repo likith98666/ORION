@@ -122,11 +122,7 @@ class FencedEvidenceItem:
                 else str(item.category)
             ),
             source=item.source,
-            stage=(
-                item.stage.value
-                if isinstance(item.stage, SWETaskStage)
-                else str(item.stage)
-            ),
+            stage=(item.stage.value if isinstance(item.stage, SWETaskStage) else str(item.stage)),
             content=item.content,
             summary=item.summary,
             timestamp=item.timestamp.isoformat() if item.timestamp else None,

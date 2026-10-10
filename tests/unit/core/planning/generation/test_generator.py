@@ -57,10 +57,7 @@ def test_plan_generator_returns_structured_plan() -> None:
 
     assert plan.steps[0].order == 1
     assert plan.steps[0].description == "Research the objective"
-    assert (
-        plan.steps[0].required_capability
-        == AgentCapability.RESEARCH
-    )
+    assert plan.steps[0].required_capability == AgentCapability.RESEARCH
 
 
 def test_plan_generator_is_abstract() -> None:

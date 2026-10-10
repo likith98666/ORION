@@ -123,9 +123,7 @@ class PatchApplicationAuthority:
             ) from exc
 
         if stored_request is None:
-            raise UnapprovedPatchError(
-                f"Approval request '{package.request_id}' does not exist."
-            )
+            raise UnapprovedPatchError(f"Approval request '{package.request_id}' does not exist.")
 
         if stored_request.status != ApprovalStatus.APPROVED:
             if stored_request.status == ApprovalStatus.DENIED:
@@ -218,9 +216,9 @@ class PatchApplicationAuthority:
 
                 content = target_path.read_text(encoding="utf-8")
                 actual_hash = hashlib.sha256(content.encode("utf-8")).hexdigest().lower()
-                expected_new_hash = hashlib.sha256(
-                    (op.new_content or "").encode("utf-8")
-                ).hexdigest().lower()
+                expected_new_hash = (
+                    hashlib.sha256((op.new_content or "").encode("utf-8")).hexdigest().lower()
+                )
 
                 if actual_hash != expected_new_hash:
                     hash_mismatches.append(
@@ -339,9 +337,9 @@ class PatchApplicationAuthority:
 
                     # Hash check
                     current_content = target_file.read_text(encoding="utf-8")
-                    current_hash = hashlib.sha256(
-                        current_content.encode("utf-8")
-                    ).hexdigest().lower()
+                    current_hash = (
+                        hashlib.sha256(current_content.encode("utf-8")).hexdigest().lower()
+                    )
 
                     if op.expected_hash is not None and op.expected_hash:
                         if op.expected_hash.lower() != current_hash:
@@ -388,9 +386,7 @@ class PatchApplicationAuthority:
 
                     elif op.operation_type == PatchOperationType.MODIFY_FILE:
                         prev_content = target_file.read_text(encoding="utf-8")
-                        prev_hash = hashlib.sha256(
-                            prev_content.encode("utf-8")
-                        ).hexdigest().lower()
+                        prev_hash = hashlib.sha256(prev_content.encode("utf-8")).hexdigest().lower()
                         content = op.new_content or ""
                         target_file.write_text(content, encoding="utf-8", newline="\n")
                         new_hash = hashlib.sha256(content.encode("utf-8")).hexdigest().lower()
@@ -407,9 +403,7 @@ class PatchApplicationAuthority:
 
                     elif op.operation_type == PatchOperationType.DELETE_FILE:
                         prev_content = target_file.read_text(encoding="utf-8")
-                        prev_hash = hashlib.sha256(
-                            prev_content.encode("utf-8")
-                        ).hexdigest().lower()
+                        prev_hash = hashlib.sha256(prev_content.encode("utf-8")).hexdigest().lower()
                         target_file.unlink()
                         record = AppliedOperationRecord(
                             operation_type=op.operation_type,
@@ -424,7 +418,7 @@ class PatchApplicationAuthority:
 
                 except Exception as exc:
                     # Operation failed: initiate deterministic recovery
-                    remaining = tuple(proposal.operations[idx + 1:])
+                    remaining = tuple(proposal.operations[idx + 1 :])
                     lifecycle.transition_to(
                         PatchExecutionState.PARTIALLY_APPLIED,
                         reason=f"Operation failed on '{sanitized_path}': {exc}",

@@ -542,4 +542,3 @@ def test_execution_graph_node_states_reflect_ledger_truth(tmp_path: Path):
     # Since no tests passed and no verified evidence was emitted in ledger, states must be FAILED
     assert node_map["run_tests"] == "FAILED"
     assert node_map["verify"] == "FAILED"
-

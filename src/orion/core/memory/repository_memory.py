@@ -20,28 +20,16 @@ class InMemoryMemoryRepository(MemoryRepository):
         self._memories.pop(memory_id, None)
 
     def list_for_task(self, task_id: UUID) -> list[MemoryRecord]:
-        return [
-            memory
-            for memory in self._memories.values()
-            if memory.task_id == task_id
-        ]
+        return [memory for memory in self._memories.values() if memory.task_id == task_id]
 
     def list_for_agent(self, agent_id: UUID) -> list[MemoryRecord]:
-        return [
-            memory
-            for memory in self._memories.values()
-            if memory.agent_id == agent_id
-        ]
+        return [memory for memory in self._memories.values() if memory.agent_id == agent_id]
 
     def list_by_type(
         self,
         memory_type: MemoryType,
     ) -> list[MemoryRecord]:
-        return [
-            memory
-            for memory in self._memories.values()
-            if memory.memory_type == memory_type
-        ]
+        return [memory for memory in self._memories.values() if memory.memory_type == memory_type]
 
     def list_all(self) -> list[MemoryRecord]:
         return list(self._memories.values())

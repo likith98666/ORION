@@ -37,9 +37,7 @@ class Plan:
             raise ValueError("Plan objective cannot be empty.")
 
         if len(cleaned_objective) > 10_000:
-            raise ValueError(
-                "Plan objective cannot exceed 10,000 characters."
-            )
+            raise ValueError("Plan objective cannot exceed 10,000 characters.")
 
         return cls(
             id=uuid4(),

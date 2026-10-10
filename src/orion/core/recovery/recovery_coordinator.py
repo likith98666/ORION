@@ -44,43 +44,28 @@ class RecoveryCoordinator:
         """Analyze a failed execution and produce a recovery action."""
 
         if not isinstance(execution, AgentExecution):
-            raise TypeError(
-                "execution must be an AgentExecution instance."
-            )
+            raise TypeError("execution must be an AgentExecution instance.")
 
         if execution.status != AgentExecutionStatus.FAILED:
-            raise ValueError(
-                "Recovery can only be initiated for failed executions."
-            )
+            raise ValueError("Recovery can only be initiated for failed executions.")
 
         if execution.failure is None:
-            raise ValueError(
-                "Failed execution must contain a structured failure."
-            )
+            raise ValueError("Failed execution must contain a structured failure.")
 
         if execution_context is not None and not isinstance(
             execution_context,
             RecoveryExecutionContext,
         ):
-            raise TypeError(
-                "execution_context must be a "
-                "RecoveryExecutionContext instance."
-            )
+            raise TypeError("execution_context must be a RecoveryExecutionContext instance.")
 
         failure = execution.failure
 
         if execution_context is not None:
             if execution_context.current_execution_id != execution.id:
-                raise ValueError(
-                    "Recovery execution context does not match "
-                    "the failed execution."
-                )
+                raise ValueError("Recovery execution context does not match the failed execution.")
 
             if execution_context.task_id != execution.agent_task_id:
-                raise ValueError(
-                    "Recovery execution context does not match "
-                    "the execution task."
-                )
+                raise ValueError("Recovery execution context does not match the execution task.")
 
             retry_count = execution_context.recovery_attempt_number
 

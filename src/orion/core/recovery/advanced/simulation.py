@@ -95,9 +95,7 @@ class RecoverySimulator:
 
         # Predict impacted tests
         impacted_tests = tuple(
-            f"tests/test_{f.split('/')[-1]}"
-            for f in target_files
-            if not f.startswith("tests/")
+            f"tests/test_{f.split('/')[-1]}" for f in target_files if not f.startswith("tests/")
         )
 
         return RecoverySimulationResult(

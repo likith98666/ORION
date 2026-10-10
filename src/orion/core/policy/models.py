@@ -136,9 +136,7 @@ class PolicyDecision:
     evaluation_context: PolicyContext
     rule_id: str | None = None
     modified_parameters: dict[str, Any] | None = None
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(UTC)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     audit_id: str = field(default_factory=lambda: str(uuid4()))
 
     def to_dict(self) -> dict[str, Any]:

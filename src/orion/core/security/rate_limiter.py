@@ -21,9 +21,7 @@ class TokenBucketRateLimiter:
         self._windows: dict[str, deque[float]] = {}
         self._last_cleanup = time.time()
 
-    def check_rate_limit(
-        self, key: str, limit_per_minute: int | None = None
-    ) -> tuple[bool, float]:
+    def check_rate_limit(self, key: str, limit_per_minute: int | None = None) -> tuple[bool, float]:
         """Check whether an action by `key` is allowed under the rate limit.
 
         Returns:
@@ -70,9 +68,7 @@ class TokenBucketRateLimiter:
 
         window_duration = 60.0
         keys_to_remove = [
-            k
-            for k, win in self._windows.items()
-            if not win or win[-1] <= now - window_duration
+            k for k, win in self._windows.items() if not win or win[-1] <= now - window_duration
         ]
         for k in keys_to_remove:
             del self._windows[k]

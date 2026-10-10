@@ -49,14 +49,8 @@ def test_generate_data_analysis_plan() -> None:
 
     assert len(plan.steps) == 3
 
-    assert (
-        plan.steps[0].required_capability
-        == AgentCapability.DATA_ANALYSIS
-    )
-    assert (
-        plan.steps[1].required_capability
-        == AgentCapability.DATA_ANALYSIS
-    )
+    assert plan.steps[0].required_capability == AgentCapability.DATA_ANALYSIS
+    assert plan.steps[1].required_capability == AgentCapability.DATA_ANALYSIS
     assert plan.steps[2].required_capability == AgentCapability.WRITING
 
     assert plan.steps[1].dependencies == frozenset({1})
@@ -74,14 +68,8 @@ def test_generate_software_plan() -> None:
     assert len(plan.steps) == 3
 
     assert plan.steps[0].required_capability == AgentCapability.REASONING
-    assert (
-        plan.steps[1].required_capability
-        == AgentCapability.CODE_EXECUTION
-    )
-    assert (
-        plan.steps[2].required_capability
-        == AgentCapability.VERIFICATION
-    )
+    assert plan.steps[1].required_capability == AgentCapability.CODE_EXECUTION
+    assert plan.steps[2].required_capability == AgentCapability.VERIFICATION
 
     assert plan.steps[1].dependencies == frozenset({1})
     assert plan.steps[2].dependencies == frozenset({2})

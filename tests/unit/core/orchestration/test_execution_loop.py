@@ -52,6 +52,7 @@ class FakeParallelExecutor:
         self.calls.append((tasks, model_config, memory_contexts))
         return self.result
 
+
 def create_assigned_task(description: str) -> AgentTask:
     task = AgentTask.create(
         task_id=uuid4(),
@@ -100,10 +101,7 @@ def test_execution_loop_preserves_task_order() -> None:
         model_config=model_config,
     )
 
-    assert [
-        execution.agent_task_id
-        for execution in result.executions
-    ] == [
+    assert [execution.agent_task_id for execution in result.executions] == [
         third_task.id,
         first_task.id,
         second_task.id,

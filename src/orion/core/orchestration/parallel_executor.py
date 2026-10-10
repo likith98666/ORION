@@ -48,9 +48,7 @@ class ParallelExecutor:
             return ParallelExecutionResult(executions=())
 
         if memory_contexts is not None and len(memory_contexts) != len(tasks):
-            raise ValueError(
-                "memory_contexts must contain exactly one context per task."
-            )
+            raise ValueError("memory_contexts must contain exactly one context per task.")
 
         contexts: Sequence[ExecutionMemoryContext | None]
         if memory_contexts is None:
@@ -69,9 +67,6 @@ class ParallelExecutor:
                 for task, memory_context in zip(tasks, contexts, strict=True)
             ]
 
-            executions = tuple(
-                future.result()
-                for future in futures
-            )
+            executions = tuple(future.result() for future in futures)
 
         return ParallelExecutionResult(executions=executions)

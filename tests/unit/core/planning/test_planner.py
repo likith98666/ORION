@@ -59,17 +59,11 @@ def test_create_plan_preserves_step_order_and_details() -> None:
 
     assert plan_steps[0].order == 1
     assert plan_steps[0].description == "Load the dataset"
-    assert (
-        plan_steps[0].required_capability
-        == AgentCapability.DATA_ANALYSIS
-    )
+    assert plan_steps[0].required_capability == AgentCapability.DATA_ANALYSIS
 
     assert plan_steps[1].order == 2
     assert plan_steps[1].description == "Analyze the dataset"
-    assert (
-        plan_steps[1].required_capability
-        == AgentCapability.DATA_ANALYSIS
-    )
+    assert plan_steps[1].required_capability == AgentCapability.DATA_ANALYSIS
 
 
 def test_create_plan_resolves_dependencies_by_step_order() -> None:

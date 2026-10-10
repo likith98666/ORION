@@ -178,15 +178,9 @@ class EngineeringMetrics:
 
         total_rec_attempts = sum(r.recovery_attempts for r in results)
         total_rollbacks = sum(r.rollback_events for r in results)
-        successful_rec = sum(
-            1 for r in results if r.recovery_attempts > 0 and r.status == "PASS"
-        )
-        rec_success_rate = (
-            (successful_rec / total_rec_attempts) if total_rec_attempts > 0 else 1.0
-        )
-        rollback_freq = (
-            (total_rollbacks / total_rec_attempts) if total_rec_attempts > 0 else 0.0
-        )
+        successful_rec = sum(1 for r in results if r.recovery_attempts > 0 and r.status == "PASS")
+        rec_success_rate = (successful_rec / total_rec_attempts) if total_rec_attempts > 0 else 1.0
+        rollback_freq = (total_rollbacks / total_rec_attempts) if total_rec_attempts > 0 else 0.0
 
         strat_counts: dict[str, int] = {}
         strat_successes: dict[str, int] = {}
@@ -197,9 +191,7 @@ class EngineeringMetrics:
                     strat_successes[s] = strat_successes.get(s, 0) + 1
 
         strategy_rates = {
-            s: strat_successes.get(s, 0) / count
-            for s, count in strat_counts.items()
-            if count > 0
+            s: strat_successes.get(s, 0) / count for s, count in strat_counts.items() if count > 0
         }
 
         tests_passed = sum(r.tests_passed for r in results)
@@ -220,11 +212,7 @@ class EngineeringMetrics:
                     if r.failure_category == ground_truth_categories[r.task_id]:
                         classified_correct += 1
 
-        classif_acc = (
-            (classified_correct / total_evaluated_cat)
-            if total_evaluated_cat > 0
-            else 1.0
-        )
+        classif_acc = (classified_correct / total_evaluated_cat) if total_evaluated_cat > 0 else 1.0
 
         return cls(
             total_missions=total_missions,

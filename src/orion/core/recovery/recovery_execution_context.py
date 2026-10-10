@@ -34,37 +34,22 @@ class RecoveryExecutionContext:
             raise TypeError("recovery_attempt_number must be an integer")
 
         if self.recovery_attempt_number < 0:
-            raise ValueError(
-                "recovery_attempt_number cannot be negative"
-            )
+            raise ValueError("recovery_attempt_number cannot be negative")
 
         if self.recovery_attempt_number > self.attempt_number - 1:
-            raise ValueError(
-                "recovery_attempt_number cannot exceed completed attempts"
-            )
+            raise ValueError("recovery_attempt_number cannot exceed completed attempts")
 
         if not isinstance(self.failure_history, tuple):
             raise TypeError("failure_history must be a tuple")
 
-        if not all(
-            isinstance(failure, Failure)
-            for failure in self.failure_history
-        ):
-            raise TypeError(
-                "failure_history must contain only Failure instances"
-            )
+        if not all(isinstance(failure, Failure) for failure in self.failure_history):
+            raise TypeError("failure_history must contain only Failure instances")
 
         if not isinstance(self.recovery_history, tuple):
             raise TypeError("recovery_history must be a tuple")
 
-        if not all(
-            isinstance(decision, RecoveryDecision)
-            for decision in self.recovery_history
-        ):
-            raise TypeError(
-                "recovery_history must contain only "
-                "RecoveryDecision instances"
-            )
+        if not all(isinstance(decision, RecoveryDecision) for decision in self.recovery_history):
+            raise TypeError("recovery_history must contain only RecoveryDecision instances")
 
     @classmethod
     def from_execution(
@@ -72,9 +57,7 @@ class RecoveryExecutionContext:
         execution: AgentExecution,
     ) -> "RecoveryExecutionContext":
         if not isinstance(execution, AgentExecution):
-            raise TypeError(
-                "execution must be an AgentExecution instance"
-            )
+            raise TypeError("execution must be an AgentExecution instance")
 
         failure_history: tuple[Failure, ...] = ()
 
@@ -111,9 +94,7 @@ class RecoveryExecutionContext:
         decision: RecoveryDecision,
     ) -> "RecoveryExecutionContext":
         if not isinstance(decision, RecoveryDecision):
-            raise TypeError(
-                "decision must be a RecoveryDecision instance"
-            )
+            raise TypeError("decision must be a RecoveryDecision instance")
 
         return RecoveryExecutionContext(
             task_id=self.task_id,
@@ -133,10 +114,7 @@ class RecoveryExecutionContext:
             raise TypeError("current_execution_id must be a UUID")
 
         if current_execution_id == self.current_execution_id:
-            raise ValueError(
-                "current_execution_id must be different from "
-                "the previous execution"
-            )
+            raise ValueError("current_execution_id must be different from the previous execution")
 
         return RecoveryExecutionContext(
             task_id=self.task_id,

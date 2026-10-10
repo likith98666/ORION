@@ -56,7 +56,7 @@ class AuditEvent:
                 if not isinstance(value, str):
                     raise TypeError(f"{name} must be a string or None.")
                 if not value.strip():
-                    raise ValueError(f"{name.replace("_", " ")} must not be empty.")
+                    raise ValueError(f"{name.replace('_', ' ')} must not be empty.")
 
         if not isinstance(self.details, dict):
             raise TypeError("details must be a dictionary.")

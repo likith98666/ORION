@@ -63,7 +63,8 @@ class PatchVerificationAuthority:
         if not application_result.is_applied:
             fail_type = (
                 FailureType.TOOL_FAILURE
-                if application_result.status in (
+                if application_result.status
+                in (
                     PatchExecutionState.RECOVERED,
                     PatchExecutionState.RECOVERY_FAILED,
                     PatchExecutionState.PARTIALLY_APPLIED,

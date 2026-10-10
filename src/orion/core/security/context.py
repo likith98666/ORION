@@ -19,9 +19,7 @@ class ModelContextSection:
             raise ValueError("content cannot be empty.")
 
         if not isinstance(self.trust_level, ContentTrustLevel):
-            raise TypeError(
-                "trust_level must be a ContentTrustLevel."
-            )
+            raise TypeError("trust_level must be a ContentTrustLevel.")
 
         if not isinstance(self.source, str):
             raise TypeError("source must be a string.")

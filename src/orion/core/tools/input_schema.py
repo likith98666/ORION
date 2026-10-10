@@ -67,9 +67,7 @@ class ToolInputSchema:
             raise ValueError("max_string_length must be greater than zero.")
 
         if self.max_collection_items < 1:
-            raise ValueError(
-                "max_collection_items must be greater than zero."
-            )
+            raise ValueError("max_collection_items must be greater than zero.")
 
         if not isinstance(self.allow_unknown_fields, bool):
             raise TypeError("allow_unknown_fields must be a boolean.")

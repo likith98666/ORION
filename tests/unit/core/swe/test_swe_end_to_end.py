@@ -42,25 +42,21 @@ def test_repo(tmp_path: Path) -> Path:
     # Faulty module: subtracts instead of adds
     code_file = src_dir / "math_lib.py"
     code_file.write_text(
-        "def add(a: int, b: int) -> int:\n"
-        "    return a - b\n",
+        "def add(a: int, b: int) -> int:\n    return a - b\n",
         encoding="utf-8",
     )
 
     # Unit test asserting correct addition
     test_file = tests_dir / "test_math_lib.py"
     test_file.write_text(
-        "from src.math_lib import add\n\n"
-        "def test_addition():\n"
-        "    assert add(2, 3) == 5\n",
+        "from src.math_lib import add\n\ndef test_addition():\n    assert add(2, 3) == 5\n",
         encoding="utf-8",
     )
 
     # conftest to ensure src is in python path
     conftest_file = repo / "conftest.py"
     conftest_file.write_text(
-        "import sys, os\n"
-        "sys.path.insert(0, os.path.abspath('.'))\n",
+        "import sys, os\nsys.path.insert(0, os.path.abspath('.'))\n",
         encoding="utf-8",
     )
 
@@ -105,21 +101,25 @@ def test_deterministic_swe_workflow_end_to_end(test_repo: Path):
     swe_agent = Agent.create(
         name="SWE-Engineer",
         description="Autonomous SWE agent with code and test privileges",
-        capabilities=frozenset({
-            AgentCapability.REPOSITORY_ANALYSIS,
-            AgentCapability.SOFTWARE_DEBUGGING,
-            AgentCapability.REASONING,
-            AgentCapability.CODE_MODIFICATION,
-            AgentCapability.TESTING,
-            AgentCapability.VERIFICATION,
-            AgentCapability.WRITING,
-        }),
+        capabilities=frozenset(
+            {
+                AgentCapability.REPOSITORY_ANALYSIS,
+                AgentCapability.SOFTWARE_DEBUGGING,
+                AgentCapability.REASONING,
+                AgentCapability.CODE_MODIFICATION,
+                AgentCapability.TESTING,
+                AgentCapability.VERIFICATION,
+                AgentCapability.WRITING,
+            }
+        ),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -194,10 +194,7 @@ def test_deterministic_swe_workflow_end_to_end(test_repo: Path):
     coordinator.advance_stage(SWETaskStage.IMPLEMENT_CHANGE)
 
     exec_id = uuid4()
-    fixed_content = (
-        "def add(a: int, b: int) -> int:\n"
-        "    return a + b\n"
-    )
+    fixed_content = "def add(a: int, b: int) -> int:\n    return a + b\n"
 
     # Write tool is HIGH risk, must require approval
     with pytest.raises(ApprovalRequiredError) as exc_info:
@@ -329,12 +326,14 @@ def test_swe_workflow_failure_recovery_loop(test_repo: Path):
     swe_agent = Agent.create(
         name="SWE-Engineer",
         description="SWE agent",
-        capabilities=frozenset({
-            AgentCapability.REPOSITORY_ANALYSIS,
-            AgentCapability.SOFTWARE_DEBUGGING,
-            AgentCapability.TESTING,
-            AgentCapability.VERIFICATION,
-        }),
+        capabilities=frozenset(
+            {
+                AgentCapability.REPOSITORY_ANALYSIS,
+                AgentCapability.SOFTWARE_DEBUGGING,
+                AgentCapability.TESTING,
+                AgentCapability.VERIFICATION,
+            }
+        ),
         permission_policy=AgentPermissionPolicy.create(
             frozenset({AgentPermission.READ_FILES, AgentPermission.CODE_EXECUTION})
         ),
@@ -430,21 +429,25 @@ def test_swe_workflow_recovery_retry_success(test_repo: Path):
     swe_agent = Agent.create(
         name="SWE-Engineer",
         description="SWE agent with code and test privileges",
-        capabilities=frozenset({
-            AgentCapability.REPOSITORY_ANALYSIS,
-            AgentCapability.SOFTWARE_DEBUGGING,
-            AgentCapability.REASONING,
-            AgentCapability.CODE_MODIFICATION,
-            AgentCapability.TESTING,
-            AgentCapability.VERIFICATION,
-            AgentCapability.WRITING,
-        }),
+        capabilities=frozenset(
+            {
+                AgentCapability.REPOSITORY_ANALYSIS,
+                AgentCapability.SOFTWARE_DEBUGGING,
+                AgentCapability.REASONING,
+                AgentCapability.CODE_MODIFICATION,
+                AgentCapability.TESTING,
+                AgentCapability.VERIFICATION,
+                AgentCapability.WRITING,
+            }
+        ),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -603,4 +606,3 @@ def test_swe_workflow_recovery_retry_success(test_repo: Path):
     assert report.evaluation.metrics.verification_failed == 1
     assert report.evaluation.criteria.recovery_transparent is True
     assert len(report.verified_evidence) == 1
-

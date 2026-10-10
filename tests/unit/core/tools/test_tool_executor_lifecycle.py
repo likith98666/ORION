@@ -18,9 +18,7 @@ def create_agent() -> Agent:
         name="lifecycle-agent",
         description="Tool lifecycle test agent",
         capabilities=frozenset({AgentCapability.RESEARCH}),
-        permission_policy=AgentPermissionPolicy.create(
-            frozenset({AgentPermission.READ_FILES})
-        ),
+        permission_policy=AgentPermissionPolicy.create(frozenset({AgentPermission.READ_FILES})),
     )
 
 
@@ -121,9 +119,7 @@ def test_tool_executor_links_agent_execution():
 def test_tool_executor_preserves_existing_behavior_without_repository():
     agent = create_agent()
 
-    executor = ToolExecutor(
-        create_registry(lambda arguments: arguments["value"])
-    )
+    executor = ToolExecutor(create_registry(lambda arguments: arguments["value"]))
 
     result = executor.execute(
         agent=agent,

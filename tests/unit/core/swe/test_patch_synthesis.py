@@ -199,21 +199,24 @@ def _sample_fix_proposal() -> FixProposal:
 # 1. VALID PATCH PROPOSAL & DIFF GENERATION
 # ==============================================================================
 
+
 def test_valid_patch_proposal_synthesis(tmp_path: Path) -> None:
     """1. Valid patch proposal generates structured operations, diff, and syntax results."""
-    canned_patch = json.dumps({
-        "affected_files": ["src/math_lib.py"],
-        "operations": [
-            {
-                "operation_type": "modify_file",
-                "path": "src/math_lib.py",
-                "new_content": "def add(a, b):\n    return a + b\n",
-            }
-        ],
-        "rationale": "Replace incorrect minus with plus operator",
-        "validation_steps": ["pytest tests/test_math.py"],
-        "confidence": 0.95,
-    })
+    canned_patch = json.dumps(
+        {
+            "affected_files": ["src/math_lib.py"],
+            "operations": [
+                {
+                    "operation_type": "modify_file",
+                    "path": "src/math_lib.py",
+                    "new_content": "def add(a, b):\n    return a + b\n",
+                }
+            ],
+            "rationale": "Replace incorrect minus with plus operator",
+            "validation_steps": ["pytest tests/test_math.py"],
+            "confidence": 0.95,
+        }
+    )
 
     _, _, synthesizer, _, _ = _create_test_environment(tmp_path, canned_response=canned_patch)
     fix_prop = _sample_fix_proposal()
@@ -281,6 +284,7 @@ def test_valid_diff_generation_created_modified_deleted(tmp_path: Path) -> None:
 # ==============================================================================
 # 2. SCHEMA, PAYLOAD, AND BOUNDS VALIDATION
 # ==============================================================================
+
 
 def test_malformed_json_rejected(tmp_path: Path) -> None:
     """2. Non-JSON model output is rejected with InvalidPatchError."""
@@ -433,6 +437,7 @@ def test_invalid_operation_type_rejected(tmp_path: Path) -> None:
 # ==============================================================================
 # 3. PATH SECURITY & WORKSPACE CONTAINMENT
 # ==============================================================================
+
 
 def test_absolute_path_rejected(tmp_path: Path) -> None:
     """10. Absolute paths (Unix or Windows drive) raise UnsafePatchPathError."""
@@ -667,6 +672,7 @@ def test_malformed_patch_operation_preconditions(tmp_path: Path) -> None:
 # 4. SYNTAX VALIDATION & LANGUAGE SUPPORT
 # ==============================================================================
 
+
 def test_python_syntax_valid(tmp_path: Path) -> None:
     """23. Python AST successfully parses syntactically valid code."""
     syn_val = PatchSyntaxValidator()
@@ -713,6 +719,7 @@ def test_unsupported_language_syntax_fallback(tmp_path: Path) -> None:
 # ==============================================================================
 # 5. HASH LOCKING & CONCURRENCY
 # ==============================================================================
+
 
 def test_stale_hash_rejected(tmp_path: Path) -> None:
     """25. Stale hash check detects concurrent modification and raises StalePatchError."""
@@ -768,6 +775,7 @@ def test_unchanged_hash_accepted(tmp_path: Path) -> None:
 # ==============================================================================
 # 6. APPROVAL SERVICE INTEGRATION
 # ==============================================================================
+
 
 def test_approval_service_integration_approve_flow(tmp_path: Path) -> None:
     """28. Patch proposal connects to ApprovalService and transitions to approved."""
@@ -843,6 +851,7 @@ def test_approval_service_integration_deny_flow(tmp_path: Path) -> None:
 # 7. MODEL RESILIENCE, TIMEOUT, AND FALLBACK
 # ==============================================================================
 
+
 def test_model_timeout_and_fallback(tmp_path: Path) -> None:
     """29 & 32. ModelTimeoutError triggers safe fallback or raises error when disabled."""
     # When fallback_on_error=True
@@ -877,6 +886,7 @@ def test_malformed_model_response_fallback(tmp_path: Path) -> None:
 # 8. BOUNDARIES & EVIDENCE TRUST
 # ==============================================================================
 
+
 def test_total_changed_lines_boundary(tmp_path: Path) -> None:
     """34. Total changed lines across all operations exceeding limit raises PatchTooLargeError."""
     validator = PatchValidator(config=PatchConfig(max_changed_lines=5))
@@ -902,19 +912,21 @@ def test_total_changed_lines_boundary(tmp_path: Path) -> None:
 
 def test_coordinator_synthesize_patch_workflow_integration(tmp_path: Path) -> None:
     """FixProposal -> coordinator.synthesize_patch -> EvidenceLedger -> Approval."""
-    canned_patch = json.dumps({
-        "affected_files": ["src/math_lib.py"],
-        "operations": [
-            {
-                "operation_type": "modify_file",
-                "path": "src/math_lib.py",
-                "new_content": "def add(a, b):\n    return a + b\n",
-            }
-        ],
-        "rationale": "Correct subtraction to addition operator",
-        "validation_steps": ["pytest tests/test_math.py"],
-        "confidence": 0.96,
-    })
+    canned_patch = json.dumps(
+        {
+            "affected_files": ["src/math_lib.py"],
+            "operations": [
+                {
+                    "operation_type": "modify_file",
+                    "path": "src/math_lib.py",
+                    "new_content": "def add(a, b):\n    return a + b\n",
+                }
+            ],
+            "rationale": "Correct subtraction to addition operator",
+            "validation_steps": ["pytest tests/test_math.py"],
+            "confidence": 0.96,
+        }
+    )
 
     coordinator, _, _, agent, approval_service = _create_test_environment(
         tmp_path, canned_response=canned_patch, with_approval=True

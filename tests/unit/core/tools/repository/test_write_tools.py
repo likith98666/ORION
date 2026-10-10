@@ -41,11 +41,13 @@ class TestWriteFileTool:
     def test_write_file_create_parents(self, tmp_path: Path) -> None:
         ws = Workspace(repository_root=tmp_path)
         tool = build_write_file_tool(ws)
-        result = tool.handler({
-            "path": "nested/dir/app.py",
-            "content": "code",
-            "create_parents": True,
-        })
+        result = tool.handler(
+            {
+                "path": "nested/dir/app.py",
+                "content": "code",
+                "create_parents": True,
+            }
+        )
 
         assert result["created"] is True
         assert (tmp_path / "nested" / "dir" / "app.py").read_text(encoding="utf-8") == "code"
@@ -55,11 +57,13 @@ class TestWriteFileTool:
         tool = build_write_file_tool(ws)
 
         with pytest.raises(FileNotFoundError, match="Parent directory does not exist"):
-            tool.handler({
-                "path": "missing/dir/app.py",
-                "content": "code",
-                "create_parents": False,
-            })
+            tool.handler(
+                {
+                    "path": "missing/dir/app.py",
+                    "content": "code",
+                    "create_parents": False,
+                }
+            )
 
     def test_write_file_traversal_rejected(self, tmp_path: Path) -> None:
         ws = Workspace(repository_root=tmp_path)
@@ -123,11 +127,13 @@ class TestApplyChangeTool:
 
         ws = Workspace(repository_root=tmp_path)
         tool = build_apply_change_tool(ws)
-        result = tool.handler({
-            "path": "code.py",
-            "new_content": "def hello():\n    return 2\n",
-            "expected_hash": orig_hash,
-        })
+        result = tool.handler(
+            {
+                "path": "code.py",
+                "new_content": "def hello():\n    return 2\n",
+                "expected_hash": orig_hash,
+            }
+        )
 
         assert result["change_applied"] is True
         assert result["previous_hash"] == orig_hash
@@ -143,11 +149,13 @@ class TestApplyChangeTool:
         tool = build_apply_change_tool(ws)
 
         with pytest.raises(StaleStateError, match="Expected hash"):
-            tool.handler({
-                "path": "code.py",
-                "new_content": "v2",
-                "expected_hash": "deadbeef1234",
-            })
+            tool.handler(
+                {
+                    "path": "code.py",
+                    "new_content": "v2",
+                    "expected_hash": "deadbeef1234",
+                }
+            )
 
     def test_apply_change_stale_content_rejected(self, tmp_path: Path) -> None:
         file = tmp_path / "code.py"
@@ -157,31 +165,37 @@ class TestApplyChangeTool:
         tool = build_apply_change_tool(ws)
 
         with pytest.raises(StaleStateError, match="Expected content does not match"):
-            tool.handler({
-                "path": "code.py",
-                "new_content": "new",
-                "expected_content": "stale content",
-            })
+            tool.handler(
+                {
+                    "path": "code.py",
+                    "new_content": "new",
+                    "expected_content": "stale content",
+                }
+            )
 
     def test_apply_change_nonexistent_file(self, tmp_path: Path) -> None:
         ws = Workspace(repository_root=tmp_path)
         tool = build_apply_change_tool(ws)
 
         with pytest.raises(FileNotFoundError):
-            tool.handler({
-                "path": "missing.py",
-                "new_content": "code",
-            })
+            tool.handler(
+                {
+                    "path": "missing.py",
+                    "new_content": "code",
+                }
+            )
 
     def test_apply_change_workspace_escape_rejected(self, tmp_path: Path) -> None:
         ws = Workspace(repository_root=tmp_path)
         tool = build_apply_change_tool(ws)
 
         with pytest.raises(PathOutsideWorkspaceError):
-            tool.handler({
-                "path": "../outside.py",
-                "new_content": "code",
-            })
+            tool.handler(
+                {
+                    "path": "../outside.py",
+                    "new_content": "code",
+                }
+            )
 
     def test_apply_change_protected_file_rejected(self, tmp_path: Path) -> None:
         env = tmp_path / ".env"
@@ -191,10 +205,12 @@ class TestApplyChangeTool:
         tool = build_apply_change_tool(ws)
 
         with pytest.raises(ProtectedPathError):
-            tool.handler({
-                "path": ".env",
-                "new_content": "FOO=baz",
-            })
+            tool.handler(
+                {
+                    "path": ".env",
+                    "new_content": "FOO=baz",
+                }
+            )
 
 
 class TestDiffTool:
@@ -206,10 +222,12 @@ class TestDiffTool:
 
         ws = Workspace(repository_root=tmp_path)
         tool = build_diff_tool(ws)
-        result = tool.handler({
-            "path": "app.py",
-            "comparison_content": "print('hello')\n",
-        })
+        result = tool.handler(
+            {
+                "path": "app.py",
+                "comparison_content": "print('hello')\n",
+            }
+        )
 
         assert result["identical"] is True
         assert result["lines_added"] == 0
@@ -222,10 +240,12 @@ class TestDiffTool:
 
         ws = Workspace(repository_root=tmp_path)
         tool = build_diff_tool(ws)
-        result = tool.handler({
-            "path": "app.py",
-            "comparison_content": "line1\nline2_modified\n",
-        })
+        result = tool.handler(
+            {
+                "path": "app.py",
+                "comparison_content": "line1\nline2_modified\n",
+            }
+        )
 
         assert result["identical"] is False
         assert result["lines_added"] == 1
@@ -240,10 +260,12 @@ class TestDiffTool:
 
         ws = Workspace(repository_root=tmp_path)
         tool = build_diff_tool(ws)
-        result = tool.handler({
-            "path": "file1.txt",
-            "comparison_path": "file2.txt",
-        })
+        result = tool.handler(
+            {
+                "path": "file1.txt",
+                "comparison_path": "file2.txt",
+            }
+        )
 
         assert result["identical"] is False
         assert result["lines_added"] == 1
@@ -256,11 +278,13 @@ class TestDiffTool:
 
         ws = Workspace(repository_root=tmp_path)
         tool = build_diff_tool(ws)
-        result = tool.handler({
-            "path": "large_diff.txt",
-            "comparison_content": comp,
-            "max_diff_lines": 10,
-        })
+        result = tool.handler(
+            {
+                "path": "large_diff.txt",
+                "comparison_content": comp,
+                "max_diff_lines": 10,
+            }
+        )
 
         assert result["truncated"] is True
         diff_lines = result["diff"].splitlines()
@@ -271,7 +295,9 @@ class TestDiffTool:
         tool = build_diff_tool(ws)
 
         with pytest.raises(PathOutsideWorkspaceError):
-            tool.handler({
-                "path": "../outside.txt",
-                "comparison_content": "test",
-            })
+            tool.handler(
+                {
+                    "path": "../outside.txt",
+                    "comparison_content": "test",
+                }
+            )

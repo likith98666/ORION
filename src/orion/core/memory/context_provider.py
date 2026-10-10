@@ -34,9 +34,7 @@ class MemoryContextProvider:
         """Retrieve bounded memory context relevant to the execution task."""
 
         if task.assigned_agent_id is None:
-            raise ValueError(
-                "Memory context requires an assigned agent."
-            )
+            raise ValueError("Memory context requires an assigned agent.")
 
         query = ExecutionMemoryQuery(
             query=task.description,

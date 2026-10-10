@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 from orion.core.tools.execution_repository_memory import (
     InMemoryToolExecutionRepository,

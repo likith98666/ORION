@@ -64,21 +64,25 @@ def _create_swe_agent() -> Agent:
     return Agent.create(
         name="Benchmark-SWE-Agent",
         description="Autonomous benchmark agent",
-        capabilities=frozenset({
-            AgentCapability.REPOSITORY_ANALYSIS,
-            AgentCapability.SOFTWARE_DEBUGGING,
-            AgentCapability.REASONING,
-            AgentCapability.CODE_MODIFICATION,
-            AgentCapability.TESTING,
-            AgentCapability.VERIFICATION,
-            AgentCapability.WRITING,
-        }),
+        capabilities=frozenset(
+            {
+                AgentCapability.REPOSITORY_ANALYSIS,
+                AgentCapability.SOFTWARE_DEBUGGING,
+                AgentCapability.REASONING,
+                AgentCapability.CODE_MODIFICATION,
+                AgentCapability.TESTING,
+                AgentCapability.VERIFICATION,
+                AgentCapability.WRITING,
+            }
+        ),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -95,8 +99,7 @@ def test_benchmark_bug_diagnosis_and_code_repair(tmp_path: Path):
 
     # Faulty implementation
     (src_dir / "utils.py").write_text(
-        "def reverse_words(s: str) -> str:\n"
-        "    return ' '.join(s.split(' '))\n",
+        "def reverse_words(s: str) -> str:\n    return ' '.join(s.split(' '))\n",
         encoding="utf-8",
     )
     # Unit test asserting reversed words
@@ -170,10 +173,7 @@ def test_benchmark_bug_diagnosis_and_code_repair(tmp_path: Path):
 
     # 4. Implement
     coordinator.advance_stage(SWETaskStage.IMPLEMENT_CHANGE)
-    fixed_code = (
-        "def reverse_words(s: str) -> str:\n"
-        "    return ' '.join(s.split(' ')[::-1])\n"
-    )
+    fixed_code = "def reverse_words(s: str) -> str:\n    return ' '.join(s.split(' ')[::-1])\n"
     exec_id = uuid4()
     with pytest.raises(ApprovalRequiredError) as exc_info:
         coordinator.execute_tool(
@@ -255,8 +255,7 @@ def test_benchmark_test_repair(tmp_path: Path):
 
     # Implementation is correct
     (src_dir / "service.py").write_text(
-        "def get_status() -> str:\n"
-        "    return 'ONLINE'\n",
+        "def get_status() -> str:\n    return 'ONLINE'\n",
         encoding="utf-8",
     )
     # Test has stale assertion
@@ -417,8 +416,7 @@ def test_benchmark_security_boundary_enforcement(tmp_path: Path):
     )
     assert tool_res.success is False
     assert any(
-        term in str(tool_res.error).lower()
-        for term in ("outside", "boundary", "security", "path")
+        term in str(tool_res.error).lower() for term in ("outside", "boundary", "security", "path")
     )
 
     # 2. Direct workspace containment validation raises PathOutsideWorkspaceError

@@ -38,9 +38,7 @@ class GeneratedPlan:
             raise ValueError("Generated plan objective cannot be empty.")
 
         if len(cleaned_objective) > 10_000:
-            raise ValueError(
-                "Generated plan objective cannot exceed 10,000 characters."
-            )
+            raise ValueError("Generated plan objective cannot exceed 10,000 characters.")
 
         if not steps:
             raise ValueError("Generated plan must contain at least one step.")

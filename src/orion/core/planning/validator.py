@@ -49,9 +49,7 @@ class PlanValidator:
 
         for step in steps:
             if step.order in orders:
-                errors.append(
-                    f"Duplicate plan step order: {step.order}."
-                )
+                errors.append(f"Duplicate plan step order: {step.order}.")
             orders.add(step.order)
 
         return errors
@@ -66,10 +64,7 @@ class PlanValidator:
         for step in steps:
             for dependency_id in step.dependencies:
                 if dependency_id not in step_ids:
-                    errors.append(
-                        f"Plan step {step.id} depends on "
-                        f"missing step {dependency_id}."
-                    )
+                    errors.append(f"Plan step {step.id} depends on missing step {dependency_id}.")
 
         return errors
 
@@ -81,9 +76,7 @@ class PlanValidator:
 
         for step in steps:
             if step.id in step.dependencies:
-                errors.append(
-                    f"Plan step {step.id} cannot depend on itself."
-                )
+                errors.append(f"Plan step {step.id} cannot depend on itself.")
 
         return errors
 
@@ -105,9 +98,7 @@ class PlanValidator:
                 visiting,
                 visited,
             ):
-                return [
-                    "Plan contains a circular dependency."
-                ]
+                return ["Plan contains a circular dependency."]
 
         return []
 

@@ -144,14 +144,16 @@ class TestTargetSelector:
         if parts:
             last_pkg = parts[-1]
             subpath = "/".join(parts)
-            candidates.extend([
-                f"tests/unit/{subpath}/test_{stem}.py",
-                f"tests/{subpath}/test_{stem}.py",
-                f"tests/unit/{last_pkg}/test_{stem}.py",
-                f"tests/{last_pkg}/test_{stem}.py",
-                f"tests/unit/{last_pkg}/test_mission_{stem}.py",
-                f"tests/unit/{last_pkg}/test_product_{last_pkg}.py",
-            ])
+            candidates.extend(
+                [
+                    f"tests/unit/{subpath}/test_{stem}.py",
+                    f"tests/{subpath}/test_{stem}.py",
+                    f"tests/unit/{last_pkg}/test_{stem}.py",
+                    f"tests/{last_pkg}/test_{stem}.py",
+                    f"tests/unit/{last_pkg}/test_mission_{stem}.py",
+                    f"tests/unit/{last_pkg}/test_product_{last_pkg}.py",
+                ]
+            )
 
         for cand in candidates:
             cand_path = self._workspace.repository_root / cand
@@ -205,9 +207,9 @@ class TestTargetSelector:
                             and (f.name.startswith("test_") or f.name.endswith("_test.py"))
                         ):
                             try:
-                                rel = str(
-                                    f.relative_to(self._workspace.repository_root)
-                                ).replace("\\", "/")
+                                rel = str(f.relative_to(self._workspace.repository_root)).replace(
+                                    "\\", "/"
+                                )
                                 found.append(self._validate_single_target(rel))
                                 if len(found) >= MAX_BOUNDED_TESTS:
                                     break
@@ -307,9 +309,7 @@ class TestTargetSelector:
             for f in sorted(tests_dir.rglob("test_*.py")):
                 if f.is_file():
                     try:
-                        rel = str(f.relative_to(self._workspace.repository_root)).replace(
-                            "\\", "/"
-                        )
+                        rel = str(f.relative_to(self._workspace.repository_root)).replace("\\", "/")
                         safe_target = self._validate_single_target(rel)
                         return (
                             (safe_target,),
@@ -390,9 +390,7 @@ class TestTargetSelector:
                     direct_matches.extend(self._find_direct_tests(file_path.strip()))
 
             if direct_matches:
-                unique_direct = tuple(sorted(dict.fromkeys(direct_matches)))[
-                    :MAX_BOUNDED_TESTS
-                ]
+                unique_direct = tuple(sorted(dict.fromkeys(direct_matches)))[:MAX_BOUNDED_TESTS]
                 target_spec = " ".join(unique_direct)
                 return TestSelectionResult(
                     selected_tests=unique_direct,

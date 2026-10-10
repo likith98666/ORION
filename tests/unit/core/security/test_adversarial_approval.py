@@ -481,6 +481,4 @@ def test_adversarial_approval_failures_do_not_execute_handler() -> None:
     )
 
     assert events
-    assert events[-1].event_type == (
-        AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED
-    )
+    assert events[-1].event_type == (AuditEventType.AUTHORIZATION_APPROVAL_REQUIRED)

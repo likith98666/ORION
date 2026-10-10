@@ -10,11 +10,7 @@ class PlanScheduler:
     ) -> list[PlanStep]:
         """Return pending steps whose dependencies are completed."""
 
-        completed_ids = {
-            step.id
-            for step in steps
-            if step.status == PlanStepStatus.COMPLETED
-        }
+        completed_ids = {step.id for step in steps if step.status == PlanStepStatus.COMPLETED}
 
         ready_steps: list[PlanStep] = []
 
@@ -52,7 +48,8 @@ class PlanScheduler:
         terminal_blocking_ids = {
             step.id
             for step in steps
-            if step.status in {
+            if step.status
+            in {
                 PlanStepStatus.FAILED,
                 PlanStepStatus.SKIPPED,
             }
@@ -84,5 +81,3 @@ class PlanScheduler:
             step.status = PlanStepStatus.SKIPPED
 
         return blocked_steps
-
-

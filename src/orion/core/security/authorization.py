@@ -36,10 +36,7 @@ class AuthorizationService:
         if request.context.agent_id != agent.id:
             result = AuthorizationResult(
                 decision=AuthorizationDecision.DENY,
-                reason=(
-                    "Security context agent does not match "
-                    "the authorization subject."
-                ),
+                reason=("Security context agent does not match the authorization subject."),
             )
             self._record_audit(
                 event_type=AuditEventType.AUTHORIZATION_DENIED,

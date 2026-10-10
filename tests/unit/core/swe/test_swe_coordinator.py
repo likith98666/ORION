@@ -62,9 +62,7 @@ def _setup_coordinator(tmp_path: Path, with_approval=False):
     registry.register(
         _create_mock_tool("list_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
     )
-    registry.register(
-        _create_mock_tool("read_file", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
-    )
+    registry.register(_create_mock_tool("read_file", AgentPermission.READ_FILES, ToolRiskLevel.LOW))
     registry.register(
         _create_mock_tool("search_files", AgentPermission.READ_FILES, ToolRiskLevel.LOW)
     )
@@ -162,11 +160,13 @@ def test_coordinator_tool_gating_inspect_repository(tmp_path: Path):
         description="Inspector agent",
         capabilities=frozenset({AgentCapability.REPOSITORY_ANALYSIS}),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -210,11 +210,13 @@ def test_coordinator_tool_gating_analyze_failure(tmp_path: Path):
         description="Debugging agent",
         capabilities=frozenset({AgentCapability.SOFTWARE_DEBUGGING}),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.CODE_EXECUTION,
-                AgentPermission.WRITE_FILES,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                    AgentPermission.WRITE_FILES,
+                }
+            )
         ),
     )
 

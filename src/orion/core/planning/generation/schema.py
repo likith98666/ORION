@@ -72,21 +72,15 @@ class PlanResponseSchema:
             raise ValueError("Plan step description cannot be empty.")
 
         if len(cleaned_description) > 5_000:
-            raise ValueError(
-                "Plan step description cannot exceed 5,000 characters."
-            )
+            raise ValueError("Plan step description cannot exceed 5,000 characters.")
 
         if not isinstance(required_capability, str):
-            raise ValueError(
-                "Plan step required_capability must be a string."
-            )
+            raise ValueError("Plan step required_capability must be a string.")
 
         try:
             capability = AgentCapability(required_capability)
         except ValueError as exc:
-            raise ValueError(
-                f"Unknown agent capability: {required_capability}"
-            ) from exc
+            raise ValueError(f"Unknown agent capability: {required_capability}") from exc
 
         if not isinstance(dependencies, list):
             raise ValueError("Plan step dependencies must be a list.")
@@ -95,14 +89,10 @@ class PlanResponseSchema:
 
         for dependency in dependencies:
             if not isinstance(dependency, int) or isinstance(dependency, bool):
-                raise ValueError(
-                    "Plan step dependency orders must be integers."
-                )
+                raise ValueError("Plan step dependency orders must be integers.")
 
             if dependency <= 0:
-                raise ValueError(
-                    "Plan step dependency orders must be greater than zero."
-                )
+                raise ValueError("Plan step dependency orders must be greater than zero.")
 
             parsed_dependencies.add(dependency)
 
@@ -134,11 +124,8 @@ class PlanResponseSchema:
             for dependency in step.dependencies:
                 if dependency not in valid_orders:
                     raise ValueError(
-                        f"Plan step {step.order} references "
-                        f"unknown dependency {dependency}."
+                        f"Plan step {step.order} references unknown dependency {dependency}."
                     )
 
                 if dependency == step.order:
-                    raise ValueError(
-                        f"Plan step {step.order} cannot depend on itself."
-                    )
+                    raise ValueError(f"Plan step {step.order} cannot depend on itself.")

@@ -26,9 +26,7 @@ class MemoryQuery:
             raise ValueError("Memory query cannot be empty.")
 
         if len(cleaned_query) > 5_000:
-            raise ValueError(
-                "Memory query cannot exceed 5,000 characters."
-            )
+            raise ValueError("Memory query cannot exceed 5,000 characters.")
 
         if self.limit < 1:
             raise ValueError("Memory query limit must be at least 1.")
@@ -41,9 +39,7 @@ class MemoryQuery:
             and self.created_before is not None
             and self.created_after > self.created_before
         ):
-            raise ValueError(
-                "created_after cannot be later than created_before."
-            )
+            raise ValueError("created_after cannot be later than created_before.")
 
         if self.max_age is not None and self.max_age < timedelta(0):
             raise ValueError("Memory query max_age cannot be negative.")
@@ -77,33 +73,23 @@ class ExecutionMemoryQuery:
             raise ValueError("Execution memory query cannot be empty.")
 
         if len(cleaned_query) > 5_000:
-            raise ValueError(
-                "Execution memory query cannot exceed 5,000 characters."
-            )
+            raise ValueError("Execution memory query cannot exceed 5,000 characters.")
 
         if self.limit < 1:
-            raise ValueError(
-                "Execution memory query limit must be at least 1."
-            )
+            raise ValueError("Execution memory query limit must be at least 1.")
 
         if self.limit > 100:
-            raise ValueError(
-                "Execution memory query limit cannot exceed 100."
-            )
+            raise ValueError("Execution memory query limit cannot exceed 100.")
 
         if (
             self.created_after is not None
             and self.created_before is not None
             and self.created_after > self.created_before
         ):
-            raise ValueError(
-                "created_after cannot be later than created_before."
-            )
+            raise ValueError("created_after cannot be later than created_before.")
 
         if self.max_age is not None and self.max_age < timedelta(0):
-            raise ValueError(
-                "Execution memory query max_age cannot be negative."
-            )
+            raise ValueError("Execution memory query max_age cannot be negative.")
 
         object.__setattr__(self, "query", cleaned_query)
         object.__setattr__(

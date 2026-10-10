@@ -211,9 +211,7 @@ def build_apply_change_tool(workspace: Workspace | None = None) -> ToolDefinitio
                 lineterm="",
             )
         )
-        lines_added = sum(
-            1 for line in diff if line.startswith("+") and not line.startswith("+++")
-        )
+        lines_added = sum(1 for line in diff if line.startswith("+") and not line.startswith("+++"))
         lines_removed = sum(
             1 for line in diff if line.startswith("-") and not line.startswith("---")
         )

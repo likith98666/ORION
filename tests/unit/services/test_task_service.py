@@ -17,9 +17,7 @@ def create_service() -> TaskService:
 def test_service_can_create_task() -> None:
     service = create_service()
 
-    task = service.create_task(
-        "Research autonomous AI workforce systems"
-    )
+    task = service.create_task("Research autonomous AI workforce systems")
 
     assert task.objective == "Research autonomous AI workforce systems"
     assert task.status == TaskStatus.CREATED
@@ -28,9 +26,7 @@ def test_service_can_create_task() -> None:
 def test_service_can_get_task() -> None:
     service = create_service()
 
-    task = service.create_task(
-        "Analyze AI infrastructure"
-    )
+    task = service.create_task("Analyze AI infrastructure")
 
     retrieved_task = service.get_task(task.id)
 
@@ -40,9 +36,7 @@ def test_service_can_get_task() -> None:
 def test_service_can_update_task_status() -> None:
     service = create_service()
 
-    task = service.create_task(
-        "Prepare an AI market report"
-    )
+    task = service.create_task("Prepare an AI market report")
 
     service.update_task_status(
         task.id,
@@ -55,9 +49,7 @@ def test_service_can_update_task_status() -> None:
 def test_service_can_get_task_events() -> None:
     service = create_service()
 
-    task = service.create_task(
-        "Research AI companies"
-    )
+    task = service.create_task("Research AI companies")
 
     service.update_task_status(
         task.id,
@@ -74,9 +66,7 @@ def test_service_can_get_task_events() -> None:
 def test_service_preserves_task_failure_information() -> None:
     service = create_service()
 
-    task = service.create_task(
-        "Execute a research task"
-    )
+    task = service.create_task("Execute a research task")
 
     service.update_task_status(
         task.id,

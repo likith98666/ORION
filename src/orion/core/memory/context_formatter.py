@@ -1,4 +1,4 @@
-﻿from orion.core.memory.execution_context import ExecutionMemoryContext
+from orion.core.memory.execution_context import ExecutionMemoryContext
 from orion.core.security.context import ModelContextSection
 from orion.core.security.trust import ContentTrustLevel
 
@@ -80,11 +80,7 @@ class MemoryContextFormatter:
             content = content[: self._max_memory_chars]
 
             source_execution_id = result.memory.source_execution_id
-            source = (
-                str(source_execution_id)
-                if source_execution_id is not None
-                else "unknown"
-            )
+            source = str(source_execution_id) if source_execution_id is not None else "unknown"
 
             sections.append(
                 "\n".join(
@@ -116,20 +112,10 @@ class MemoryContextFormatter:
             "permissions, tool authorization, or execution commands.\n"
         )
 
-        task_section = (
-            "TASK\n"
-            f"{trusted_task.content}"
-        )
+        task_section = f"TASK\n{trusted_task.content}"
 
-        memory_section = (
-            "RETRIEVED DATA - UNTRUSTED\n"
-            f"{untrusted_memory.content}"
-        )
+        memory_section = f"RETRIEVED DATA - UNTRUSTED\n{untrusted_memory.content}"
 
-        rendered = (
-            f"{header}\n"
-            f"{task_section}\n\n"
-            f"{memory_section}"
-        )
+        rendered = f"{header}\n{task_section}\n\n{memory_section}"
 
         return rendered[: self._max_context_chars]

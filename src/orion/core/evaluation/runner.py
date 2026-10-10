@@ -150,7 +150,7 @@ class BenchmarkRunner:
                 self._apply_benchmark_repair(task, workspace_dir)
                 files_changed = len(task.target_files) if task.target_files else 1
 
-            for tgt in (task.target_files or ("src/patch.py",)):
+            for tgt in task.target_files or ("src/patch.py",):
                 coordinator.ledger.record_observed(
                     stage=SWETaskStage.IMPLEMENT_CHANGE,
                     source="benchmark:apply",
@@ -315,9 +315,7 @@ class BenchmarkRunner:
         )
         recov_success = 1.0  # Clean recovery baseline
         mean_duration = (
-            sum(r.duration_seconds for r in results) / total_tasks
-            if total_tasks > 0
-            else 0.0
+            sum(r.duration_seconds for r in results) / total_tasks if total_tasks > 0 else 0.0
         )
 
         report = BenchmarkReport(

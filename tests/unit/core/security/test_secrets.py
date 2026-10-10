@@ -21,9 +21,7 @@ def test_secret_reference_rejects_empty_name() -> None:
 
 
 def test_secret_provider_resolves_by_reference() -> None:
-    provider = InMemorySecretProvider(
-        {"github_token": "super-secret-value"}
-    )
+    provider = InMemorySecretProvider({"github_token": "super-secret-value"})
 
     result = provider.get(SecretReference("github_token"))
 
@@ -38,9 +36,7 @@ def test_secret_provider_rejects_unknown_reference() -> None:
 
 
 def test_secret_provider_rejects_invalid_reference_type() -> None:
-    provider = InMemorySecretProvider(
-        {"github_token": "super-secret-value"}
-    )
+    provider = InMemorySecretProvider({"github_token": "super-secret-value"})
 
     with pytest.raises(TypeError, match="SecretReference"):
         provider.get("github_token")

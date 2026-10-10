@@ -245,14 +245,16 @@ def test_api_hitl_clarification_flow(hitl_server):
     tid = str(uuid4())
 
     # 1. Request clarification
-    req_payload = json.dumps({
-        "mission_id": mid,
-        "task_id": tid,
-        "question": "Which auth provider?",
-        "context": "Configuring security",
-        "options": ["OAuth2", "SAML"],
-        "default_choice": "OAuth2",
-    }).encode("utf-8")
+    req_payload = json.dumps(
+        {
+            "mission_id": mid,
+            "task_id": tid,
+            "question": "Which auth provider?",
+            "context": "Configuring security",
+            "options": ["OAuth2", "SAML"],
+            "default_choice": "OAuth2",
+        }
+    ).encode("utf-8")
     req_http = Request(
         f"{base_url}/api/v1/hitl/clarifications/request",
         data=req_payload,
@@ -274,10 +276,12 @@ def test_api_hitl_clarification_flow(hitl_server):
         assert l_data["clarifications"][0]["request_id"] == clarification_id
 
     # 3. Respond to clarification
-    resp_payload = json.dumps({
-        "response": "Use OAuth2 with PKCE flow",
-        "operator": "SecurityLead",
-    }).encode("utf-8")
+    resp_payload = json.dumps(
+        {
+            "response": "Use OAuth2 with PKCE flow",
+            "operator": "SecurityLead",
+        }
+    ).encode("utf-8")
     respond_http = Request(
         f"{base_url}/api/v1/hitl/clarifications/{clarification_id}/respond",
         data=resp_payload,
@@ -297,12 +301,14 @@ def test_api_hitl_interventions_and_feedback(hitl_server):
     mid = str(uuid4())
 
     # 1. Pause intervention
-    pause_payload = json.dumps({
-        "mission_id": mid,
-        "action": "pause",
-        "operator": "Operator1",
-        "reason": "Wait for DB migration",
-    }).encode("utf-8")
+    pause_payload = json.dumps(
+        {
+            "mission_id": mid,
+            "action": "pause",
+            "operator": "Operator1",
+            "reason": "Wait for DB migration",
+        }
+    ).encode("utf-8")
     req_pause = Request(
         f"{base_url}/api/v1/hitl/intervene",
         data=pause_payload,
@@ -314,13 +320,15 @@ def test_api_hitl_interventions_and_feedback(hitl_server):
         assert p_data["intervention_type"] == "pause"
 
     # 2. Steer intervention
-    steer_payload = json.dumps({
-        "mission_id": mid,
-        "action": "steer",
-        "operator": "Operator1",
-        "reason": "Guide patch strategy",
-        "payload": {"instruction": "Use existing utility in src/utils.py"},
-    }).encode("utf-8")
+    steer_payload = json.dumps(
+        {
+            "mission_id": mid,
+            "action": "steer",
+            "operator": "Operator1",
+            "reason": "Guide patch strategy",
+            "payload": {"instruction": "Use existing utility in src/utils.py"},
+        }
+    ).encode("utf-8")
     req_steer = Request(
         f"{base_url}/api/v1/hitl/intervene",
         data=steer_payload,
@@ -339,13 +347,15 @@ def test_api_hitl_interventions_and_feedback(hitl_server):
         assert i_data["total"] == 2
 
     # 4. Submit feedback
-    fb_payload = json.dumps({
-        "mission_id": mid,
-        "operator": "Operator1",
-        "rating": 5,
-        "comments": "Smooth recovery and clean patch",
-        "corrections": ["Update test coverage"],
-    }).encode("utf-8")
+    fb_payload = json.dumps(
+        {
+            "mission_id": mid,
+            "operator": "Operator1",
+            "rating": 5,
+            "comments": "Smooth recovery and clean patch",
+            "corrections": ["Update test coverage"],
+        }
+    ).encode("utf-8")
     req_fb = Request(
         f"{base_url}/api/v1/hitl/feedback",
         data=fb_payload,

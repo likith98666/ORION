@@ -224,15 +224,9 @@ class ExperimentTracker:
                 elif t_item.duration_seconds > b_item.duration_seconds * 1.2:
                     regressed.append(tid)
 
-        pass_delta = (
-            target.metrics.mission_success_rate - base.metrics.mission_success_rate
-        )
-        dur_delta = (
-            target.metrics.mean_duration_seconds - base.metrics.mean_duration_seconds
-        )
-        rec_delta = (
-            target.metrics.recovery_success_rate - base.metrics.recovery_success_rate
-        )
+        pass_delta = target.metrics.mission_success_rate - base.metrics.mission_success_rate
+        dur_delta = target.metrics.mean_duration_seconds - base.metrics.mean_duration_seconds
+        rec_delta = target.metrics.recovery_success_rate - base.metrics.recovery_success_rate
 
         summary = (
             f"Comparison {base.orion_version} ({base_id}) -> {target.orion_version} ({target_id}): "

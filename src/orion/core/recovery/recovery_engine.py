@@ -57,16 +57,11 @@ class RecoveryEngine:
         """Apply the original failure-to-strategy mapping."""
 
         strategy = self._STRATEGY_BY_FAILURE_TYPE[failure.failure_type]
-        requires_human = (
-            failure.failure_type in self._HUMAN_REQUIRED_FAILURE_TYPES
-        )
+        requires_human = failure.failure_type in self._HUMAN_REQUIRED_FAILURE_TYPES
 
         return RecoveryDecision(
             strategy=strategy,
-            reason=(
-                f"Failure classified as "
-                f"'{failure.failure_type.value}': {failure.message}"
-            ),
+            reason=(f"Failure classified as '{failure.failure_type.value}': {failure.message}"),
             requires_human=requires_human,
         )
 

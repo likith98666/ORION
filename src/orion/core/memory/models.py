@@ -54,9 +54,7 @@ class MemoryRecord:
             raise ValueError("Memory content cannot be empty.")
 
         if len(cleaned_content) > 20_000:
-            raise ValueError(
-                "Memory content cannot exceed 20,000 characters."
-            )
+            raise ValueError("Memory content cannot exceed 20,000 characters.")
 
         return cls(
             id=uuid4(),

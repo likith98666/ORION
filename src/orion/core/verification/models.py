@@ -41,9 +41,7 @@ class VerificationResult:
             raise ValueError("Verification reason cannot be empty.")
 
         if len(cleaned_reason) > 5_000:
-            raise ValueError(
-                "Verification reason cannot exceed 5,000 characters."
-            )
+            raise ValueError("Verification reason cannot exceed 5,000 characters.")
 
         return cls(
             id=uuid4(),

@@ -100,11 +100,13 @@ def _create_test_agent() -> Agent:
         description="Autonomous software engineering agent",
         capabilities=frozenset(),
         permission_policy=AgentPermissionPolicy.create(
-            frozenset({
-                AgentPermission.READ_FILES,
-                AgentPermission.WRITE_FILES,
-                AgentPermission.CODE_EXECUTION,
-            })
+            frozenset(
+                {
+                    AgentPermission.READ_FILES,
+                    AgentPermission.WRITE_FILES,
+                    AgentPermission.CODE_EXECUTION,
+                }
+            )
         ),
     )
 
@@ -408,15 +410,18 @@ def test_path_traversal_rejected(tmp_path: Path) -> None:
     assert "traversal" in str(exc_info.value).lower()
 
 
-@pytest.mark.parametrize("protected_file", [
-    ".env",
-    ".env.production",
-    "credentials.json",
-    ".git/config",
-    "id_rsa",
-    "cert.pem",
-    "secret.key",
-])
+@pytest.mark.parametrize(
+    "protected_file",
+    [
+        ".env",
+        ".env.production",
+        "credentials.json",
+        ".git/config",
+        "id_rsa",
+        "cert.pem",
+        "secret.key",
+    ],
+)
 def test_protected_file_rejected(tmp_path: Path, protected_file: str) -> None:
     """Test 8: Protected credential and configuration files are rejected at boundary."""
     ws, app_svc, applier, _, _, _ = _setup_authorities(tmp_path)

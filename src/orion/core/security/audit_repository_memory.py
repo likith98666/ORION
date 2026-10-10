@@ -26,18 +26,10 @@ class InMemoryAuditRepository(AuditRepository):
         if not isinstance(agent_id, UUID):
             raise TypeError("Agent id must be a UUID.")
 
-        return [
-            event
-            for event in self._events.values()
-            if event.agent_id == agent_id
-        ]
+        return [event for event in self._events.values() if event.agent_id == agent_id]
 
     def list_for_execution(self, execution_id: UUID) -> list[AuditEvent]:
         if not isinstance(execution_id, UUID):
             raise TypeError("Execution id must be a UUID.")
 
-        return [
-            event
-            for event in self._events.values()
-            if event.execution_id == execution_id
-        ]
+        return [event for event in self._events.values() if event.execution_id == execution_id]

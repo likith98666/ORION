@@ -18,9 +18,7 @@ class ExecutionCoordinator:
         memory_context: ExecutionMemoryContext | None = None,
     ) -> AgentExecution:
         if task.status != AgentTaskStatus.ASSIGNED:
-            raise ValueError(
-                f"Only assigned agent tasks can be executed: {task.status.value}"
-            )
+            raise ValueError(f"Only assigned agent tasks can be executed: {task.status.value}")
 
         return self._agent_executor.execute(
             task,

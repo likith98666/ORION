@@ -161,9 +161,7 @@ class HITLCoordinator:
             payload={"instruction": instruction},
         )
 
-    def force_fail_mission(
-        self, mission_id: UUID, operator: str, reason: str
-    ) -> HumanIntervention:
+    def force_fail_mission(self, mission_id: UUID, operator: str, reason: str) -> HumanIntervention:
         """Operator terminates mission with explicit rationale."""
         return self.record_intervention(
             mission_id=mission_id,

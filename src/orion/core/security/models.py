@@ -26,10 +26,7 @@ class SecurityContext:
         if self.task_id is not None and not isinstance(self.task_id, UUID):
             raise TypeError("task_id must be a UUID or None.")
 
-        if (
-            self.execution_id is not None
-            and not isinstance(self.execution_id, UUID)
-        ):
+        if self.execution_id is not None and not isinstance(self.execution_id, UUID):
             raise TypeError("execution_id must be a UUID or None.")
 
 

@@ -50,9 +50,7 @@ class ExecutionLoop:
             raise TypeError("max_recovery_attempts must be an integer.")
 
         if max_recovery_attempts < 0:
-            raise ValueError(
-                "max_recovery_attempts cannot be negative."
-            )
+            raise ValueError("max_recovery_attempts cannot be negative.")
 
         self._execution_coordinator = execution_coordinator
         self._parallel_executor = parallel_executor
@@ -85,10 +83,7 @@ class ExecutionLoop:
         executions: list[AgentExecution] = []
 
         if self._parallel_executor is not None:
-            memory_contexts = [
-                self._provide_memory_context(task)
-                for task in tasks
-            ]
+            memory_contexts = [self._provide_memory_context(task) for task in tasks]
 
             result = self._parallel_executor.execute(
                 tasks=tasks,
@@ -177,9 +172,7 @@ class ExecutionLoop:
         if execution.failure is None:
             return executions
 
-        context = RecoveryExecutionContext.from_execution(
-            execution
-        )
+        context = RecoveryExecutionContext.from_execution(execution)
 
         current_execution = execution
         current_model_config = model_config
@@ -191,24 +184,17 @@ class ExecutionLoop:
             if current_execution.failure is None:
                 break
 
-            if (
-                context.recovery_attempt_number
-                >= self._max_recovery_attempts
-            ):
+            if context.recovery_attempt_number >= self._max_recovery_attempts:
                 break
 
             recovery_result = self._recovery_coordinator.handle_failure(
                 execution=current_execution,
                 execution_context=context,
                 max_retries=self._max_recovery_attempts,
-                alternative_models_available=bool(
-                    alternative_model_configs
-                ),
+                alternative_models_available=bool(alternative_model_configs),
             )
 
-            context = context.record_recovery(
-                recovery_result.decision
-            )
+            context = context.record_recovery(recovery_result.decision)
 
             action_type = recovery_result.action.action_type
 
@@ -239,21 +225,17 @@ class ExecutionLoop:
                     memory_context=retry_memory_context,
                 )
             else:
-                next_execution = (
-                    self._recovery_service.change_model_and_retry(
-                        task=task,
-                        current_model_config=current_model_config,
-                        alternative_model_configs=alternative_model_configs,
-                        memory_context=retry_memory_context,
-                    )
+                next_execution = self._recovery_service.change_model_and_retry(
+                    task=task,
+                    current_model_config=current_model_config,
+                    alternative_model_configs=alternative_model_configs,
+                    memory_context=retry_memory_context,
                 )
 
             if next_execution is not None:
-                current_model_config = (
-                    self._model_config_after_change(
-                        current_model_config=current_model_config,
-                        alternative_model_configs=alternative_model_configs,
-                    )
+                current_model_config = self._model_config_after_change(
+                    current_model_config=current_model_config,
+                    alternative_model_configs=alternative_model_configs,
                 )
 
             if next_execution is None:
@@ -279,9 +261,7 @@ class ExecutionLoop:
             if current_execution.failure is None:
                 break
 
-            context = context.record_failure(
-                current_execution.failure
-            )
+            context = context.record_failure(current_execution.failure)
 
         return executions
 
@@ -333,9 +313,7 @@ class ExecutionLoop:
             verification_result is not None
             and verification_result.status == VerificationStatus.FAILED
         ):
-            failure = VerificationFailureAdapter.to_failure(
-                verification_result
-            )
+            failure = VerificationFailureAdapter.to_failure(verification_result)
             execution.status = AgentExecutionStatus.FAILED
             execution.verification_status = VerificationStatus.FAILED
             execution.failure = failure
@@ -400,10 +378,7 @@ class ExecutionLoop:
         """Return the selected alternative model configuration."""
 
         for alternative in alternative_model_configs:
-            if (
-                alternative.provider_name
-                != current_model_config.provider_name
-            ):
+            if alternative.provider_name != current_model_config.provider_name:
                 return alternative
 
         return current_model_config
@@ -423,9 +398,7 @@ class ExecutionLoop:
             return
 
         if plan_steps is None:
-            raise ValueError(
-                "plan_steps are required before retrying a failed task."
-            )
+            raise ValueError("plan_steps are required before retrying a failed task.")
 
         self._state_synchronizer.synchronize(
             execution,
@@ -443,9 +416,7 @@ class ExecutionLoop:
             return
 
         if plan_steps is None:
-            raise ValueError(
-                "plan_steps are required when state_synchronizer is configured."
-            )
+            raise ValueError("plan_steps are required when state_synchronizer is configured.")
 
         self._state_synchronizer.synchronize(
             execution,
@@ -463,6 +434,4 @@ class ExecutionLoop:
             if task.id == task_id:
                 return task
 
-        raise ValueError(
-            f"Agent task not found: {task_id}"
-        )
+        raise ValueError(f"Agent task not found: {task_id}")

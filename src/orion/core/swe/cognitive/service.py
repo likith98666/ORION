@@ -258,11 +258,7 @@ class SWECognitiveService:
             )
         except Exception as exc:
             if fallback_on_error:
-                default_file = (
-                    normalized_files[0][0]
-                    if normalized_files
-                    else "src/main.py"
-                )
+                default_file = normalized_files[0][0] if normalized_files else "src/main.py"
                 return self.create_fallback_fix(
                     task_id=task_id,
                     execution_id=execution_id,
@@ -285,15 +281,12 @@ class SWECognitiveService:
             root_cause_hypothesis=(
                 "Deterministic analysis fallback: automated test suite reported failures."
             ),
-            supporting_observations=(
-                "Deterministic fallback active due to model unavailability",
-            ),
+            supporting_observations=("Deterministic fallback active due to model unavailability",),
             relevant_files=(),
             confidence=0.5,
             proposed_next_action="inspect_repository_and_formulate_fix",
             reasoning_summary=(
-                f"Model analysis unavailable ({reason[:200]}); "
-                "defaulted to deterministic analysis."
+                f"Model analysis unavailable ({reason[:200]}); defaulted to deterministic analysis."
             ),
             task_id=task_id,
             execution_id=execution_id,
@@ -315,8 +308,7 @@ class SWECognitiveService:
                 "Review and correct implementation based on test failure assertions",
             ),
             rationale=(
-                f"Model formulation unavailable ({reason[:200]}); "
-                "defaulted to deterministic plan."
+                f"Model formulation unavailable ({reason[:200]}); defaulted to deterministic plan."
             ),
             expected_effect="Resolve failing test assertions",
             validation_plan=("run_tests",),
@@ -363,5 +355,3 @@ class SWECognitiveService:
             execution_id=execution_id,
             reason=reason,
         )
-
-

@@ -57,11 +57,7 @@ class WorkforceOrchestrator:
 
             for role, func in tasks:
                 agents = self.registry.get_agents_by_role(role)
-                contract = (
-                    agents[0]
-                    if agents
-                    else self.registry.register_role_contract(role)
-                )
+                contract = agents[0] if agents else self.registry.register_role_contract(role)
 
                 def runner(
                     c: WorkforceAgentContract,

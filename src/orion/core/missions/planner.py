@@ -132,95 +132,109 @@ class MissionPlanner:
 
         # 1. Repository & failure investigation
         task_1_id = uuid4()
-        sub_tasks.append({
-            "task_id": str(task_1_id),
-            "title": "Diagnose & Inspect Failure Root Cause",
-            "description": f"Examine workspace files and isolate fault: {objective}",
-            "dependencies": [],
-            "priority": "high",
-            "risk": "low",
-            "budget": budget.to_dict(),
-        })
+        sub_tasks.append(
+            {
+                "task_id": str(task_1_id),
+                "title": "Diagnose & Inspect Failure Root Cause",
+                "description": f"Examine workspace files and isolate fault: {objective}",
+                "dependencies": [],
+                "priority": "high",
+                "risk": "low",
+                "budget": budget.to_dict(),
+            }
+        )
 
         # 2. Formulate implementation proposal
         task_2_id = uuid4()
-        sub_tasks.append({
-            "task_id": str(task_2_id),
-            "title": "Formulate Solution Architecture & Patch",
-            "description": "Design concrete fix without introducing regressions.",
-            "dependencies": [str(task_1_id)],
-            "priority": "high",
-            "risk": "medium",
-            "budget": budget.to_dict(),
-        })
+        sub_tasks.append(
+            {
+                "task_id": str(task_2_id),
+                "title": "Formulate Solution Architecture & Patch",
+                "description": "Design concrete fix without introducing regressions.",
+                "dependencies": [str(task_1_id)],
+                "priority": "high",
+                "risk": "medium",
+                "budget": budget.to_dict(),
+            }
+        )
 
         # 3. Add regression tests if requested or relevant
         task_3_id: UUID | None = None
         if "test" in obj_lower or "regression" in obj_lower or "bug" in obj_lower:
             task_3_id = uuid4()
-            sub_tasks.append({
-                "task_id": str(task_3_id),
-                "title": "Author Targeted Regression Tests",
-                "description": (
-                    "Create automated tests reproducing and guarding against recurrence."
-                ),
-                "dependencies": [str(task_2_id)],
-                "priority": "high",
-                "risk": "low",
-                "budget": budget.to_dict(),
-            })
+            sub_tasks.append(
+                {
+                    "task_id": str(task_3_id),
+                    "title": "Author Targeted Regression Tests",
+                    "description": (
+                        "Create automated tests reproducing and guarding against recurrence."
+                    ),
+                    "dependencies": [str(task_2_id)],
+                    "priority": "high",
+                    "risk": "low",
+                    "budget": budget.to_dict(),
+                }
+            )
 
         # 4. Apply implementation changes
         task_4_id = uuid4()
         patch_deps = [str(task_3_id)] if task_3_id else [str(task_2_id)]
-        sub_tasks.append({
-            "task_id": str(task_4_id),
-            "title": "Apply Implementation Changes",
-            "description": "Apply targeted source edits subject to capability approval.",
-            "dependencies": patch_deps,
-            "priority": "critical",
-            "risk": "high",
-            "budget": budget.to_dict(),
-        })
+        sub_tasks.append(
+            {
+                "task_id": str(task_4_id),
+                "title": "Apply Implementation Changes",
+                "description": "Apply targeted source edits subject to capability approval.",
+                "dependencies": patch_deps,
+                "priority": "critical",
+                "risk": "high",
+                "budget": budget.to_dict(),
+            }
+        )
 
         # 5. Run test suite & verify
         task_5_id = uuid4()
-        sub_tasks.append({
-            "task_id": str(task_5_id),
-            "title": "Execute Verification & Integration Suite",
-            "description": "Verify 0 regressions and full test pass.",
-            "dependencies": [str(task_4_id)],
-            "priority": "critical",
-            "risk": "medium",
-            "budget": budget.to_dict(),
-        })
+        sub_tasks.append(
+            {
+                "task_id": str(task_5_id),
+                "title": "Execute Verification & Integration Suite",
+                "description": "Verify 0 regressions and full test pass.",
+                "dependencies": [str(task_4_id)],
+                "priority": "critical",
+                "risk": "medium",
+                "budget": budget.to_dict(),
+            }
+        )
 
         # 6. Update documentation if requested
         task_6_id: UUID | None = None
         if "doc" in obj_lower or "api" in obj_lower or "readme" in obj_lower:
             task_6_id = uuid4()
-            sub_tasks.append({
-                "task_id": str(task_6_id),
-                "title": "Update Documentation & API Contracts",
-                "description": "Align documentation and API references with changes.",
-                "dependencies": [str(task_5_id)],
-                "priority": "medium",
-                "risk": "low",
-                "budget": budget.to_dict(),
-            })
+            sub_tasks.append(
+                {
+                    "task_id": str(task_6_id),
+                    "title": "Update Documentation & API Contracts",
+                    "description": "Align documentation and API references with changes.",
+                    "dependencies": [str(task_5_id)],
+                    "priority": "medium",
+                    "risk": "low",
+                    "budget": budget.to_dict(),
+                }
+            )
 
         # 7. Final Verification & Certified Report
         task_final_id = uuid4()
         final_deps = [str(task_6_id)] if task_6_id else [str(task_5_id)]
-        sub_tasks.append({
-            "task_id": str(task_final_id),
-            "title": "Final Mission Verification & Certification",
-            "description": "Issue authoritative verification certificate and audit report.",
-            "dependencies": final_deps,
-            "priority": "high",
-            "risk": "low",
-            "budget": budget.to_dict(),
-        })
+        sub_tasks.append(
+            {
+                "task_id": str(task_final_id),
+                "title": "Final Mission Verification & Certification",
+                "description": "Issue authoritative verification certificate and audit report.",
+                "dependencies": final_deps,
+                "priority": "high",
+                "risk": "low",
+                "budget": budget.to_dict(),
+            }
+        )
 
         proposal = PlanProposal(
             mission_id=mid,

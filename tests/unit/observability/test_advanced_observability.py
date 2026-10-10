@@ -188,6 +188,7 @@ def test_system_optimizer_recommendations() -> None:
 # Integration / REST API Verification for Advanced Observability
 # -------------------------------------------------------------------------
 
+
 @pytest.fixture
 def obs_api_server() -> Any:
     service = MissionAPIService()

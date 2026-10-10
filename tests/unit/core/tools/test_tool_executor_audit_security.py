@@ -151,9 +151,7 @@ def test_secret_inside_nested_output_is_redacted() -> None:
 
 def test_secret_in_error_is_redacted_from_lifecycle() -> None:
     def failing_handler(arguments):
-        raise RuntimeError(
-            f"Remote API rejected credential {arguments['api_token']}"
-        )
+        raise RuntimeError(f"Remote API rejected credential {arguments['api_token']}")
 
     executor, execution_repository, _ = _executor(failing_handler)
 
@@ -169,9 +167,7 @@ def test_secret_in_error_is_redacted_from_lifecycle() -> None:
     execution = execution_repository.get(result.execution_id)
 
     assert execution is not None
-    assert execution.error == (
-        f"Remote API rejected credential {REDACTED_VALUE}"
-    )
+    assert execution.error == (f"Remote API rejected credential {REDACTED_VALUE}")
     assert SECRET not in execution.error
 
 
@@ -190,9 +186,7 @@ def test_secret_is_redacted_from_audit_output() -> None:
     events = audit_repository.list_for_execution(parent_execution_id)
 
     completed = [
-        event
-        for event in events
-        if event.event_type == AuditEventType.TOOL_EXECUTION_COMPLETED
+        event for event in events if event.event_type == AuditEventType.TOOL_EXECUTION_COMPLETED
     ]
 
     assert len(completed) == 1
@@ -203,9 +197,7 @@ def test_secret_is_redacted_from_audit_output() -> None:
 
 def test_secret_is_redacted_from_audit_error() -> None:
     def failing_handler(arguments):
-        raise RuntimeError(
-            f"Authentication failed with {arguments['api_token']}"
-        )
+        raise RuntimeError(f"Authentication failed with {arguments['api_token']}")
 
     executor, _, audit_repository = _executor(failing_handler)
 
@@ -218,16 +210,10 @@ def test_secret_is_redacted_from_audit_error() -> None:
 
     events = audit_repository.list_for_execution(parent_execution_id)
 
-    failed = [
-        event
-        for event in events
-        if event.event_type == AuditEventType.TOOL_EXECUTION_FAILED
-    ]
+    failed = [event for event in events if event.event_type == AuditEventType.TOOL_EXECUTION_FAILED]
 
     assert len(failed) == 1
-    assert failed[0].details["error"] == (
-        f"Authentication failed with {REDACTED_VALUE}"
-    )
+    assert failed[0].details["error"] == (f"Authentication failed with {REDACTED_VALUE}")
     assert SECRET not in str(failed[0].details)
     assert result.execution_id != parent_execution_id
 

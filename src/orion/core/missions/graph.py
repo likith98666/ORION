@@ -85,9 +85,7 @@ class MissionTaskGraph:
     def has_cycles(self) -> bool:
         """Detect whether the graph contains any cycles via Kahn's algorithm."""
         in_degree: dict[UUID, int] = {tid: len(t.dependencies) for tid, t in self._tasks.items()}
-        queue: deque[UUID] = deque(
-            [tid for tid, deg in in_degree.items() if deg == 0]
-        )
+        queue: deque[UUID] = deque([tid for tid, deg in in_degree.items() if deg == 0])
         visited_count = 0
 
         while queue:
@@ -106,9 +104,7 @@ class MissionTaskGraph:
             raise MissionGraphCycleError("Cannot sort graph containing cycles.")
 
         in_degree: dict[UUID, int] = {tid: len(t.dependencies) for tid, t in self._tasks.items()}
-        queue: deque[UUID] = deque(
-            [tid for tid, deg in in_degree.items() if deg == 0]
-        )
+        queue: deque[UUID] = deque([tid for tid, deg in in_degree.items() if deg == 0])
         ordered: list[TaskNode] = []
 
         while queue:

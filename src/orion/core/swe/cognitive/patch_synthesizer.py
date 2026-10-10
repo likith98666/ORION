@@ -138,9 +138,7 @@ class PatchSynthesizer:
             + "\n\n"
             f"TECHNICAL RATIONALE:\n{fix_proposal.rationale}\n\n"
             f"EXPECTED EFFECT:\n{fix_proposal.expected_effect}\n\n"
-            f"AFFECTED FILES:\n"
-            + "\n".join(f"- {f}" for f in fix_proposal.affected_files)
-            + "\n\n"
+            f"AFFECTED FILES:\n" + "\n".join(f"- {f}" for f in fix_proposal.affected_files) + "\n\n"
             f"TASK OBJECTIVE:\n{task_objective}"
         )
 

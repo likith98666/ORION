@@ -266,9 +266,8 @@ def test_swe_report_rejects_incompatible_evaluation_status():
             status="verified_success",
             evaluation=failed_evaluation,
         )
-    assert (
-        "Cannot mark SWE report as 'verified_success' when evaluation status is 'fail'"
-        in str(exc_info.value)
+    assert "Cannot mark SWE report as 'verified_success' when evaluation status is 'fail'" in str(
+        exc_info.value
     )
 
 

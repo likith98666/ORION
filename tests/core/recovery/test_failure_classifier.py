@@ -18,9 +18,7 @@ def classifier() -> FailureClassifier:
 def test_classifies_model_provider_unavailable_as_model_failure(
     classifier: FailureClassifier,
 ) -> None:
-    failure = classifier.classify(
-        ModelProviderUnavailableError("Provider unavailable")
-    )
+    failure = classifier.classify(ModelProviderUnavailableError("Provider unavailable"))
 
     assert failure.failure_type == FailureType.MODEL_FAILURE
     assert failure.message == "Provider unavailable"

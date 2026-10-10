@@ -31,9 +31,7 @@ def test_valid_plan() -> None:
         dependencies=frozenset({step_one.id}),
     )
 
-    result = PlanValidator().validate(
-        [step_one, step_two]
-    )
+    result = PlanValidator().validate([step_one, step_two])
 
     assert result.valid is True
     assert result.errors == ()
@@ -50,9 +48,7 @@ def test_detects_duplicate_orders() -> None:
         description="Analyze research",
     )
 
-    result = PlanValidator().validate(
-        [step_one, step_two]
-    )
+    result = PlanValidator().validate([step_one, step_two])
 
     assert result.valid is False
     assert "Duplicate plan step order: 1." in result.errors
@@ -70,10 +66,7 @@ def test_detects_missing_dependency() -> None:
     result = PlanValidator().validate([step])
 
     assert result.valid is False
-    assert any(
-        "depends on missing step" in error
-        for error in result.errors
-    )
+    assert any("depends on missing step" in error for error in result.errors)
 
 
 def test_detects_self_dependency() -> None:
@@ -87,10 +80,7 @@ def test_detects_self_dependency() -> None:
     result = PlanValidator().validate([step])
 
     assert result.valid is False
-    assert any(
-        "cannot depend on itself" in error
-        for error in result.errors
-    )
+    assert any("cannot depend on itself" in error for error in result.errors)
 
 
 def test_detects_circular_dependency() -> None:
@@ -107,9 +97,7 @@ def test_detects_circular_dependency() -> None:
 
     step_one.dependencies = frozenset({step_two.id})
 
-    result = PlanValidator().validate(
-        [step_one, step_two]
-    )
+    result = PlanValidator().validate([step_one, step_two])
 
     assert result.valid is False
     assert "Plan contains a circular dependency." in result.errors
@@ -127,14 +115,9 @@ def test_reports_multiple_validation_errors() -> None:
         dependencies=frozenset({uuid4()}),
     )
 
-    result = PlanValidator().validate(
-        [step_one, step_two]
-    )
+    result = PlanValidator().validate([step_one, step_two])
 
     assert result.valid is False
     assert len(result.errors) == 2
     assert "Duplicate plan step order: 1." in result.errors
-    assert any(
-        "depends on missing step" in error
-        for error in result.errors
-    )
+    assert any("depends on missing step" in error for error in result.errors)

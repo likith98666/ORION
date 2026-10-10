@@ -1,4 +1,4 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 from uuid import UUID
 
 from orion.core.security.approval import ApprovalRequest

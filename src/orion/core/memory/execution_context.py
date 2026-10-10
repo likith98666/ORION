@@ -30,24 +30,18 @@ class ExecutionMemoryContext:
             raise ValueError("max_memories must be between 1 and 100.")
 
         if len(self.memories) > self.max_memories:
-            raise ValueError(
-                "memories cannot exceed max_memories."
-            )
+            raise ValueError("memories cannot exceed max_memories.")
 
         memory_ids: set[UUID] = set()
 
         for result in self.memories:
             if not isinstance(result, MemoryRetrievalResult):
-                raise TypeError(
-                    "memories must contain only MemoryRetrievalResult instances."
-                )
+                raise TypeError("memories must contain only MemoryRetrievalResult instances.")
 
             memory_id = result.memory.id
 
             if memory_id in memory_ids:
-                raise ValueError(
-                    f"Duplicate memory in execution context: {memory_id}"
-                )
+                raise ValueError(f"Duplicate memory in execution context: {memory_id}")
 
             memory_ids.add(memory_id)
 

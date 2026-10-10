@@ -7,19 +7,21 @@ from pathlib import Path
 
 from orion.core.repo_intel.models import CodeSymbol, ModuleNode, SymbolType
 
-EXCLUDED_DIRS: frozenset[str] = frozenset({
-    ".git",
-    "__pycache__",
-    ".venv",
-    "venv",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "node_modules",
-    "dist",
-    "build",
-    "egg-info",
-})
+EXCLUDED_DIRS: frozenset[str] = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        ".venv",
+        "venv",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "node_modules",
+        "dist",
+        "build",
+        "egg-info",
+    }
+)
 
 
 class ASTSymbolIndexer:

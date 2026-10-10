@@ -24,10 +24,7 @@ class ApprovalRequiredError(PermissionError):
 
     def __init__(self, request_id: UUID) -> None:
         self.request_id = request_id
-        super().__init__(
-            f"Tool execution requires approval. "
-            f"Approval request: {request_id}"
-        )
+        super().__init__(f"Tool execution requires approval. Approval request: {request_id}")
 
 
 @dataclass(frozen=True)
@@ -47,9 +44,7 @@ class ApprovalRequest:
             raise TypeError("id must be a UUID.")
         if not isinstance(self.agent_id, UUID):
             raise TypeError("agent_id must be a UUID.")
-        if self.execution_id is not None and not isinstance(
-            self.execution_id, UUID
-        ):
+        if self.execution_id is not None and not isinstance(self.execution_id, UUID):
             raise TypeError("execution_id must be a UUID or None.")
         if not self.tool_name.strip():
             raise ValueError("tool_name must not be empty.")
@@ -59,9 +54,7 @@ class ApprovalRequest:
             raise TypeError("risk_level must be a ToolRiskLevel.")
         if not isinstance(self.created_at, datetime):
             raise TypeError("created_at must be a datetime.")
-        if self.expires_at is not None and not isinstance(
-            self.expires_at, datetime
-        ):
+        if self.expires_at is not None and not isinstance(self.expires_at, datetime):
             raise TypeError("expires_at must be a datetime.")
         if not isinstance(self.status, ApprovalStatus):
             raise TypeError("status must be an ApprovalStatus.")

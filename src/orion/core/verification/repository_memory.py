@@ -22,21 +22,13 @@ class InMemoryVerificationRepository(VerificationRepository):
         self,
         execution_id: UUID,
     ) -> list[VerificationResult]:
-        return [
-            result
-            for result in self._results.values()
-            if result.execution_id == execution_id
-        ]
+        return [result for result in self._results.values() if result.execution_id == execution_id]
 
     def list_by_status(
         self,
         status: VerificationStatus,
     ) -> list[VerificationResult]:
-        return [
-            result
-            for result in self._results.values()
-            if result.status == status
-        ]
+        return [result for result in self._results.values() if result.status == status]
 
     def list_by_type(
         self,

@@ -229,9 +229,7 @@ class SWEWorkflowCoordinator:
         if self._patch_applier is None:
             approval_service = getattr(self._tool_executor, "approval_service", None)
             if approval_service is None:
-                raise PatchApprovalRequiredError(
-                    "ToolExecutor has no configured ApprovalService."
-                )
+                raise PatchApprovalRequiredError("ToolExecutor has no configured ApprovalService.")
             self._patch_applier = PatchApplicationAuthority(
                 workspace=self._workspace,
                 approval_service=approval_service,
@@ -463,10 +461,12 @@ class SWEWorkflowCoordinator:
         )
 
         category, summary, safe_meta = self._categorize_tool_execution(tool_name, arguments, result)
-        safe_meta.update({
-            "tool_name": tool_name,
-            "agent_id": str(agent.id),
-        })
+        safe_meta.update(
+            {
+                "tool_name": tool_name,
+                "agent_id": str(agent.id),
+            }
+        )
 
         if result.success:
             if tool_name == "run_tests" and result.output is not None:
@@ -479,9 +479,9 @@ class SWEWorkflowCoordinator:
                     stderr = str(getattr(result.output, "stderr", ""))
                 combined = f"{stdout}\n{stderr}".strip()
                 self._last_test_output = combined[:65536]
-                target_str = arguments.get('target', '')
-                ec_val = safe_meta.get('exit_code')
-                st_val = safe_meta.get('status')
+                target_str = arguments.get("target", "")
+                ec_val = safe_meta.get("exit_code")
+                st_val = safe_meta.get("status")
                 content = f"Ran tests target='{target_str}' (exit_code={ec_val}, status={st_val})."
             else:
                 content = f"Executed {tool_name} successfully."
@@ -530,9 +530,7 @@ class SWEWorkflowCoordinator:
         """Perform model-assisted failure analysis within strict context boundaries."""
         stage_val = getattr(self._current_stage, "value", None)
         if self._current_stage != SWETaskStage.ANALYZE_FAILURE:
-            raise WorkflowSequenceError(
-                f"Cannot analyze failure during stage '{stage_val}'."
-            )
+            raise WorkflowSequenceError(f"Cannot analyze failure during stage '{stage_val}'.")
 
         effective_execution_id = execution_id or uuid4()
         effective_output = test_output if test_output is not None else self._last_test_output
@@ -605,9 +603,7 @@ class SWEWorkflowCoordinator:
         """Perform model-assisted fix formulation within strict context boundaries."""
         stage_val = getattr(self._current_stage, "value", None)
         if self._current_stage != SWETaskStage.FORMULATE_FIX:
-            raise WorkflowSequenceError(
-                f"Cannot formulate fix during stage '{stage_val}'."
-            )
+            raise WorkflowSequenceError(f"Cannot formulate fix during stage '{stage_val}'.")
 
         effective_execution_id = execution_id or uuid4()
         effective_diagnosis = (
@@ -699,9 +695,7 @@ class SWEWorkflowCoordinator:
         """Synthesize concrete code patches from a validated FixProposal."""
         stage_val = getattr(self._current_stage, "value", None)
         if self._current_stage not in (SWETaskStage.FORMULATE_FIX, SWETaskStage.IMPLEMENT_CHANGE):
-            raise WorkflowSequenceError(
-                f"Cannot synthesize patch during stage '{stage_val}'."
-            )
+            raise WorkflowSequenceError(f"Cannot synthesize patch during stage '{stage_val}'.")
 
         effective_execution_id = execution_id or uuid4()
         target_fix = fix_proposal or self._last_fix_proposal
@@ -775,9 +769,7 @@ class SWEWorkflowCoordinator:
                 source="patch_validator",
                 content=proposal.unified_diff[:2000],
                 category=EvidenceCategory.DIFF_RESULT,
-                summary=(
-                    f"Diff: +{proposal.total_lines_added}/-{proposal.total_lines_removed}"
-                ),
+                summary=(f"Diff: +{proposal.total_lines_added}/-{proposal.total_lines_removed}"),
                 task_id=self._task_id,
                 execution_id=effective_execution_id,
                 request_id=self._telemetry_context.request_id,
@@ -851,9 +843,7 @@ class SWEWorkflowCoordinator:
             raise UnapprovedPatchError("No patch approval package available to apply.")
 
         effective_execution_id = (
-            execution_id
-            or (target_pkg.execution_id if target_pkg else None)
-            or uuid4()
+            execution_id or (target_pkg.execution_id if target_pkg else None) or uuid4()
         )
         result = self.patch_application_authority.apply_patch(
             approval_package=target_pkg,
@@ -877,9 +867,7 @@ class SWEWorkflowCoordinator:
             )
 
         last_app_exec_id = (
-            self._last_application_result.execution_id
-            if self._last_application_result
-            else None
+            self._last_application_result.execution_id if self._last_application_result else None
         )
         effective_execution_id = execution_id or last_app_exec_id or uuid4()
 
@@ -901,9 +889,7 @@ class SWEWorkflowCoordinator:
         tg = getattr(self, "_task_graph", None)
         objective = str(getattr(tg, "objective", None) or "")
 
-        has_explicit = bool(
-            target and (not isinstance(target, str) or target.strip())
-        )
+        has_explicit = bool(target and (not isinstance(target, str) or target.strip()))
 
         selection = self._test_selector.select_test_targets(
             explicit_target=target if has_explicit else None,
@@ -971,9 +957,7 @@ class SWEWorkflowCoordinator:
             raise WorkflowSequenceError("Cannot verify without prior patch application result.")
 
         last_app_exec_id = (
-            self._last_application_result.execution_id
-            if self._last_application_result
-            else None
+            self._last_application_result.execution_id if self._last_application_result else None
         )
         effective_execution_id = execution_id or last_app_exec_id or uuid4()
         outcome = self.patch_verification_authority.verify_execution(
@@ -1001,9 +985,7 @@ class SWEWorkflowCoordinator:
         """Execute bounded self-healing recovery loop using SWERecoveryCoordinator."""
         effective_execution_id = execution_id or uuid4()
         outcome_vr = (
-            self._last_phase5_outcome.verification_result
-            if self._last_phase5_outcome
-            else None
+            self._last_phase5_outcome.verification_result if self._last_phase5_outcome else None
         )
         test_fail = (
             self._last_controlled_test_result
@@ -1101,9 +1083,7 @@ class SWEWorkflowCoordinator:
         """Formally verify the execution outcome using ORION VerificationEngine."""
         if self._current_stage != SWETaskStage.VERIFY:
             curr_val = getattr(self._current_stage, "value", None)
-            raise WorkflowSequenceError(
-                f"Cannot execute verify_fix during stage '{curr_val}'."
-            )
+            raise WorkflowSequenceError(f"Cannot execute verify_fix during stage '{curr_val}'.")
 
         output_to_verify = custom_output if custom_output is not None else self._last_test_output
 
@@ -1222,9 +1202,7 @@ class SWEWorkflowCoordinator:
         """Generate structured mission report with evidence categorization and evaluation."""
         if self._current_stage != SWETaskStage.GENERATE_REPORT:
             curr_val = getattr(self._current_stage, "value", None)
-            raise WorkflowSequenceError(
-                f"Cannot generate report during stage '{curr_val}'."
-            )
+            raise WorkflowSequenceError(f"Cannot generate report during stage '{curr_val}'.")
 
         evaluation = self.evaluate_mission(required_categories=required_categories)
 
@@ -1235,11 +1213,15 @@ class SWEWorkflowCoordinator:
         else:
             status = "inconclusive"
 
-        files_modified = tuple(sorted({
-            str(item.metadata["path"])
-            for item in self._ledger.get_items(category=EvidenceCategory.FILE_CHANGE)
-            if "path" in item.metadata and item.metadata["path"]
-        }))
+        files_modified = tuple(
+            sorted(
+                {
+                    str(item.metadata["path"])
+                    for item in self._ledger.get_items(category=EvidenceCategory.FILE_CHANGE)
+                    if "path" in item.metadata and item.metadata["path"]
+                }
+            )
+        )
 
         report = SWEReport.create(
             mission_id=self._mission_id,
