@@ -60,6 +60,8 @@
     missionStatusBadge: document.getElementById('missionStatusBadge'),
     missionLifecycleBadge: document.getElementById('missionLifecycleBadge'),
     missionWorkspaceBadge: document.getElementById('missionWorkspaceBadge'),
+    btnMissionTraceLink: document.getElementById('btnMissionTraceLink'),
+    missionTraceIdText: document.getElementById('missionTraceIdText'),
     missionObjective: document.getElementById('missionObjective'),
     btnRunPipeline: document.getElementById('btnRunPipeline'),
     btnAdvanceStage: document.getElementById('btnAdvanceStage'),
@@ -2171,6 +2173,14 @@ Verification: VERIFIED_SUCCESS`,
     if (dom.btnCopyTestTargets) {
       dom.btnCopyTestTargets.addEventListener('click', handleCopyTestTargetsClick);
     }
+    if (dom.btnMissionTraceLink) {
+      dom.btnMissionTraceLink.addEventListener('click', () => {
+        switchView('system', 'obs');
+        if (currentTaskId) {
+          loadObsData(currentTaskId);
+        }
+      });
+    }
 
     // Quick Operator Interventions (Screen 1 & 8)
     if (dom.btnQuickPause) dom.btnQuickPause.addEventListener('click', () => handleIntervention('pause', 'Manual operator pause from Mission Command Center'));
@@ -2291,7 +2301,10 @@ Verification: VERIFIED_SUCCESS`,
     if (tabId === 'tab-hitl') loadHitlData(currentTaskId);
     if (tabId === 'tab-policy') loadPolicyData();
     if (tabId === 'tab-eval') loadEvalData();
-    if (tabId === 'tab-observability') loadObsData(currentTaskId);
+    if (tabId === 'tab-observability') {
+      switchView('system', 'obs');
+      loadObsData(currentTaskId);
+    }
   }
 
   // -------------------------------------------------------------
@@ -2902,6 +2915,14 @@ Verification: VERIFIED_SUCCESS`,
     dom.missionStatusBadge.textContent = (task.status || 'STANDBY').toUpperCase();
     dom.missionLifecycleBadge.textContent = `STATE: ${task.lifecycle_state || 'RECEIVED'}`;
     dom.missionWorkspaceBadge.textContent = `WORKSPACE: ${task.workspace_root ? task.workspace_root.split(/[\\/]/).pop() : 'LOCALHOST'}`;
+
+    const traceId = task.trace_id || (task.task_id ? `trc-${String(task.task_id).slice(0, 8)}` : 'none');
+    if (dom.missionTraceIdText) {
+      dom.missionTraceIdText.textContent = traceId;
+    }
+    if (dom.btnMissionTraceLink) {
+      dom.btnMissionTraceLink.title = `View Distributed Trace Waterfall (${traceId})`;
+    }
 
     const missionShort = task.task_id ? String(task.task_id).slice(0, 8) : 'STANDBY';
     const missionLabel = task.task_id ? `MISSION-${String(task.task_id).slice(0, 8).toUpperCase()}` : 'STANDBY';

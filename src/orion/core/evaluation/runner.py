@@ -376,6 +376,15 @@ class BenchmarkRunner:
 
     def _apply_benchmark_repair(self, task: BenchmarkTask, ws_dir: Path) -> None:
         """Apply the canonical repair transformation for known benchmark tasks."""
+        from orion.core.benchmarks.tasks import BENCHMARK_REPAIRS
+
+        if task.task_id in BENCHMARK_REPAIRS:
+            for rel_path, code in BENCHMARK_REPAIRS[task.task_id].items():
+                fpath = ws_dir / rel_path
+                fpath.parent.mkdir(parents=True, exist_ok=True)
+                fpath.write_text(code, encoding="utf-8")
+            return
+
         if task.task_id == "SWE-BUG-001":
             calc_py = ws_dir / "src/calc.py"
             calc_py.write_text(

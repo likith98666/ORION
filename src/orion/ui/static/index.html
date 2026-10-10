@@ -614,6 +614,7 @@
                 <span class="mission-id-pill code-font" id="missionIdBadge">No Active Mission</span>
                 <span class="badge badge-outline" id="missionLifecycleBadge">IDLE</span>
                 <span class="workspace-pill" id="missionWorkspaceBadge">Workspace: .</span>
+                <button type="button" class="badge badge-outline code-font" id="btnMissionTraceLink" style="cursor: pointer; background: transparent; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 4px;" title="View Distributed Trace Waterfall"><span style="color: var(--text-muted);">TRACE:</span> <span id="missionTraceIdText">none</span></button>
               </div>
               <div class="mission-header-actions">
                 <button type="button" class="btn btn-secondary btn-xs" id="btnReplayMission" title="Timeline Replay">Replay</button>
@@ -695,7 +696,7 @@
             <button type="button" class="subtab-btn" data-tab="tab-hitl" id="tabBtnHitl" style="display: none;">HITL</button>
             <button type="button" class="subtab-btn" data-tab="tab-policy" id="tabBtnPolicy" style="display: none;">Policy</button>
             <button type="button" class="subtab-btn" data-tab="tab-eval" id="tabBtnEval" style="display: none;">Eval</button>
-            <button type="button" class="subtab-btn" data-tab="tab-observability" id="tabBtnObservability" style="display: none;">Obs</button>
+            <button type="button" class="subtab-btn" data-tab="tab-observability" id="tabBtnObservability">Observability</button>
             <button type="button" class="subtab-btn" data-tab="tab-demo" id="tabBtnDemo" style="display: none;">Demo</button>
             <button type="button" class="subtab-btn" data-tab="tab-report" id="tabBtnReport" style="display: none;">Report</button>
           </div>

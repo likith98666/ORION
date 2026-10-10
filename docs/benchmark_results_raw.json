@@ -1,0 +1,389 @@
+{
+  "trials": [
+    {
+      "trial": 1,
+      "benchmark_id": "bench-a3289256",
+      "total_tasks": 10,
+      "passed_tasks": 10,
+      "failed_tasks": 0,
+      "pass_at_1_rate": 1.0,
+      "verification_completeness": 1.0,
+      "recovery_success_rate": 1.0,
+      "mean_duration_seconds": 0.7783792972564697,
+      "median_duration_seconds": 0.7787787914276123,
+      "tasks": [
+        {
+          "task_id": "BM-OFF-BY-ONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7817718982696533,
+          "failure_category": "off_by_one",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-TYPE-ERROR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7745232582092285,
+          "failure_category": "type_error",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-MISSING-NONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7791397571563721,
+          "failure_category": "missing_none_check",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-EXCEPTION",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7635335922241211,
+          "failure_category": "wrong_exception",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-REGEX",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7784860134124756,
+          "failure_category": "bad_regex",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-CONCURRENCY-RACE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7933440208435059,
+          "failure_category": "concurrency_race",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-RESOURCE-LEAK",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7981228828430176,
+          "failure_category": "resource_leak",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-OPERATOR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.779071569442749,
+          "failure_category": "wrong_operator",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-DEFAULT-ARG",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.767402172088623,
+          "failure_category": "bad_default_argument",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-FLOAT-ROUNDING",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7683978080749512,
+          "failure_category": "floating_point_rounding",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "benchmark_id": "bench-832f3541",
+      "total_tasks": 10,
+      "passed_tasks": 10,
+      "failed_tasks": 0,
+      "pass_at_1_rate": 1.0,
+      "verification_completeness": 1.0,
+      "recovery_success_rate": 1.0,
+      "mean_duration_seconds": 0.7736698389053345,
+      "median_duration_seconds": 0.7705463171005249,
+      "tasks": [
+        {
+          "task_id": "BM-OFF-BY-ONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7678990364074707,
+          "failure_category": "off_by_one",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-TYPE-ERROR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7863807678222656,
+          "failure_category": "type_error",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-MISSING-NONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7720437049865723,
+          "failure_category": "missing_none_check",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-EXCEPTION",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7770185470581055,
+          "failure_category": "wrong_exception",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-REGEX",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7599673271179199,
+          "failure_category": "bad_regex",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-CONCURRENCY-RACE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7919583320617676,
+          "failure_category": "concurrency_race",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-RESOURCE-LEAK",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7910661697387695,
+          "failure_category": "resource_leak",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-OPERATOR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7690489292144775,
+          "failure_category": "wrong_operator",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-DEFAULT-ARG",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7608990669250488,
+          "failure_category": "bad_default_argument",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-FLOAT-ROUNDING",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7604165077209473,
+          "failure_category": "floating_point_rounding",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "benchmark_id": "bench-0a4d1923",
+      "total_tasks": 10,
+      "passed_tasks": 10,
+      "failed_tasks": 0,
+      "pass_at_1_rate": 1.0,
+      "verification_completeness": 1.0,
+      "recovery_success_rate": 1.0,
+      "mean_duration_seconds": 0.7787912607192993,
+      "median_duration_seconds": 0.7728884220123291,
+      "tasks": [
+        {
+          "task_id": "BM-OFF-BY-ONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7574024200439453,
+          "failure_category": "off_by_one",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-TYPE-ERROR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7701008319854736,
+          "failure_category": "type_error",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-MISSING-NONE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7756760120391846,
+          "failure_category": "missing_none_check",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-EXCEPTION",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7622604370117188,
+          "failure_category": "wrong_exception",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-REGEX",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7648582458496094,
+          "failure_category": "bad_regex",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-CONCURRENCY-RACE",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7979671955108643,
+          "failure_category": "concurrency_race",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-RESOURCE-LEAK",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.8030431270599365,
+          "failure_category": "resource_leak",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-WRONG-OPERATOR",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7794497013092041,
+          "failure_category": "wrong_operator",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-BAD-DEFAULT-ARG",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.8232753276824951,
+          "failure_category": "bad_default_argument",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        },
+        {
+          "task_id": "BM-FLOAT-ROUNDING",
+          "status": "PASS",
+          "verification_passed": true,
+          "duration_seconds": 0.7538793087005615,
+          "failure_category": "floating_point_rounding",
+          "recovery_attempts": 0,
+          "recovery_strategies": [],
+          "evidence_count": 6,
+          "error_message": null
+        }
+      ]
+    }
+  ],
+  "aggregate": {
+    "num_trials": 3,
+    "total_tasks_per_trial": 10,
+    "total_attempted_all": 30,
+    "total_passed_all": 30,
+    "overall_pass_rate": 1.0,
+    "median_durations": [
+      0.7787787914276123,
+      0.7705463171005249,
+      0.7728884220123291
+    ],
+    "overall_median_duration": 0.7728884220123291
+  }
+}

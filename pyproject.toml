@@ -44,6 +44,9 @@ select = [
     "B",
     "UP",
 ]
+ignore = [
+    "UP042",
+]
 
 [tool.mypy]
 python_version = "3.12"

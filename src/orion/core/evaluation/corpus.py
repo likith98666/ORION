@@ -267,6 +267,8 @@ FAILURE_TAXONOMY_CORPUS: tuple[BenchmarkTask, ...] = (
 
 def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ...]:
     """Retrieve benchmark tasks by suite name."""
+    from orion.core.benchmarks.tasks import BENCHMARK_TASKS
+
     normalized = suite_name.lower().strip()
     if normalized in ("smoke", "quick"):
         return SMOKE_CORPUS
@@ -274,6 +276,10 @@ def get_benchmark_suite(suite_name: str = "standard") -> tuple[BenchmarkTask, ..
         return STANDARD_CORPUS
     if normalized in ("taxonomy", "failures", "v6", "comprehensive"):
         return FAILURE_TAXONOMY_CORPUS
+    if normalized in ("v1", "benchmarks", "expanded", "ten"):
+        return BENCHMARK_TASKS
     raise KeyError(
-        f"Unknown benchmark suite '{suite_name}'. Available: 'standard', 'smoke', 'taxonomy'."
+        f"Unknown benchmark suite '{suite_name}'. "
+        "Available: 'standard', 'smoke', 'taxonomy', 'v1'."
     )
+
