@@ -239,8 +239,15 @@ class MissionAPIService:
             tmp_path = file_path.with_suffix(".tmp")
             tmp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             tmp_path.replace(file_path)
-        except Exception:
-            pass
+        except Exception as exc:
+            import logging
+
+            logging.getLogger("orion.persistence").warning(
+                "Failed to persist mission %s to disk (%s): %s",
+                record.mission_id,
+                self._data_dir,
+                exc,
+            )
 
     def _load_persisted_missions(self) -> None:
         """Restore missions from data_dir if configured."""
@@ -353,8 +360,14 @@ class MissionAPIService:
                     last_error=data.get("last_error"),
                 )
                 self._missions[m_id] = record
-            except Exception:
-                pass
+            except Exception as exc:
+                import logging
+
+                logging.getLogger("orion.persistence").warning(
+                    "Failed to restore mission from %s: %s",
+                    file_path,
+                    exc,
+                )
 
     @property
     def config(self) -> AppConfig:
@@ -497,6 +510,18 @@ class MissionAPIService:
             except OSError:
                 checks["workspace_writable"] = False
 
+        if self._data_dir:
+            checks["data_dir_writable"] = False
+            try:
+                self._data_dir.mkdir(parents=True, exist_ok=True)
+                probe_data = self._data_dir / f".orion_readiness_probe_{uuid4().hex}"
+                probe_data.write_text("ok", encoding="utf-8")
+                if probe_data.exists():
+                    checks["data_dir_writable"] = True
+                    probe_data.unlink(missing_ok=True)
+            except OSError:
+                checks["data_dir_writable"] = False
+
         is_ready = all(checks.values())
         status_str = "ready" if is_ready else "not_ready"
 
@@ -545,6 +570,7 @@ class MissionAPIService:
                     except (queue.Full, OSError):
                         pass
                 record.subscribers.clear()
+            self._save_mission(record)
 
     # -------------------------------------------------------------
     # Evaluation & Benchmarking Operations
@@ -805,6 +831,7 @@ class MissionAPIService:
             report = record.coordinator.generate_report(summary=record.summary)
             record.report = report
             record.status = report.status
+            self._save_mission(record)
             return report.to_dict()
 
         return None

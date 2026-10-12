@@ -8,7 +8,7 @@ LABEL maintainer="ORION Engineering Team" \
 
 # Install git and essential security tooling
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl ca-certificates && \
+    apt-get install -y --no-install-recommends git curl ca-certificates gosu && \
     rm -rf /var/lib/apt/lists/*
 
 # Security: Create non-privileged user and workspace
@@ -19,9 +19,11 @@ RUN groupadd -g 1000 orion && \
 
 WORKDIR /app
 
-# Copy application source code
+# Copy application source code and entrypoint
 COPY --chown=orion:orion pyproject.toml /app/
 COPY --chown=orion:orion src/ /app/src/
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Set Python environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -43,5 +45,8 @@ STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request, os; port = os.environ.get('PORT', os.environ.get('ORION_PORT', '8000')); urllib.request.urlopen(f'http://127.0.0.1:{port}/api/v1/health')" || exit 1
 
-ENTRYPOINT ["python", "-m", "orion"]
+# Start container with root entrypoint to ensure persistent volume ownership, dropping privileges to orion user via gosu
+USER root
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD []
