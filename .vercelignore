@@ -1,0 +1,26 @@
+# Vercel Deployment Ignore Rules
+# Exclude Python runtime backend files, test suites, virtual environments, and caches from frontend deployment
+
+.git
+.github
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+.coverage.*
+htmlcov/
+tests/
+scratch/
+experiments/
+workspace_data/
+.orion_state/
+*.pyc
+__pycache__/
+*.egg-info/
+pyproject.toml
+Dockerfile
+docker-compose.yml
+.env
+.env.*
+!.env.example

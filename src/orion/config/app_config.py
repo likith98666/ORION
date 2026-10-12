@@ -104,7 +104,8 @@ class AppConfig:
         )
 
         host = argv_host or source_env.get("ORION_HOST", "127.0.0.1")
-        port_str = str(argv_port) if argv_port is not None else source_env.get("ORION_PORT", "8000")
+        port_env = source_env.get("PORT") or source_env.get("ORION_PORT", "8000")
+        port_str = str(argv_port) if argv_port is not None else port_env
         try:
             port = int(port_str)
         except ValueError:
@@ -156,6 +157,17 @@ class AppConfig:
         data_dir_env = source_env.get("ORION_DATA_DIR")
         data_dir = Path(data_dir_env).resolve() if data_dir_env else None
 
+        # Configurable CORS allowed origins (comma-separated list, default "*")
+        cors_origins_env = source_env.get("ORION_CORS_ALLOWED_ORIGINS")
+        if cors_origins_env and cors_origins_env.strip():
+            cors_allowed_origins = tuple(
+                origin.strip()
+                for origin in cors_origins_env.split(",")
+                if origin.strip()
+            )
+        else:
+            cors_allowed_origins = ("*",)
+
         return cls(
             host=host,
             port=port,
@@ -167,6 +179,7 @@ class AppConfig:
             mission_rate_limit_per_minute=mission_rate_limit_per_minute,
             redaction_enabled=redaction_enabled,
             known_secrets=tuple(known_secrets_list),
+            cors_allowed_origins=cors_allowed_origins,
             api_token=api_token,
             data_dir=data_dir,
         )

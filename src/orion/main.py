@@ -49,11 +49,16 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=os.environ.get("ORION_HOST", "127.0.0.1"),
         help="Host address to bind HTTP server (default: 127.0.0.1, use 0.0.0.0 for Docker)",
     )
+    port_default_raw = os.environ.get("PORT") or os.environ.get("ORION_PORT", "8000")
+    try:
+        port_default = int(port_default_raw)
+    except ValueError:
+        port_default = 8000
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.environ.get("ORION_PORT", "8000")),
-        help="Port number to listen on (default: 8000)",
+        default=port_default,
+        help="Port number to listen on (default: 8000 or from $PORT / $ORION_PORT)",
     )
     parser.add_argument(
         "--workspace",

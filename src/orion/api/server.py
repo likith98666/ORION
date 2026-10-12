@@ -126,6 +126,9 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         if path == "/" or path == "/index.html":
             self._serve_static_file("index.html", "text/html; charset=utf-8")
             return
+        elif path == "/404.html":
+            self._serve_static_file("404.html", "text/html; charset=utf-8")
+            return
         elif path in ("/favicon.ico", "/favicon.svg"):
             self._serve_static_file("favicon.svg", "image/svg+xml")
             return
@@ -1510,10 +1513,30 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         )
 
     def _send_cors_headers(self) -> None:
-        """Include standard CORS headers."""
-        self.send_header("Access-Control-Allow-Origin", "*")
+        """Include standard CORS headers matching configuration."""
+        has_hdrs = hasattr(self, "headers") and self.headers is not None
+        req_origin = self.headers.get("Origin", "") if has_hdrs else ""
+        allowed_origins = getattr(self.service.config, "cors_allowed_origins", ("*",))
+
+        if "*" in allowed_origins:
+            self.send_header("Access-Control-Allow-Origin", req_origin if req_origin else "*")
+        elif req_origin and (
+            req_origin in allowed_origins
+            or any(
+                o.startswith("*.") and req_origin.endswith(o[1:])
+                for o in allowed_origins
+                if "." in o
+            )
+        ):
+            self.send_header("Access-Control-Allow-Origin", req_origin)
+            self.send_header("Vary", "Origin")
+        elif allowed_origins:
+            self.send_header("Access-Control-Allow-Origin", allowed_origins[0])
+            self.send_header("Vary", "Origin")
+
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
+        self.send_header("Access-Control-Max-Age", "86400")
 
     def _send_security_headers(self) -> None:
         """Send production HTTP security headers."""

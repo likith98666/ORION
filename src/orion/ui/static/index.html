@@ -3,8 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ORION // Mission Command Center & Certified Autonomous AI Software Engineering Console">
   <title>ORION // Mission Command Center // Certified AI Software Engineer</title>
+  <meta name="description" content="ORION // Mission Command Center & Certified Autonomous AI Software Engineering Console. Deterministic multi-agent coordination with authoritative verification.">
+  <meta name="author" content="Likith">
+  <meta name="theme-color" content="#05060A">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook / LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ORION // Autonomous AI Workforce // Mission Command Center">
+  <meta property="og:description" content="Authoritative, deterministic, and evidence-backed Autonomous Software Engineering Operating System with multi-agent coordination and certified ground-truth verification.">
+  <meta property="og:image" content="/static/orion-preview.png">
+  <meta property="og:site_name" content="ORION Platform">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ORION // Autonomous AI Workforce // Mission Command Center">
+  <meta name="twitter:description" content="Authoritative, deterministic Autonomous Software Engineering Operating System with multi-agent coordination and certified ground-truth verification.">
+  <meta name="twitter:image" content="/static/orion-preview.png">
+
+  <!-- Dynamic Environment API Base URL (injected during deployment or overridden via UI) -->
+  <meta name="orion-api-url" content="">
+
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
 </head>
@@ -57,9 +77,9 @@
       </div>
 
       <!-- System Online Indicator -->
-      <div class="topbar-system-status" title="ORION Autonomous Subsystems: Online">
-        <span class="status-dot online"></span>
-        <span>System Online</span>
+      <div class="topbar-system-status" id="btnTopbarBackendStatus" style="cursor: pointer;" title="Backend Connection &amp; Telemetry Status (Click to configure)">
+        <span class="status-dot online" id="topbarStatusDot"></span>
+        <span id="topbarStatusText">System Online</span>
       </div>
 
       <div class="topbar-vsep"></div>
@@ -1382,7 +1402,7 @@
                   <span class="dot yellow"></span>
                   <span class="dot green"></span>
                 </div>
-                <span class="frame-url">http://127.0.0.1:8000/ &bull; ORION Mission Command Center</span>
+                <span class="frame-url" id="previewFrameUrl">orion-command-center.vercel.app &bull; ORION Mission Command Center</span>
                 <button type="button" class="btn btn-secondary btn-xs" id="btnLandingFrameOpen">Open Live Cockpit &rarr;</button>
               </div>
               <div class="preview-frame-body">
@@ -1794,11 +1814,22 @@ mypy src
               <div class="settings-card-body">
                 <div class="settings-row">
                   <div class="settings-info">
-                    <span class="settings-label">Backend REST API</span>
-                    <span class="settings-desc">FastAPI local application server endpoint.</span>
+                    <span class="settings-label">Backend REST API Base URL</span>
+                    <span class="settings-desc">Configured server endpoint for REST APIs &amp; SSE streams. Leave empty for same-origin / Vercel proxy.</span>
                   </div>
-                  <div class="settings-control">
-                    <span class="code-font text-secondary" id="cfgApiEndpoint">http://127.0.0.1:8000/api</span>
+                  <div class="settings-control" style="display: flex; gap: 8px; align-items: center; max-width: 440px; width: 100%;">
+                    <input type="text" id="cfgApiEndpointInput" class="form-control text-xs code-font" placeholder="Same-origin / Relative (/api)" style="flex: 1; padding: 6px 10px; background: #05060A; border: 1px solid #1D2633; color: #EEECE5; border-radius: 4px;">
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnSaveApiEndpoint">Save &amp; Connect</button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">API Bearer Token (Optional)</span>
+                    <span class="settings-desc">Cryptographic authentication token for non-loopback protected backends.</span>
+                  </div>
+                  <div class="settings-control" style="display: flex; gap: 8px; align-items: center; max-width: 440px; width: 100%;">
+                    <input type="password" id="cfgApiTokenInput" class="form-control text-xs code-font" placeholder="Optional Authorization token" style="flex: 1; padding: 6px 10px; background: #05060A; border: 1px solid #1D2633; color: #EEECE5; border-radius: 4px;">
+                    <button type="button" class="btn btn-secondary btn-xs" id="btnSaveApiToken">Save Token</button>
                   </div>
                 </div>
                 <div class="settings-row">

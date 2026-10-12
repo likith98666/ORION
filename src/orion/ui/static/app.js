@@ -13,6 +13,79 @@
   let pollFallbackInterval = null;
   let activePendingApproval = null;
 
+  // =============================================================
+  // Centralized Environment-based API & Authentication Client
+  // Supports Vercel production hosting, remote backends, and local dev
+  // =============================================================
+  const OrionAPI = {
+    getBaseUrl() {
+      const stored = localStorage.getItem('orion_api_base_url');
+      if (stored !== null && stored !== undefined && stored.trim() !== '') {
+        return stored.trim().replace(/\/+$/, '');
+      }
+      if (window.__ORION_CONFIG__ && window.__ORION_CONFIG__.apiUrl) {
+        return window.__ORION_CONFIG__.apiUrl.trim().replace(/\/+$/, '');
+      }
+      const meta = document.querySelector('meta[name="orion-api-url"]');
+      if (meta && meta.content && !meta.content.startsWith('%') && meta.content.trim() !== '') {
+        return meta.content.trim().replace(/\/+$/, '');
+      }
+      return '';
+    },
+
+    setBaseUrl(url) {
+      if (!url || url.trim() === '') {
+        localStorage.removeItem('orion_api_base_url');
+      } else {
+        localStorage.setItem('orion_api_base_url', url.trim().replace(/\/+$/, ''));
+      }
+    },
+
+    getToken() {
+      return localStorage.getItem('orion_api_token') || 
+             (window.__ORION_CONFIG__ && window.__ORION_CONFIG__.apiToken) || '';
+    },
+
+    setToken(token) {
+      if (!token || token.trim() === '') {
+        localStorage.removeItem('orion_api_token');
+      } else {
+        localStorage.setItem('orion_api_token', token.trim());
+      }
+    },
+
+    getUrl(path) {
+      const base = this.getBaseUrl();
+      const cleanPath = path.startsWith('/') ? path : '/' + path;
+      return base ? `${base}${cleanPath}` : cleanPath;
+    },
+
+    getHeaders(customHeaders = {}) {
+      const headers = { ...customHeaders };
+      const token = this.getToken();
+      if (token && !headers['Authorization'] && !headers['X-API-Key']) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
+    },
+
+    async fetch(path, options = {}) {
+      const url = this.getUrl(path);
+      const opts = { ...options };
+      opts.headers = this.getHeaders(opts.headers || {});
+      return fetch(url, opts);
+    },
+
+    createEventSource(path) {
+      const url = this.getUrl(path);
+      return new EventSource(url);
+    }
+  };
+
+  const orionFetch = OrionAPI.fetch.bind(OrionAPI);
+  let isHandlingRoute = false;
+
+
   const STAGES = [
     'inspect_repository',
     'analyze_failure',
@@ -1809,7 +1882,7 @@ Verification: VERIFIED_SUCCESS`,
     }
     if (recordedTimelineEvents.length === 0 && currentMissionId) {
       try {
-        const resp = await fetch(`/api/v1/missions/${currentMissionId}/timeline`);
+        const resp = await orionFetch(`/api/v1/missions/${currentMissionId}/timeline`);
         if (resp.ok) {
           const data = await resp.json();
           if (data && Array.isArray(data.timeline)) {
@@ -2342,7 +2415,7 @@ Verification: VERIFIED_SUCCESS`,
     dom.sseStatusText.textContent = 'CONNECTING...';
 
     const sseUrl = `/api/tasks/${taskId}/events`;
-    eventSource = new EventSource(sseUrl);
+    eventSource = OrionAPI.createEventSource(sseUrl);
 
     eventSource.onopen = function () {
       dom.sseStatusDot.className = 'status-dot online';
@@ -2560,7 +2633,7 @@ Verification: VERIFIED_SUCCESS`,
     const reqId = activePendingApproval ? activePendingApproval.request_id : null;
 
     try {
-      const res = await fetch(`/api/tasks/${currentTaskId}/approve`, {
+      const res = await orionFetch(`/api/tasks/${currentTaskId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2591,7 +2664,7 @@ Verification: VERIFIED_SUCCESS`,
   // -------------------------------------------------------------
   async function syncHealth() {
     try {
-      const res = await fetch('/api/v1/health');
+      const res = await orionFetch('/api/v1/health');
       if (!res.ok) throw new Error('Health check non-200');
       const data = await res.json();
       if (dom.engineUptime) dom.engineUptime.textContent = `${data.uptime_seconds}s`;
@@ -2613,6 +2686,10 @@ Verification: VERIFIED_SUCCESS`,
 
       triggerPulse(dom.coreStatusDot);
       triggerPulse(document.getElementById('statusApiDot'));
+      triggerPulse(document.getElementById('topbarStatusDot'));
+
+      const topbarText = document.getElementById('topbarStatusText');
+      if (topbarText) topbarText.textContent = 'System Online';
 
       // Update intro system states from real backend health
       if (dom.introSysState) dom.introSysState.textContent = 'ONLINE';
@@ -2632,6 +2709,10 @@ Verification: VERIFIED_SUCCESS`,
       };
       markFailed(dom.coreStatusDot);
       markFailed(document.getElementById('statusApiDot'));
+      markFailed(document.getElementById('topbarStatusDot'));
+
+      const topbarText = document.getElementById('topbarStatusText');
+      if (topbarText) topbarText.textContent = 'Backend Offline';
     }
   }
 
@@ -2870,7 +2951,7 @@ Verification: VERIFIED_SUCCESS`,
 
   async function loadInitialTasks() {
     try {
-      const res = await fetch('/api/tasks');
+      const res = await orionFetch('/api/tasks');
       if (res.ok) {
         const data = await res.json();
         const list = data.tasks || data.missions || [];
@@ -2898,48 +2979,48 @@ Verification: VERIFIED_SUCCESS`,
   async function refreshTaskData(taskId) {
     try {
       // 1. Core Task Details
-      const tRes = await fetch(`/api/tasks/${taskId}`);
+      const tRes = await orionFetch(`/api/tasks/${taskId}`);
       if (!tRes.ok) return;
       const task = await tRes.json();
       renderTaskHeader(task);
 
       // 2. Execution Telemetry
-      const exRes = await fetch(`/api/tasks/${taskId}/execution`);
+      const exRes = await orionFetch(`/api/tasks/${taskId}/execution`);
       if (exRes.ok) {
         const exec = await exRes.json();
         renderExecutionState(exec);
       }
 
       // 3. Code Changes
-      const chRes = await fetch(`/api/tasks/${taskId}/changes`);
+      const chRes = await orionFetch(`/api/tasks/${taskId}/changes`);
       if (chRes.ok) {
         const ch = await chRes.json();
         renderCodeChanges(ch);
       }
 
       // 4. Controlled Tests
-      const testRes = await fetch(`/api/tasks/${taskId}/tests`);
+      const testRes = await orionFetch(`/api/tasks/${taskId}/tests`);
       if (testRes.ok) {
         const tests = await testRes.json();
         renderTestResults(tests);
       }
 
       // 5. Recovery Observatory
-      const recRes = await fetch(`/api/tasks/${taskId}/recovery`);
+      const recRes = await orionFetch(`/api/tasks/${taskId}/recovery`);
       if (recRes.ok) {
         const rec = await recRes.json();
         renderRecoveryObservatory(rec);
       }
 
       // 6. Verification
-      const verRes = await fetch(`/api/tasks/${taskId}/verification`);
+      const verRes = await orionFetch(`/api/tasks/${taskId}/verification`);
       if (verRes.ok) {
         const ver = await verRes.json();
         renderVerification(ver);
       }
 
       // 7. Evidence
-      const evRes = await fetch(`/api/tasks/${taskId}/evidence`);
+      const evRes = await orionFetch(`/api/tasks/${taskId}/evidence`);
       if (evRes.ok) {
         const evData = await evRes.json();
         cachedEvidence = evData.evidence || [];
@@ -2947,21 +3028,21 @@ Verification: VERIFIED_SUCCESS`,
       }
 
       // 8. Timeline
-      const timeRes = await fetch(`/api/tasks/${taskId}/timeline`);
+      const timeRes = await orionFetch(`/api/tasks/${taskId}/timeline`);
       if (timeRes.ok) {
         const timeData = await timeRes.json();
         renderTimeline(timeData.timeline || []);
       }
 
       // 9. Execution Graph (DAG)
-      const grRes = await fetch(`/api/tasks/${taskId}/graph`);
+      const grRes = await orionFetch(`/api/tasks/${taskId}/graph`);
       if (grRes.ok) {
         const grData = await grRes.json();
         renderExecutionGraph(grData);
       }
 
       // 10. Workforce Roster
-      const agRes = await fetch(`/api/tasks/${taskId}/agents`);
+      const agRes = await orionFetch(`/api/tasks/${taskId}/agents`);
       if (agRes.ok) {
         const agData = await agRes.json();
         renderWorkforceRoster(agData);
@@ -3721,7 +3802,7 @@ Verification: VERIFIED_SUCCESS`,
     dom.btnSubmitTask.textContent = 'Launching...';
 
     try {
-      const res = await fetch('/api/tasks', {
+      const res = await orionFetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task, workspace, execution_mode }),
@@ -3745,7 +3826,7 @@ Verification: VERIFIED_SUCCESS`,
       await loadInitialTasks();
 
       // Trigger execution pipeline immediately
-      await fetch(`/api/tasks/${currentTaskId}/run`, {
+      await orionFetch(`/api/tasks/${currentTaskId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auto_approve: execution_mode === 'autonomous', background: true }),
@@ -3765,7 +3846,7 @@ Verification: VERIFIED_SUCCESS`,
     const execution_mode = document.getElementById('inputExecutionMode').value;
 
     try {
-      const res = await fetch('/api/tasks', {
+      const res = await orionFetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task: objective, workspace: workspace_path, execution_mode }),
@@ -3794,7 +3875,7 @@ Verification: VERIFIED_SUCCESS`,
     dom.btnRunPipeline.textContent = 'Running Pipeline...';
 
     try {
-      const res = await fetch(`/api/tasks/${currentTaskId}/run`, {
+      const res = await orionFetch(`/api/tasks/${currentTaskId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auto_approve: false, background: true }),
@@ -3819,7 +3900,7 @@ Verification: VERIFIED_SUCCESS`,
     if (!currentTaskId) return;
 
     try {
-      const tRes = await fetch(`/api/tasks/${currentTaskId}`);
+      const tRes = await orionFetch(`/api/tasks/${currentTaskId}`);
       if (!tRes.ok) return;
       const t = await tRes.json();
 
@@ -3830,7 +3911,7 @@ Verification: VERIFIED_SUCCESS`,
       }
 
       const nextStage = STAGES[nextIdx];
-      const res = await fetch(`/api/v1/missions/${currentTaskId}/advance`, {
+      const res = await orionFetch(`/api/v1/missions/${currentTaskId}/advance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: nextStage }),
@@ -3851,7 +3932,7 @@ Verification: VERIFIED_SUCCESS`,
   async function handleGenerateReportClick() {
     if (!currentTaskId) return;
     try {
-      const res = await fetch(`/api/v1/missions/${currentTaskId}/report`, {
+      const res = await orionFetch(`/api/v1/missions/${currentTaskId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ summary: 'Authoritative certified SWE mission report' }),
@@ -3916,7 +3997,7 @@ Verification: VERIFIED_SUCCESS`,
     if (!confirm('Are you sure you want to halt and cancel this active mission?')) return;
 
     try {
-      const res = await fetch(`/api/tasks/${currentTaskId}/cancel`, {
+      const res = await orionFetch(`/api/tasks/${currentTaskId}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: 'Operator requested mission cancellation' }),
@@ -4136,7 +4217,7 @@ Verification: VERIFIED_SUCCESS`,
   // -------------------------------------------------------------
   async function loadRepoData() {
     try {
-      const res = await fetch('/api/v1/repo/index');
+      const res = await orionFetch('/api/v1/repo/index');
       if (res.ok) {
         const data = await res.json();
         if (dom.repoTotalFilesBadge) dom.repoTotalFilesBadge.textContent = `FILES: ${data.total_files || data.file_count || Object.keys(data.files || {}).length || 0}`;
@@ -4151,7 +4232,7 @@ Verification: VERIFIED_SUCCESS`,
   async function handleAnalyzeImpact() {
     const targetFile = (dom.repoImpactTargetFile ? dom.repoImpactTargetFile.value.trim() : '') || 'src/orion/api/service.py';
     try {
-      const res = await fetch('/api/v1/repo/impact', {
+      const res = await orionFetch('/api/v1/repo/impact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_file: targetFile }),
@@ -4174,7 +4255,7 @@ Verification: VERIFIED_SUCCESS`,
   async function handleAnalyzeContext() {
     const targetFile = (dom.repoContextTargetFile ? dom.repoContextTargetFile.value.trim() : '') || 'src/orion/core/tools/executor.py';
     try {
-      const res = await fetch('/api/v1/repo/context', {
+      const res = await orionFetch('/api/v1/repo/context', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_file: targetFile, max_tokens: 4000 }),
@@ -4210,7 +4291,7 @@ Verification: VERIFIED_SUCCESS`,
       return;
     }
     try {
-      const res = await fetch('/api/v1/hitl/intervene', {
+      const res = await orionFetch('/api/v1/hitl/intervene', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4238,7 +4319,7 @@ Verification: VERIFIED_SUCCESS`,
       return;
     }
     try {
-      const res = await fetch('/api/v1/hitl/feedback', {
+      const res = await orionFetch('/api/v1/hitl/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4261,14 +4342,14 @@ Verification: VERIFIED_SUCCESS`,
   async function loadHitlData(missionId) {
     try {
       const url = missionId ? `/api/v1/hitl/clarifications?mission_id=${missionId}` : '/api/v1/hitl/clarifications';
-      const res = await fetch(url);
+      const res = await orionFetch(url);
       if (res.ok) {
         const clarifications = await res.json();
         renderClarifications(clarifications);
       }
 
       if (missionId) {
-        const intRes = await fetch(`/api/v1/hitl/interventions/${missionId}`);
+        const intRes = await orionFetch(`/api/v1/hitl/interventions/${missionId}`);
         if (intRes.ok) {
           const intervs = await intRes.json();
           renderHitlHistory(intervs);
@@ -4333,7 +4414,7 @@ Verification: VERIFIED_SUCCESS`,
 
   async function respondClarification(reqId, responseText) {
     try {
-      const res = await fetch(`/api/v1/hitl/clarifications/${reqId}/respond`, {
+      const res = await orionFetch(`/api/v1/hitl/clarifications/${reqId}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ response_text: responseText, operator: 'Operator' }),
@@ -4375,8 +4456,8 @@ Verification: VERIFIED_SUCCESS`,
   async function loadPolicyData() {
     try {
       const [rulesRes, decRes] = await Promise.all([
-        fetch('/api/v1/policy/rules'),
-        fetch('/api/v1/policy/decisions?limit=25'),
+        orionFetch('/api/v1/policy/rules'),
+        orionFetch('/api/v1/policy/decisions?limit=25'),
       ]);
 
       if (rulesRes.ok) {
@@ -4445,7 +4526,7 @@ Verification: VERIFIED_SUCCESS`,
     e.preventDefault();
     if (!dom.policySimResult) return;
     try {
-      const res = await fetch('/api/v1/policy/evaluate', {
+      const res = await orionFetch('/api/v1/policy/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4480,8 +4561,8 @@ Verification: VERIFIED_SUCCESS`,
   async function loadEvalData() {
     try {
       const [benchRes, runsRes] = await Promise.all([
-        fetch('/api/v1/evaluation/benchmarks'),
-        fetch('/api/v1/evaluation/runs'),
+        orionFetch('/api/v1/evaluation/benchmarks'),
+        orionFetch('/api/v1/evaluation/runs'),
       ]);
 
       if (benchRes.ok) {
@@ -4593,7 +4674,7 @@ Verification: VERIFIED_SUCCESS`,
     dom.btnRunEvaluation.disabled = true;
     dom.btnRunEvaluation.textContent = 'Running Benchmark...';
     try {
-      const res = await fetch('/api/v1/evaluation/run', {
+      const res = await orionFetch('/api/v1/evaluation/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4620,7 +4701,7 @@ Verification: VERIFIED_SUCCESS`,
     if (!baseId || !targetId) return;
 
     try {
-      const res = await fetch('/api/v1/evaluation/compare', {
+      const res = await orionFetch('/api/v1/evaluation/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base_id: baseId, target_id: targetId }),
@@ -4653,9 +4734,9 @@ Verification: VERIFIED_SUCCESS`,
   async function loadObsData(missionId) {
     try {
       const [costRes, bottleRes, optRes] = await Promise.all([
-        fetch(missionId ? `/api/v1/observability/metrics/cost?mission_id=${missionId}` : '/api/v1/observability/metrics/cost'),
-        fetch(missionId ? `/api/v1/observability/bottlenecks?mission_id=${missionId}` : '/api/v1/observability/bottlenecks'),
-        fetch(missionId ? `/api/v1/observability/optimize?mission_id=${missionId}` : '/api/v1/observability/optimize'),
+        orionFetch(missionId ? `/api/v1/observability/metrics/cost?mission_id=${missionId}` : '/api/v1/observability/metrics/cost'),
+        orionFetch(missionId ? `/api/v1/observability/bottlenecks?mission_id=${missionId}` : '/api/v1/observability/bottlenecks'),
+        orionFetch(missionId ? `/api/v1/observability/optimize?mission_id=${missionId}` : '/api/v1/observability/optimize'),
       ]);
 
       if (costRes.ok) {
@@ -4679,7 +4760,7 @@ Verification: VERIFIED_SUCCESS`,
       }
 
       if (missionId) {
-        const spansRes = await fetch(`/api/v1/observability/spans/${missionId}`);
+        const spansRes = await orionFetch(`/api/v1/observability/spans/${missionId}`);
         if (spansRes.ok) {
           const spansData = await spansRes.json();
           renderTraceWaterfall(spansData.spans || []);
@@ -5013,7 +5094,7 @@ Verification: VERIFIED_SUCCESS`,
     } else if (viewName === 'agents') {
       window.location.hash = 'workforce';
       if (currentTaskId) {
-        fetch(`/api/tasks/${currentTaskId}/agents`).then(r => r.ok && r.json()).then(d => {
+        orionFetch(`/api/tasks/${currentTaskId}/agents`).then(r => r.ok && r.json()).then(d => {
           if (d) renderWorkforceRoster(d);
         }).catch(() => {});
       }
@@ -5136,20 +5217,23 @@ Verification: VERIFIED_SUCCESS`,
     const badge = document.getElementById('cfgServiceHealthBadge');
     const text = document.getElementById('cfgServiceHealthText');
     if (text) text.textContent = 'Checking...';
-    fetch('/api/tasks').then(r => {
+    const startTime = performance.now();
+    orionFetch('/api/v1/health').then(async r => {
+      const latency = Math.round(performance.now() - startTime);
       if (r.ok) {
-        if (text) text.textContent = 'Healthy (200 OK)';
+        const data = await r.json().catch(() => ({}));
+        if (text) text.textContent = `Healthy (200 OK, ${latency}ms)`;
         if (badge) badge.className = 'status-pill status-pill-success';
-        showToast('Service health verified: 200 OK', 'success');
+        showToast('Service Connected', `ORION backend online (${latency}ms, ${data.uptime_seconds || 0}s uptime)`, 'success');
       } else {
-        if (text) text.textContent = `Degraded (${r.status})`;
+        if (text) text.textContent = `Degraded (${r.status}, ${latency}ms)`;
         if (badge) badge.className = 'status-pill status-pill-warning';
-        showToast(`Service returned status ${r.status}`, 'warning');
+        showToast(`Service Degraded`, `Server responded with status ${r.status}`, 'warning');
       }
-    }).catch(() => {
-      if (text) text.textContent = 'Offline';
+    }).catch((err) => {
+      if (text) text.textContent = 'Offline / Unreachable';
       if (badge) badge.className = 'status-pill status-pill-error';
-      showToast('Service unreachable.', 'error');
+      showToast('Connection Failed', 'Backend service unreachable. Check URL or start server.', 'error');
     });
   }
 
@@ -5479,33 +5563,99 @@ Verification: VERIFIED_SUCCESS`,
       }
     });
 
-    // 10. Check Initial Hash on page load
-    const hash = window.location.hash.replace('#', '');
-    if (hash === 'landing') {
-      switchView('landing');
-    } else if (hash === 'docs' || hash === 'documentation') {
-      switchView('docs');
-    } else if (hash === 'privacy') {
-      switchView('privacy');
-    } else if (hash === 'terms') {
-      switchView('terms');
-    } else if (hash === 'settings') {
-      switchView('settings');
-    } else if (hash === 'missions') {
-      switchView('missions-all');
-    } else if (hash === 'history') {
-      switchView('missions-history');
-    } else if (hash === 'workforce') {
-      switchView('agents');
-    } else if (hash === 'evidence') {
-      switchView('evidence');
-    } else if (hash.startsWith('system')) {
-      const parts = hash.split('-');
-      switchView('system', parts[1] || 'security');
-    } else if (hash.startsWith('mission')) {
-      switchView('mission-detail');
-    } else {
-      switchView('overview');
+
+  // =============================================================
+  // Client-Side Routing and Direct-Page Refreshes
+  // =============================================================
+  function handleRouting() {
+    if (isHandlingRoute) return;
+    isHandlingRoute = true;
+    try {
+      let route = window.location.hash.replace(/^#\/?/, '').trim();
+      if (!route) {
+        const path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '').trim();
+        if (path && path !== 'index.html' && path !== 'index') {
+          route = path;
+        }
+      }
+      if (route === 'landing') {
+        switchView('landing');
+      } else if (route === 'docs' || route === 'documentation') {
+        switchView('docs');
+      } else if (route === 'privacy') {
+        switchView('privacy');
+      } else if (route === 'terms') {
+        switchView('terms');
+      } else if (route === 'settings') {
+        switchView('settings');
+      } else if (route === 'missions') {
+        switchView('missions-all');
+      } else if (route === 'history') {
+        switchView('missions-history');
+      } else if (route === 'workforce') {
+        switchView('agents');
+      } else if (route === 'evidence') {
+        switchView('evidence');
+      } else if (route.startsWith('system')) {
+        const parts = route.split('-');
+        switchView('system', parts[1] || 'security');
+      } else if (route.startsWith('mission')) {
+        switchView('mission-detail');
+      } else {
+        switchView('overview');
+      }
+    } finally {
+      isHandlingRoute = false;
+    }
+  }
+
+    // 10. Initialize client routing and wire browser navigation
+    handleRouting();
+    window.addEventListener('hashchange', handleRouting);
+    window.addEventListener('popstate', handleRouting);
+
+    // 11. Wire Backend Connection Settings controls
+    const btnSaveApiEndpoint = document.getElementById('btnSaveApiEndpoint');
+    const cfgApiEndpointInput = document.getElementById('cfgApiEndpointInput');
+    const btnSaveApiToken = document.getElementById('btnSaveApiToken');
+    const cfgApiTokenInput = document.getElementById('cfgApiTokenInput');
+    const btnTopbarBackendStatus = document.getElementById('btnTopbarBackendStatus');
+    const previewFrameUrl = document.getElementById('previewFrameUrl');
+
+    if (cfgApiEndpointInput) {
+      cfgApiEndpointInput.value = OrionAPI.getBaseUrl();
+    }
+    if (cfgApiTokenInput) {
+      cfgApiTokenInput.value = OrionAPI.getToken();
+    }
+    if (previewFrameUrl && window.location.host) {
+      previewFrameUrl.textContent = `${window.location.host} • ORION Mission Command Center`;
+    }
+
+    if (btnSaveApiEndpoint && cfgApiEndpointInput) {
+      btnSaveApiEndpoint.addEventListener('click', () => {
+        OrionAPI.setBaseUrl(cfgApiEndpointInput.value);
+        checkServiceHealthDirect();
+        syncHealth();
+        showToast('Configuration Saved', `Target backend set to: ${OrionAPI.getBaseUrl() || '(same-origin)'}`, 'success');
+      });
+    }
+
+    if (btnSaveApiToken && cfgApiTokenInput) {
+      btnSaveApiToken.addEventListener('click', () => {
+        OrionAPI.setToken(cfgApiTokenInput.value);
+        showToast('Token Saved', 'Backend authorization bearer token saved.', 'success');
+        checkServiceHealthDirect();
+      });
+    }
+
+    if (btnTopbarBackendStatus) {
+      btnTopbarBackendStatus.addEventListener('click', () => {
+        switchView('settings');
+        setTimeout(() => {
+          if (cfgApiEndpointInput) cfgApiEndpointInput.focus();
+        }, 150);
+      });
     }
   }
 

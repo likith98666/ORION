@@ -1,0 +1,20 @@
+{
+  "name": "orion-command-center",
+  "version": "1.0.0",
+  "description": "ORION Autonomous AI Workforce — Mission Command Center",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-frontend.js",
+    "validate": "node scripts/validate-frontend.js",
+    "start": "npx serve dist"
+  },
+  "keywords": [
+    "orion",
+    "autonomous-ai",
+    "software-engineering",
+    "command-center",
+    "agentic-workflow"
+  ],
+  "author": "Likith",
+  "license": "MIT"
+}
