@@ -1518,8 +1518,12 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         req_origin = self.headers.get("Origin", "") if has_hdrs else ""
         allowed_origins = getattr(self.service.config, "cors_allowed_origins", ("*",))
 
+        cors_headers = "Content-Type, Authorization, X-API-Key"
         if "*" in allowed_origins:
             self.send_header("Access-Control-Allow-Origin", req_origin if req_origin else "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", cors_headers)
+            self.send_header("Access-Control-Max-Age", "86400")
         elif req_origin and (
             req_origin in allowed_origins
             or any(
@@ -1530,13 +1534,11 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         ):
             self.send_header("Access-Control-Allow-Origin", req_origin)
             self.send_header("Vary", "Origin")
-        elif allowed_origins:
-            self.send_header("Access-Control-Allow-Origin", allowed_origins[0])
-            self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", cors_headers)
+            self.send_header("Access-Control-Max-Age", "86400")
 
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
-        self.send_header("Access-Control-Max-Age", "86400")
+
 
     def _send_security_headers(self) -> None:
         """Send production HTTP security headers."""
