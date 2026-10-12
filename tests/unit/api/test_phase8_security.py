@@ -569,3 +569,49 @@ def test_app_config_secret_masking_and_validation(tmp_path: Path):
     # Invalid environment raises
     with pytest.raises(ValueError, match="Invalid environment"):
         AppConfig(environment="invalid_env", workspace=tmp_path.resolve())  # type: ignore
+
+
+def test_app_config_non_loopback_api_token_requirement(tmp_path: Path) -> None:
+    """Verify that non-loopback binding strictly requires api_token unless testing."""
+    # Binding 0.0.0.0 without token raises ValueError
+    with pytest.raises(ValueError, match="requires configuring 'api_token'"):
+        AppConfig(
+            host="0.0.0.0",
+            port=8000,
+            workspace=tmp_path.resolve(),
+            environment="production",
+            api_token=None,
+        )
+
+    # Binding 0.0.0.0 with ORION_API_TOKEN succeeds
+    cfg_token = AppConfig.from_env(
+        env={
+            "ORION_HOST": "0.0.0.0",
+            "ORION_API_TOKEN": "mock-test-token-value",
+            "ORION_WORKSPACE": str(tmp_path.resolve()),
+        }
+    )
+    assert cfg_token.host == "0.0.0.0"
+    assert cfg_token.api_token == "mock-test-token-value"
+
+    # Binding 0.0.0.0 with ORION_API_KEY alias succeeds
+    cfg_key = AppConfig.from_env(
+        env={
+            "ORION_HOST": "0.0.0.0",
+            "ORION_API_KEY": "mock-test-key-value",
+            "ORION_WORKSPACE": str(tmp_path.resolve()),
+        }
+    )
+    assert cfg_key.host == "0.0.0.0"
+    assert cfg_key.api_token == "mock-test-key-value"
+
+    # Binding 127.0.0.1 without token succeeds
+    cfg_loopback = AppConfig(
+        host="127.0.0.1",
+        port=8000,
+        workspace=tmp_path.resolve(),
+        environment="production",
+        api_token=None,
+    )
+    assert cfg_loopback.api_token is None
+
